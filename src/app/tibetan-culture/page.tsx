@@ -141,6 +141,7 @@ const INITIAL_PLEDGES: PledgeItem[] = [
 export default function TibetanCulturePilotPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoSpeed, setVideoSpeed] = useState<"1x" | "1.5x" | "2x">("1.5x");
+  const [isPlayerOpen, setIsPlayerOpen] = useState(false);
   const [visualTheme, setVisualTheme] =
     useState<VisualTheme>("lungta-festive");
   const [selectedRole, setSelectedRole] =
@@ -196,7 +197,27 @@ export default function TibetanCulturePilotPage() {
   const isFestive = visualTheme === "lungta-festive";
 
   return (
-    <div className="min-h-screen flex flex-col justify-between">
+    <div className="min-h-screen flex flex-col justify-between relative isolate">
+      {/* ══════════════════════════════════════════════════════════════════
+          Full-width Ambient Background Video (L2 High-Speed Background)
+          ══════════════════════════════════════════════════════════════════ */}
+      <div
+        aria-hidden="true"
+        className="fixed inset-0 -z-20 overflow-hidden pointer-events-none select-none"
+      >
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="auto"
+          className="w-full h-full object-cover opacity-20 sm:opacity-25 transition-opacity"
+          src="/videos/pema-tsal-loop-fast.mp4"
+        />
+        {/* Subtle backdrop overlay to ensure contrast and readability */}
+        <div className="absolute inset-0 bg-background/88 backdrop-blur-[1px]" />
+      </div>
+
       {/* Top ribbon: Sacred 5 Lungta Elements or Traditional 3 Sakya Stripes */}
       {isFestive ? (
         <div
@@ -407,72 +428,105 @@ export default function TibetanCulturePilotPage() {
             </div>
           )}
 
-          {/* L2 Fast-Paced Visual Stream · Pema Ts'al Monastic Institute */}
-          <div className="relative overflow-hidden rounded-md border border-border-subtle bg-black/95 shadow-md">
-            <div className="relative aspect-video sm:aspect-21/9 w-full overflow-hidden">
-              <video
-                ref={videoRef}
-                autoPlay
-                loop
-                muted
-                playsInline
-                preload="auto"
-                className="w-full h-full object-cover opacity-85 transition-opacity"
-                src="/videos/pema-tsal-loop-fast.mp4"
-              />
-              <div className="absolute inset-0 bg-linear-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
+          <div className="flex flex-wrap items-center gap-3 pt-1">
+            <button
+              type="button"
+              onClick={() => setIsPlayerOpen(!isPlayerOpen)}
+              aria-expanded={isPlayerOpen}
+              className={`inline-flex items-center gap-2.5 px-4 py-2.5 rounded-sm text-xs sm:text-sm font-medium transition-all shadow-2xs cursor-pointer ${
+                isPlayerOpen
+                  ? "bg-foreground text-background hover:opacity-90"
+                  : isFestive
+                    ? "bg-tibet-crimson text-white hover:bg-tibet-crimson-deep"
+                    : "bg-sakya-crimson text-white hover:opacity-90"
+              }`}
+            >
+              <span aria-hidden="true" className="text-sm">
+                {isPlayerOpen ? "✕" : "▶"}
+              </span>
+              <span>
+                {isPlayerOpen
+                  ? "Cerrar reproductor de video"
+                  : "Desplegar video: Pema Ts'al Institute (Pokhara, Nepal)"}
+              </span>
+              <span className="px-2 py-0.5 rounded-full bg-white/20 text-[10px] uppercase font-bold tracking-wider">
+                L2 Stream
+              </span>
+            </button>
 
-              {/* L2 High-Frequency Badge */}
-              <div className="absolute top-3 left-3 sm:top-4 sm:left-4 flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md text-[10px] sm:text-[11px] font-semibold tracking-wider uppercase text-white border border-white/20">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  L2 Fast Stream · {videoSpeed}
-                </span>
-                <span className="hidden sm:inline-block px-2.5 py-1 rounded-full bg-tibet-gold/80 backdrop-blur-md text-[10px] sm:text-[11px] font-bold tracking-wider uppercase text-white">
-                  Pokhara, Nepal · Pema Ts&apos;al
-                </span>
-              </div>
+            <span className="text-xs text-muted">
+              (El video continúa en el fondo full-width de la página)
+            </span>
+          </div>
 
-              {/* Video Speed Toggle */}
-              <div className="absolute top-3 right-3 sm:top-4 sm:right-4 flex items-center gap-1 bg-black/70 backdrop-blur-md rounded-full p-1 border border-white/20 text-white text-[10px] sm:text-[11px]">
-                <span className="px-2 text-white/70">Velocidad:</span>
-                {(["1x", "1.5x", "2x"] as const).map((spd) => (
-                  <button
-                    key={spd}
-                    type="button"
-                    onClick={() => handleSpeedChange(spd)}
-                    className={`px-2 py-0.5 rounded-full transition-colors cursor-pointer ${
-                      videoSpeed === spd
-                        ? "bg-white text-black font-bold"
-                        : "text-white/70 hover:text-white"
-                    }`}
-                  >
-                    {spd}
-                  </button>
-                ))}
-              </div>
+          {/* L2 Fast-Paced Visual Stream · Pema Ts'al Monastic Institute (Expandable) */}
+          {isPlayerOpen && (
+            <div className="relative overflow-hidden rounded-md border border-border-subtle bg-black/95 shadow-lg transition-all animate-in fade-in duration-300">
+              <div className="relative aspect-video sm:aspect-21/9 w-full overflow-hidden">
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  preload="auto"
+                  className="w-full h-full object-cover opacity-90 transition-opacity"
+                  src="/videos/pema-tsal-loop-fast.mp4"
+                />
+                <div className="absolute inset-0 bg-linear-to-t from-black/85 via-transparent to-black/35 pointer-events-none" />
 
-              {/* Bottom Caption Overlay */}
-              <div className="absolute bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4 flex flex-col sm:flex-row sm:items-end justify-between gap-2 text-white">
-                <div>
-                  <p className="font-serif text-base sm:text-xl font-medium drop-shadow-sm text-white">
-                    Pema Ts&apos;al Sakya Monastic Institute · Living Heritage
-                  </p>
-                  <p className="text-xs sm:text-sm text-white/80 drop-shadow-sm max-w-xl">
-                    Young monks preserving 2,000+ years of classical language, calligraphy, debate, and Buddhist wisdom.
-                  </p>
+                {/* L2 High-Frequency Badge */}
+                <div className="absolute top-3 left-3 sm:top-4 sm:left-4 flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md text-[10px] sm:text-[11px] font-semibold tracking-wider uppercase text-white border border-white/20">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    L2 Fast Stream · {videoSpeed}
+                  </span>
+                  <span className="hidden sm:inline-block px-2.5 py-1 rounded-full bg-tibet-gold/80 backdrop-blur-md text-[10px] sm:text-[11px] font-bold tracking-wider uppercase text-white">
+                    Pokhara, Nepal · Pema Ts&apos;al
+                  </span>
                 </div>
-                <a
-                  href="https://www.youtube.com/watch?v=T9o-r5kd2h8"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[11px] uppercase tracking-wider text-tibet-gold hover:text-white underline underline-offset-4 self-start sm:self-auto shrink-0"
-                >
-                  Full Video on YouTube &rarr;
-                </a>
+
+                {/* Video Speed Toggle */}
+                <div className="absolute top-3 right-3 sm:top-4 sm:right-4 flex items-center gap-1 bg-black/70 backdrop-blur-md rounded-full p-1 border border-white/20 text-white text-[10px] sm:text-[11px]">
+                  <span className="px-2 text-white/70">Velocidad:</span>
+                  {(["1x", "1.5x", "2x"] as const).map((spd) => (
+                    <button
+                      key={spd}
+                      type="button"
+                      onClick={() => handleSpeedChange(spd)}
+                      className={`px-2 py-0.5 rounded-full transition-colors cursor-pointer ${
+                        videoSpeed === spd
+                          ? "bg-white text-black font-bold"
+                          : "text-white/70 hover:text-white"
+                      }`}
+                    >
+                      {spd}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Bottom Caption Overlay */}
+                <div className="absolute bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4 flex flex-col sm:flex-row sm:items-end justify-between gap-2 text-white">
+                  <div>
+                    <p className="font-serif text-base sm:text-xl font-medium drop-shadow-sm text-white">
+                      Pema Ts&apos;al Sakya Monastic Institute · Living Heritage
+                    </p>
+                    <p className="text-xs sm:text-sm text-white/80 drop-shadow-sm max-w-xl">
+                      Young monks preserving 2,000+ years of classical language, calligraphy, debate, and Buddhist wisdom.
+                    </p>
+                  </div>
+                  <a
+                    href="https://www.youtube.com/watch?v=T9o-r5kd2h8"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[11px] uppercase tracking-wider text-tibet-gold hover:text-white underline underline-offset-4 self-start sm:self-auto shrink-0"
+                  >
+                    Full Video on YouTube &rarr;
+                  </a>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </section>
 
         {/* Step 1: Choose how you participate */}
