@@ -1,7 +1,131 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+
+interface BuddhistOffering {
+  id: string;
+  sanskrit: string;
+  tibetan: string;
+  english: string;
+  meaning: string;
+  svgPath: React.ReactNode;
+}
+
+const SEVEN_OFFERINGS: BuddhistOffering[] = [
+  {
+    id: "argham",
+    sanskrit: "Argham",
+    tibetan: "ཆབ་བསིལ།",
+    english: "Drinking Water",
+    meaning: "Purity of mind, speech, and deeds.",
+    svgPath: (
+      /* Sacred Water Jug / Pure Drinking Water */
+      <path
+        d="M12 3v3m-4 5c0 4.418 3.582 8 8 8s8-3.582 8-8c0-3.5-3.5-7-8-12-4.5 5-8 8.5-8 12z"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    ),
+  },
+  {
+    id: "padhya",
+    sanskrit: "Pādhya",
+    tibetan: "ཞབས་བསིལ།",
+    english: "Cleansing Water",
+    meaning: "Cooling water for washing the feet; purification of karma.",
+    svgPath: (
+      /* Cleansing Water Basin */
+      <path
+        d="M4 14c0 4.418 3.582 6 8 6s8-1.582 8-6H4zm8-10v5m-4-2.5l4 4 4-4"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    ),
+  },
+  {
+    id: "pushpe",
+    sanskrit: "Pushpe",
+    tibetan: "མེ་ཏོག",
+    english: "Flowers",
+    meaning: "Beauty of awakening and blooming generosity.",
+    svgPath: (
+      /* Lotus Blossom */
+      <path
+        d="M12 21c-4-4-7-8-7-12 0-3 2.5-5 5-5 1.5 0 2 1 2 1s.5-1 2-1c2.5 0 5 2 5 5 0 4-3 8-7 12zm-5-9c2 0 4-2 5-6 1 4 3 6 5 6"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    ),
+  },
+  {
+    id: "dhupe",
+    sanskrit: "Dhupe",
+    tibetan: "བདུག་སྤོས།",
+    english: "Incense",
+    meaning: "Fragrance of pure ethical discipline pervading the world.",
+    svgPath: (
+      /* Incense Censer & Rising Smoke */
+      <path
+        d="M8 17h8v3a1 1 0 01-1 1H9a1 1 0 01-1-1v-3zm4-3v-3m-3-1c0-2 2-3 2-5m4 5c0-2-2-3-2-5"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    ),
+  },
+  {
+    id: "aloke",
+    sanskrit: "Āloke",
+    tibetan: "མར་མེ།",
+    english: "Luminous Lamp",
+    meaning: "Butter lamp light dispelling the darkness of ignorance.",
+    svgPath: (
+      /* Traditional Butter Lamp */
+      <path
+        d="M6 14h12l-2 5H8l-2-5zm6-11c-1.5 2-2.5 3.5-2.5 5.5 0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5C14.5 6.5 13.5 5 12 3zm-4 16h8v2H8v-2z"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    ),
+  },
+  {
+    id: "gandhe",
+    sanskrit: "Gandhe",
+    tibetan: "དྲི་ཆབ།",
+    english: "Perfumed Water",
+    meaning: "Scented saffron water applied to the heart; devotion.",
+    svgPath: (
+      /* Perfume Flask / Essence Container */
+      <path
+        d="M10 4h4v3h-4V4zm-3 7a5 5 0 0010 0V7H7v4zm5 3a2 2 0 100-4 2 2 0 000 4zm-4 6h8v1H8v-1z"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    ),
+  },
+  {
+    id: "naivedya",
+    sanskrit: "Naivedya",
+    tibetan: "ཞལ་ཟས།",
+    english: "Celestial Food",
+    meaning: "Pure sustenance and nourishment of meditative absorption.",
+    svgPath: (
+      /* Sacred Food Bowl / Torma Offering */
+      <path
+        d="M5 13c0 4 3 7 7 7s7-3 7-7H5zm7-9l3 6H9l3-6zm-4 16h8v2H8v-2z"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    ),
+  },
+];
 
 type ParticipantRole =
   | "individual"
@@ -139,9 +263,10 @@ const INITIAL_PLEDGES: PledgeItem[] = [
 ];
 
 export default function TibetanCulturePilotPage() {
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const bgVideoRef = useRef<HTMLVideoElement>(null);
+  const playerVideoRef = useRef<HTMLVideoElement>(null);
   const [videoSpeed, setVideoSpeed] = useState<"1x" | "1.5x" | "2x">("1.5x");
-  const [isPlayerOpen, setIsPlayerOpen] = useState(false);
+  const [isPlayerOpen, setIsPlayerOpen] = useState(true);
   const [visualTheme, setVisualTheme] =
     useState<VisualTheme>("lungta-festive");
   const [selectedRole, setSelectedRole] =
@@ -154,11 +279,44 @@ export default function TibetanCulturePilotPage() {
   );
   const [submittedNotice, setSubmittedNotice] = useState("");
 
+  /* Synchronize both background and player video streams */
+  useEffect(() => {
+    const player = playerVideoRef.current;
+    const bg = bgVideoRef.current;
+    if (!player || !bg) return;
+
+    const rateMap = { "1x": 1.0, "1.5x": 1.5, "2x": 2.0 };
+    const rate = rateMap[videoSpeed];
+    player.playbackRate = rate;
+    bg.playbackRate = rate;
+
+    const syncTime = () => {
+      if (Math.abs(bg.currentTime - player.currentTime) > 0.15) {
+        bg.currentTime = player.currentTime;
+      }
+    };
+
+    player.addEventListener("timeupdate", syncTime);
+    player.addEventListener("seeking", syncTime);
+    player.addEventListener("seeked", syncTime);
+
+    return () => {
+      player.removeEventListener("timeupdate", syncTime);
+      player.removeEventListener("seeking", syncTime);
+      player.removeEventListener("seeked", syncTime);
+    };
+  }, [isPlayerOpen, videoSpeed]);
+
   const handleSpeedChange = (spd: "1x" | "1.5x" | "2x") => {
     setVideoSpeed(spd);
-    if (videoRef.current) {
-      const rateMap = { "1x": 1.0, "1.5x": 1.5, "2x": 2.0 };
-      videoRef.current.playbackRate = rateMap[spd];
+    const rateMap = { "1x": 1.0, "1.5x": 1.5, "2x": 2.0 };
+    const rate = rateMap[spd];
+    if (playerVideoRef.current) playerVideoRef.current.playbackRate = rate;
+    if (bgVideoRef.current) {
+      bgVideoRef.current.playbackRate = rate;
+      if (playerVideoRef.current) {
+        bgVideoRef.current.currentTime = playerVideoRef.current.currentTime;
+      }
     }
   };
 
@@ -206,6 +364,7 @@ export default function TibetanCulturePilotPage() {
         className="fixed inset-0 z-0 overflow-hidden pointer-events-none select-none"
       >
         <video
+          ref={bgVideoRef}
           autoPlay
           loop
           muted
@@ -464,7 +623,7 @@ export default function TibetanCulturePilotPage() {
             <div className="relative overflow-hidden rounded-md border border-border-subtle bg-black/95 shadow-lg transition-all animate-in fade-in duration-300">
               <div className="relative aspect-video sm:aspect-21/9 w-full overflow-hidden">
                 <video
-                  ref={videoRef}
+                  ref={playerVideoRef}
                   autoPlay
                   loop
                   muted
@@ -527,6 +686,59 @@ export default function TibetanCulturePilotPage() {
               </div>
             </div>
           )}
+
+          {/* The Seven Traditional Offerings to the Buddha (Argham, Pādhya, Pushpe, Dhupe, Āloke, Gandhe, Naivedya) */}
+          <div className="bg-card-bg/85 backdrop-blur-md border border-border-subtle p-5 sm:p-6 rounded-md shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-1 border-b border-border-subtle/70 pb-3">
+              <div>
+                <h3 className="font-serif text-lg sm:text-xl font-medium text-foreground flex items-center gap-2">
+                  <span>The Seven Traditional Offerings to the Buddha</span>
+                  <span lang="bo" className="text-xs sm:text-sm text-tibet-gold-rich font-normal">
+                    ༄༅། །སངས་རྒྱས་ལ་མཆོད་པ་བདུན།
+                  </span>
+                </h3>
+                <p className="text-xs text-muted mt-0.5">
+                  Seven sacred outer sensory offerings placed upon the altar, honoring the enlightened body, speech, and mind.
+                </p>
+              </div>
+              <span className="text-[10px] font-semibold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-tibet-gold-light border border-tibet-gold/30 text-tibet-gold-rich self-start sm:self-auto">
+                Sacred Tradition
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+              {SEVEN_OFFERINGS.map((offering) => (
+                <div
+                  key={offering.id}
+                  className="flex flex-col items-center text-center p-3 rounded-sm bg-background/80 border border-border-subtle/80 hover:border-tibet-gold hover:shadow-xs transition-all group"
+                >
+                  <div className="w-10 h-10 rounded-full bg-tibet-gold-light border border-tibet-gold/30 flex items-center justify-center text-tibet-gold-rich group-hover:scale-110 transition-transform mb-2">
+                    <svg
+                      viewBox="0 0 24 24"
+                      className="w-5 h-5 fill-none stroke-current"
+                    >
+                      {offering.svgPath}
+                    </svg>
+                  </div>
+                  <span className="font-serif text-sm font-semibold text-foreground group-hover:text-tibet-crimson transition-colors">
+                    {offering.sanskrit}
+                  </span>
+                  <span
+                    lang="bo"
+                    className="text-xs text-tibet-gold-rich font-medium mt-0.5 font-serif"
+                  >
+                    {offering.tibetan}
+                  </span>
+                  <span className="text-[11px] text-muted font-medium mt-1">
+                    {offering.english}
+                  </span>
+                  <p className="text-[10px] text-muted/80 mt-1 leading-tight hidden sm:block">
+                    {offering.meaning}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
         </section>
 
         {/* Step 1: Choose how you participate */}
