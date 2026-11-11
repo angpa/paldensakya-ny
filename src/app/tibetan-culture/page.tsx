@@ -127,6 +127,8 @@ const SEVEN_OFFERINGS: BuddhistOffering[] = [
   },
 ];
 
+type Language = "en" | "bo";
+
 type ParticipantRole =
   | "individual"
   | "monastery"
@@ -139,80 +141,237 @@ type VisualTheme = "lungta-festive" | "sakya-classic";
 
 interface RoleConfig {
   id: ParticipantRole;
-  label: string;
-  description: string;
-  suggestions: string[];
+  labelEn: string;
+  labelBo: string;
+  descEn: string;
+  descBo: string;
+  suggestionsEn: string[];
+  suggestionsBo: string[];
 }
 
 const ROLES: RoleConfig[] = [
   {
     id: "individual",
-    label: "Individual Practitioner",
-    description:
+    labelEn: "Individual Practitioner",
+    labelBo: "སྒེར་སྒྲུབ་པ་པོ།",
+    descEn:
       "Participate in your own personal rhythm—through recitation, silent meditation, study, or sponsorship.",
-    suggestions: [
+    descBo:
+      "རང་ཉིད་ཀྱི་དུས་ཚོད་དང་མཐུན་པར་ཞལ་འདོན་དང་སྒོམ་སྒྲུབ། སློབ་གཉེར། སྦྱིན་བདག་སོགས་ཀྱི་སྒོ་ནས་མཉམ་ཞུགས་གནང་བ།",
+    suggestionsEn: [
       "Recite the 21 Praises to Tara 1,000 times during the year",
       "Dedicate 18 hours of silent meditation over the course of the year",
       "Learn to read and pronounce the 30 letters of the Tibetan Uchen alphabet",
       "Sponsor a child's education or a Tibetan cultural publication",
     ],
+    suggestionsBo: [
+      "ལོ་གཅིག་ནང་སྒྲོལ་མ་ཕྱག་འཚལ་ཉེར་གཅིག་ཚར་ ༡,༠༠༠ གསུང་འདོན་གནང་བ།",
+      "ལོ་གཅིག་གི་རིང་ཞི་གནས་སྒོམ་སྒྲུབ་ཆུ་ཚོད་ ༡༨ རིང་ཉམས་ལེན་གནང་བ།",
+      "བོད་ཡིག་དབུ་ཅན་གྱི་གསལ་བྱེད་སུམ་ཅུའི་ཀློག་གདངས་དང་འབྲི་ཀློག་སྦྱོང་བ།",
+      "བོད་ཕྲུག་ཅིག་གི་ཤེས་ཡོན་ནམ་བོད་ཀྱི་དཔེ་དེབ་དཔར་སྐྲུན་ལ་སྦྱིན་བདག་གནང་བ།",
+    ],
   },
   {
     id: "monastery",
-    label: "Monastery / Dharma Center",
-    description:
+    labelEn: "Monastery / Dharma Center",
+    labelBo: "དགོན་སྡེ་དང་ཆོས་ཚོགས།",
+    descEn:
       "Dedicate special pujas, lineage teachings, or open-house days celebrating Tibetan heritage.",
-    suggestions: [
+    descBo:
+      "བོད་ཀྱི་རིག་གཞུང་སྲུང་སྐྱོབ་ཆེད་དམིགས་བསལ་ཞབས་བརྟན་དང་ཆོས་འབྲེལ། སྒོ་འབྱེད་མཛད་སྒོ་གོ་སྒྲིག་གནང་བ།",
+    suggestionsEn: [
       "Dedicate annual Tara or Medicine Buddha accumulations to cultural preservation",
       "Host free weekly Tibetan reading and liturgical chanting workshops",
       "Display the International Year of Tibetan Culture & Language emblem at the temple entrance",
     ],
+    suggestionsBo: [
+      "ལོ་རེའི་སྒྲོལ་མ་དང་སྨན་བླའི་བཟླས་བརྗོད་རིག་གཞུང་སྲུང་སྐྱོབ་ཆེད་བསྔོ་སྨོན་གནང་བ།",
+      "བདུན་རེར་དབུ་ཅན་འབྲི་ཀློག་དང་ཆོས་སྤྱོད་ཞལ་འདོན་གྱི་རིན་མེད་ཟབ་སྦྱོང་སྤེལ་བ།",
+      "ཆོས་ཚོགས་ཀྱི་སྒོ་འགྲམ་དུ་ལོ་ཉིས་སྟོང་དུས་སྟོན་གྱི་མཚོན་རྟགས་སྦྱར་བ།",
+    ],
   },
   {
     id: "school",
-    label: "School / University / Student Group",
-    description:
+    labelEn: "School / University / Student Group",
+    labelBo: "སློབ་གྲྭ་དང་གཙུག་ལག་སློབ་ཁང་།",
+    descEn:
       "Invite students and faculty to explore over 2,000 years of Tibetan civilization, literature, and philosophy.",
-    suggestions: [
+    descBo:
+      "སློབ་མ་དང་དགེ་རྒན་རྣམས་ཀྱིས་ལོ་ཉིས་སྟོང་ལྷག་གི་བོད་ཀྱི་ལོ་རྒྱུས་དང་རྩོམ་རིག ཚད་མ་རིག་པར་སློབ་གཉེར་གནང་བ།",
+    suggestionsEn: [
       "Organize a Tibetan Culture & Language symposium or film screening on campus",
       "Establish a student reading circle on Tibetan history, logic, or poetry",
       "Partner with Tibetan youth and monastic schools for language exchange",
     ],
+    suggestionsBo: [
+      "སློབ་གྲྭའི་ནང་བོད་ཀྱི་རིག་གཞུང་སྐོར་གྱི་བགྲོ་གླེང་དང་གློག་བརྙན་གཟིགས་འབུལ་གོ་སྒྲིག་གནང་བ།",
+      "བོད་ཀྱི་ལོ་རྒྱུས་དང་སྙན་ངག རྟོག་གེ་བཅས་ཀྱི་སློབ་མའི་དེབ་ཀློག་ཚོགས་པ་འཛུགས་པ།",
+      "བོད་པའི་དགོན་སྡེ་དང་སློབ་གྲྭ་ཁག་དང་མཉམ་དུ་སྐད་ཡིག་བརྗེ་ལེན་གནང་བ།",
+    ],
   },
   {
     id: "restaurant",
-    label: "Restaurant / Business",
-    description:
+    labelEn: "Restaurant / Business",
+    labelBo: "ཟ་ཁང་དང་ཚོང་ལས་ཁང་།",
+    descEn:
       "Share awareness in your storefront, menus, or workplace and support community initiatives.",
-    suggestions: [
+    descBo:
+      "སྒོ་ཁ་དང་ཟ་ཐོ། ལས་ཁུངས་བཅས་སུ་རིག་གཞུང་གོ་རྟོགས་སྤེལ་ཞིང་སྤྱི་ཚོགས་ལས་དོན་ལ་རྒྱབ་སྐྱོར་གནང་བ།",
+    suggestionsEn: [
       "Display the official celebration decal on storefront doors and windows",
       "Feature a Tibetan cultural note or word-of-the-week for guests",
       "Pledge a portion of a special day's proceeds to sponsor a Tibetan book or student",
     ],
+    suggestionsBo: [
+      "ཚོང་ཁང་གི་སྒོ་དང་སྒེའུ་ཁུང་དུ་དུས་སྟོན་གྱི་མཚོན་རྟགས་སྦྱར་བ།",
+      "མགྲོན་པོ་རྣམས་ལ་བདུན་རེའི་བོད་ཡིག་མིང་ཚིག་གམ་རིག་གཞུང་ངོ་སྤྲོད་གནང་བ།",
+      "དམིགས་བསལ་ཉིན་མོའི་ཁེ་བཟང་གི་ཆ་ཤས་ཤིག་བོད་ཡིག་དེབ་དཔར་སྐྲུན་ལ་ཞལ་འདེབས་གནང་བ།",
+    ],
   },
   {
     id: "artist",
-    label: "Writer / Poet / Artist",
-    description:
+    labelEn: "Writer / Poet / Artist",
+    labelBo: "རྩོམ་པ་པོ་དང་སྒྱུ་རྩལ་པ།",
+    descEn:
       "Create, publish, translate, or perform works inspired by Tibetan language and artistic traditions.",
-    suggestions: [
+    descBo:
+      "བོད་ཀྱི་སྐད་ཡིག་དང་སྒྱུ་རྩལ་ལ་དམིགས་པའི་བརྩམས་ཆོས་གསར་རྩོམ་དང་ལོ་ཙཱ། འཁྲབ་སྟོན་གནང་བ།",
+    suggestionsEn: [
       "Author or translate a book, essay, or collection of poems celebrating Tibet",
       "Create calligraphy, thangka-inspired visual art, music, or drama",
       "Connect with sponsors to publish a completed manuscript on Tibetan culture",
     ],
+    suggestionsBo: [
+      "བོད་ཀྱི་སྐོར་ལ་དཔེ་དེབ་དང་དཔྱད་རྩོམ། སྙན་ངག་གསར་རྩོམ་མམ་ལོ་ཙཱ་གནང་བ།",
+      "བོད་ཀྱི་ཡིག་གཟུགས་དང་ཐང་ག རོལ་མོ། ཟློས་གར་སོགས་གསར་གཏོད་གནང་བ།",
+      "བོད་ཀྱི་རིག་གཞུང་སྐོར་གྱི་ཕྱག་དེབ་དཔར་སྐྲུན་ཆེད་སྦྱིན་བདག་དང་འབྲེལ་མཐུད་གནང་བ།",
+    ],
   },
   {
     id: "youth",
-    label: "Kids & Youth",
-    description:
+    labelEn: "Kids & Youth",
+    labelBo: "བྱིས་པ་དང་གཞོན་སྐྱེས།",
+    descEn:
       "Even children can participate with simple daily habits of kindness, language learning, and generosity.",
-    suggestions: [
+    descBo:
+      "བྱིས་པ་ཚོས་ཀྱང་ཉིན་རེའི་གོམས་གཤིས་བཟང་པོ་དང་སྐད་ཡིག་སློབ་སྦྱོང་། གཞན་ཕན་གྱི་སྒོ་ནས་མཉམ་ཞུགས་ཆོག",
+    suggestionsEn: [
       "Save a few pennies each day in a dedication jar to help sponsor a classmate in Asia",
       "Learn 5 Tibetan greetings, numbers, or songs with family",
       "Draw or paint a symbol of peace and Tibetan heritage",
     ],
+    suggestionsBo: [
+      "ཉིན་རེར་སྒོར་ཟུར་རེ་བསགས་ཏེ་ཧི་མ་ལ་ཡའི་སློབ་ཕྲུག་ཚོར་རོགས་སྐྱོར་གནང་བ།",
+      "ཁྱིམ་ཚང་མཉམ་དུ་བོད་པའི་འཚམས་འདྲི་དང་ཨང་གྲངས། གཞས་ ༥ རེ་སྦྱོང་བ།",
+      "ཞི་བདེ་དང་བོད་ཀྱི་རིག་གཞུང་མཚོན་པའི་རི་མོ་འབྲི་བ།",
+    ],
   },
 ];
+
+const CULTURE_UI = {
+  en: {
+    back: "Back to Vikramasila Foundation · Palden Sakya",
+    badgeJubilee: "2,000 Years Jubilation",
+    badgeInitiative: "2026–2029 Initiative",
+    heroHonoring: "Honoring 20 Centuries of Living Wisdom & Language",
+    heroHeadingPrefix: "Celebration of Tibetan Culture & Language",
+    heroHeadingHighlight: "2,000 Years",
+    heroIntro:
+      "Honoring over 2,000 years of living Tibetan civilization, literature, spiritual wisdom, and language. This global initiative does not impose rules—instead, it invites everyone (monasteries, schools, universities, businesses, poets, artists, children, and individual practitioners worldwide) to subscribe an idea and participate in your own authentic way.",
+    heroSubscribeLink: "subscribe an idea and participate in your own authentic way",
+    decalTitle: "The Official Commemorative Decal",
+    decalBadge: "Universal Emblem",
+    decalDesc:
+      "Created to be printed out and displayed proudly on storefront doors, cars, laptops, classrooms, home altars, and dharma centers—signaling: \"We participate in honoring 2,000 years of Tibetan Culture & Language.\"",
+    btnVideoOpen: "Close Video Player · བརྙན་འཕྲིན་སྒོ་རྒྱག",
+    btnVideoClosed: "View Video Stream: Pema Ts'al Institute (Pokhara, Nepal) · བརྙན་འཕྲིན།",
+    videoAmbientNotice: "(Ambient video stream continues in the full-width background)",
+    videoCaptionTitle: "Pema Ts'al Sakya Monastic Institute · Living Heritage",
+    videoCaptionSub:
+      "Young monks preserving 2,000+ years of classical language, calligraphy, debate, and Buddhist wisdom.",
+    videoYoutubeLink: "Full Video on YouTube →",
+    offeringsTitle: "The Seven Traditional Offerings to the Buddha",
+    offeringsTibetan: "༄༅། །སངས་རྒྱས་ལ་མཆོད་པ་བདུན།",
+    offeringsSub:
+      "Seven sacred outer sensory offerings placed upon the altar, honoring the enlightened body, speech, and mind.",
+    offeringsBadge: "Sacred Tradition",
+    step1Title: "1. Explore Ways to Participate",
+    step1Sub:
+      "Select your group below to see suggested ways to celebrate 2,000 years of heritage.",
+    step1PickPrompt: "Suggested ideas for the 2,000 years commemoration (click to select):",
+    step2Title: "2. Subscribe Your Commitment",
+    step2Sub:
+      "Register how you, your school, temple, or company celebrate 2,000 years of living heritage.",
+    fieldName: "Your Name or Organization",
+    placeholderName: "e.g., Tenzin Dorje or Lotus Bookshop",
+    fieldLocation: "City / Country",
+    placeholderLocation: "e.g., New York, USA",
+    fieldPledge: "Our Participation Commitment",
+    fieldPledgeHint:
+      "Describe your recitation, silent meditation, exhibition, class, or sponsorship in your own words.",
+    btnSubmit: "Subscribe Idea & Join Community Register",
+    step3Title: "3. Community Participation Register",
+    step3Sub:
+      "See who has subscribed an idea and what people are accomplishing for 2,000 years of Tibetan culture.",
+    registeredCountSuffix: "Registered Commitments",
+    statusSubscribed: "Subscribed",
+    statusAccomplished: "Accomplished",
+    footerText:
+      "Celebration of Tibetan Culture & Language 2000 Years (2026–2029) · Vikramasila Foundation",
+    footerBack: "← Return to Main Foundation Site",
+  },
+  bo: {
+    back: "ཝི་ཀྲ་མ་ཤཱི་ལའི་དགེ་རྩ་ཚོགས་པ་དང་དཔལ་ལྡན་ས་སྐྱའི་ཆོས་ཚོགས་སུ་ཕྱིར་ལོག",
+    badgeJubilee: "ལོ་ཉིས་སྟོང་འཁོར་བའི་དུས་ཆེན།",
+    badgeInitiative: "༢༠༢༦–༢༠༢༩ ལས་གཞི།",
+    heroHonoring: "བོད་ཀྱི་ཤེས་རིག་དང་སྐད་ཡིག་ལོ་ཉིས་སྟོང་འཁོར་བར་གུས་འདུད་ཞུ།",
+    heroHeadingPrefix: "བོད་ཀྱི་རིག་གཞུང་དང་སྐད་ཡིག་ལོ་ཉིས་སྟོང་འཁོར་བའི་དུས་སྟོན།",
+    heroHeadingHighlight: "ལོ་ཉིས་སྟོང་།",
+    heroIntro:
+      "ལོ་ཉིས་སྟོང་ལྷག་གི་བོད་ཀྱི་རིག་གཞུང་དང་སྐད་ཡིག ནང་དོན་རིག་པའི་བཅུད་བཟང་ལ་གུས་འདུད་ཞུ། འདི་ནི་བཀའ་བཀོད་གཏོང་བའི་ལས་གཞི་ཞིག་མིན་པར། དགོན་སྡེ་དང་སློབ་གྲྭ། གཙུག་ལག་སློབ་ཁང་། ཚོང་ལས། རྩོམ་པ་པོ། སྒྱུ་རྩལ་པ། བྱིས་པ། སྒེར་སོ་སོ་བཅས་ཀུན་གྱིས་རང་གི་ནུས་པ་དང་འདོད་མོས་ལྟར་མཉམ་ཞུགས་དམ་བཅའ་འཇོག་པར་འབོད་སྐུལ་ཞུ་བཞིན་ཡོད།",
+    heroSubscribeLink: "རང་ཉིད་ཀྱི་འདོད་མོས་ལྟར་དམ་བཅའ་བཞག་སྟེ་མཉམ་ཞུགས་གནང་བ།",
+    decalTitle: "མཉམ་ཞུགས་རྟགས་མ་དང་སྦྱར་བྱང་།",
+    decalBadge: "སྤྱིའི་མཚོན་རྟགས།",
+    decalDesc:
+      "སྒོ་དང་རླངས་འཁོར། གློག་ཀླད། འཛིན་གྲྭ། མཆོད་ཁང་དང་ཆོས་ཚོགས་སོགས་སུ་སྦྱར་ཆོག་པའི་རྟགས་མ་སྟེ། 'ང་ཚོ་བོད་ཀྱི་རིག་གཞུང་དང་སྐད་ཡིག་ལོ་ཉིས་སྟོང་འཁོར་བའི་དུས་སྟོན་དུ་མཉམ་ཞུགས་བྱེད' ཅེས་པའི་མཚོན་རྟགས་ཡིན།",
+    btnVideoOpen: "Close Video Player · བརྙན་འཕྲིན་སྒོ་རྒྱག",
+    btnVideoClosed: "View Video Stream: Pema Ts'al Institute (Pokhara, Nepal) · བརྙན་འཕྲིན།",
+    videoAmbientNotice: "(རྒྱབ་ལྗོངས་སུ་བརྙན་འཕྲིན་རྒྱུན་མཐུད་དུ་གཟིགས་ཐུབ)",
+    videoCaptionTitle: "པདྨ་ཚལ་ས་སྐྱའི་དགོན་པའི་སློབ་གཉེར་ཁང་། · གསོན་ཉམས་ལྡན་པའི་རིག་གཞུང་།",
+    videoCaptionSub:
+      "དགེ་འདུན་པ་གཞོན་ནུ་རྣམས་ཀྱིས་ལོ་ཉིས་སྟོང་ལྷག་གི་སྐད་ཡིག་དང་ཡིག་གཟུགས། རྩོད་པ། ནང་ཆོས་ཀྱི་ལྟ་གྲུབ་ཉམས་པ་མེད་པར་འཛིན་སྐྱོང་གནང་བཞིན་པ།",
+    videoYoutubeLink: "YouTube ཐོག་བརྙན་འཕྲིན་ཆ་ཚང་གཟིགས། →",
+    offeringsTitle: "སངས་རྒྱས་ལ་མཆོད་པ་བདུན།",
+    offeringsTibetan: "༄༅། །སངས་རྒྱས་ལ་མཆོད་པ་བདུན།",
+    offeringsSub:
+      "སྐུ་གསུང་ཐུགས་ཀྱི་ཡོན་ཏན་ལ་དམིགས་ཏེ་མཆོད་བཤམས་སུ་འབུལ་བའི་ཕྱིའི་མཆོད་པ་བདུན།",
+    offeringsBadge: "དམ་པའི་ཆོས་སྲོལ།",
+    step1Title: "༡. མཉམ་ཞུགས་གནང་ཕྱོགས།",
+    step1Sub:
+      "ཁྱེད་ཀྱི་སྡེ་ཚན་བདམས་ཏེ་ལོ་ཉིས་སྟོང་གི་རིག་གཞུང་སྲུང་སྐྱོབ་ཆེད་མཉམ་ཞུགས་གནང་ཕྱོགས་ཀྱི་ལམ་སྟོན་ལ་གཟིགས།",
+    step1PickPrompt: "ལོ་ཉིས་སྟོང་དུས་སྟོན་མཉམ་ཞུགས་ཀྱི་ལམ་སྟོན (མནན་ཏེ་འདེམས་ཆོག):",
+    step2Title: "༢. མཉམ་ཞུགས་དམ་བཅའ་འཇོག་པ།",
+    step2Sub:
+      "ཁྱེད་རང་ཉིད་དང་སློབ་གྲྭ། དགོན་པ། ཚོང་ལས་ཁང་བཅས་ཀྱིས་ཇི་ལྟར་མཉམ་ཞུགས་གནང་མིན་ཐོ་འགོད་གནང་རོགས།",
+    fieldName: "ཁྱེད་ཀྱི་མཚན་ནམ་ཚོགས་པའི་མིང་།",
+    placeholderName: "དཔེར་ན། བསྟན་འཛིན་རྡོ་རྗེའམ་པདྨའི་དེབ་ཁང་།",
+    fieldLocation: "གྲོང་ཁྱེར་དང་རྒྱལ་ཁབ།",
+    placeholderLocation: "དཔེར་ན། ནིའུ་ཡོག ཨ་རི།",
+    fieldPledge: "ང་ཚོའི་མཉམ་ཞུགས་དམ་བཅའ།",
+    fieldPledgeHint:
+      "ཁྱེད་ཀྱི་ཞལ་འདོན་གྲངས་ཚད། སྒོམ་སྒྲུབ། འགྲེམས་སྟོན། སློབ་ཁྲིད། སྦྱིན་བདག་གི་ལས་གཞི་སོགས་རང་གི་ཚིག་གིས་འབྲི་རོགས།",
+    btnSubmit: "དམ་བཅའ་ཐོ་འགོད་དང་མཉམ་ཞུགས་གནང་བ།",
+    step3Title: "༣. མཉམ་ཞུགས་མི་མང་གི་ཐོ་གཞུང་།",
+    step3Sub:
+      "བོད་ཀྱི་རིག་གཞུང་ལོ་ཉིས་སྟོང་ཆེད་སུས་དམ་བཅའ་བཞག་པ་དང་ཅི་ཞིག་གྲུབ་ཟིན་པར་གཟིགས།",
+    registeredCountSuffix: "ཐོ་འགོད་དམ་བཅའ།",
+    statusSubscribed: "དམ་བཅས་པ།",
+    statusAccomplished: "གྲུབ་ཟིན་པ།",
+    footerText:
+      "བོད་ཀྱི་རིག་གཞུང་དང་སྐད་ཡིག་ལོ་ཉིས་སྟོང་འཁོར་བའི་དུས་སྟོན (༢༠༢༦–༢༠༢༩) · ཝི་ཀྲ་མ་ཤཱི་ལའི་དགེ་རྩ་ཚོགས་པ།",
+    footerBack: "← དགེ་རྩ་ཚོགས་པའི་དྲྭ་ཚིགས་གཙོ་བོར་ཕྱིར་ལོག",
+  },
+};
 
 interface PledgeItem {
   id: string;
@@ -263,6 +422,8 @@ const INITIAL_PLEDGES: PledgeItem[] = [
 ];
 
 export default function TibetanCulturePilotPage() {
+  const [lang, setLang] = useState<Language>("en");
+  const t = CULTURE_UI[lang];
   const bgVideoRef = useRef<HTMLVideoElement>(null);
   const playerVideoRef = useRef<HTMLVideoElement>(null);
   const [videoSpeed, setVideoSpeed] = useState<"1x" | "1.5x" | "2x">("1.5x");
@@ -275,7 +436,7 @@ export default function TibetanCulturePilotPage() {
   const [name, setName] = useState("");
   const [location, setLocation] = useState("");
   const [customPledge, setCustomPledge] = useState(
-    ROLES[0].suggestions[0]
+    ROLES[0].suggestionsEn[0]
   );
   const [submittedNotice, setSubmittedNotice] = useState("");
 
@@ -326,8 +487,11 @@ export default function TibetanCulturePilotPage() {
   const handleRoleSelect = (roleId: ParticipantRole) => {
     setSelectedRole(roleId);
     const found = ROLES.find((r) => r.id === roleId);
-    if (found && found.suggestions.length > 0) {
-      setCustomPledge(found.suggestions[0]);
+    if (found) {
+      const suggestions = lang === "bo" ? found.suggestionsBo : found.suggestionsEn;
+      if (suggestions.length > 0) {
+        setCustomPledge(suggestions[0]);
+      }
     }
   };
 
@@ -338,8 +502,8 @@ export default function TibetanCulturePilotPage() {
     const newEntry: PledgeItem = {
       id: String(Date.now()),
       name: name.trim(),
-      location: location.trim() || "Global Participant",
-      roleLabel: currentRole.label,
+      location: location.trim() || (lang === "bo" ? "ཀུན་ཁྱབ་མཉམ་ཞུགས་པ།" : "Global Participant"),
+      roleLabel: lang === "bo" ? currentRole.labelBo : currentRole.labelEn,
       pledge: customPledge.trim(),
       status: "Subscribed",
     };
@@ -348,7 +512,9 @@ export default function TibetanCulturePilotPage() {
     setName("");
     setLocation("");
     setSubmittedNotice(
-      `Thank you, ${newEntry.name}. Your participation pledge has been added to the community register.`
+      lang === "bo"
+        ? `ཐུགས་རྗེ་ཆེ། ${newEntry.name}། ཁྱེད་ཀྱི་དམ་བཅའ་མི་མང་ཐོ་གཞུང་དུ་བཀོད་ཟིན།`
+        : `Thank you, ${newEntry.name}. Your participation pledge has been added to the community register.`
     );
   };
 
@@ -414,63 +580,103 @@ export default function TibetanCulturePilotPage() {
           className="inline-flex items-center gap-2 text-sm text-muted hover:text-tibet-crimson transition-colors"
         >
           <span aria-hidden="true">&larr;</span>
-          <span>Back to Vikramasila Foundation · Palden Sakya</span>
+          <span>{t.back}</span>
         </Link>
 
-        {/* Theme Switcher Toggle */}
-        <div
-          role="radiogroup"
-          aria-label="Select visual style"
-          className="flex items-center gap-1 p-1 rounded-sm bg-card-bg/90 backdrop-blur-md border border-border-subtle shadow-2xs"
-        >
-          <span className="text-[11px] uppercase tracking-wider text-muted px-2 font-medium">
-            Theme · བཀོད་པ།:
-          </span>
-          <button
-            type="button"
-            role="radio"
-            aria-checked={isFestive}
-            onClick={() => setVisualTheme("lungta-festive")}
-            className={`px-2.5 py-1 text-xs rounded-sm transition-all cursor-pointer ${
-              isFestive
-                ? "bg-tibet-gold text-white font-semibold shadow-2xs"
-                : "text-muted hover:text-foreground"
-            }`}
+        {/* Controls: Language Switcher & Theme Switcher */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Language Switcher Toggle */}
+          <div
+            role="radiogroup"
+            aria-label="Language selection"
+            className="flex items-center rounded-sm border border-border-subtle bg-card-bg/90 backdrop-blur-md p-0.5 shadow-2xs"
           >
-            ✨ 2,000 Years (Lungta &amp; Gold) · ལོ་ཉིས་སྟོང་།
-          </button>
-          <button
-            type="button"
-            role="radio"
-            aria-checked={!isFestive}
-            onClick={() => setVisualTheme("sakya-classic")}
-            className={`px-2.5 py-1 text-xs rounded-sm transition-all cursor-pointer ${
-              !isFestive
-                ? "bg-sakya-crimson text-white font-semibold shadow-2xs"
-                : "text-muted hover:text-foreground"
-            }`}
+            <button
+              type="button"
+              role="radio"
+              aria-checked={lang === "en"}
+              onClick={() => {
+                setLang("en");
+                const found = ROLES.find((r) => r.id === selectedRole);
+                if (found) setCustomPledge(found.suggestionsEn[0]);
+              }}
+              className={`px-2.5 py-1 text-xs rounded-xs font-medium transition-colors cursor-pointer ${
+                lang === "en"
+                  ? "bg-sakya-crimson text-white"
+                  : "text-muted hover:text-foreground"
+              }`}
+            >
+              English
+            </button>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={lang === "bo"}
+              onClick={() => {
+                setLang("bo");
+                const found = ROLES.find((r) => r.id === selectedRole);
+                if (found) setCustomPledge(found.suggestionsBo[0]);
+              }}
+              className={`px-2.5 py-1 text-xs rounded-xs font-medium transition-colors cursor-pointer ${
+                lang === "bo"
+                  ? "bg-sakya-crimson text-white font-serif"
+                  : "text-muted hover:text-foreground font-serif"
+              }`}
+            >
+              བོད་ཡིག
+            </button>
+          </div>
+
+          {/* Theme Switcher Toggle */}
+          <div
+            role="radiogroup"
+            aria-label="Select visual style"
+            className="flex items-center gap-1 p-1 rounded-sm bg-card-bg/90 backdrop-blur-md border border-border-subtle shadow-2xs"
           >
-            🏛️ Sakya Classic · ས་སྐྱ་སྲོལ་རྒྱུན།
-          </button>
+            <span className="text-[11px] uppercase tracking-wider text-muted px-2 font-medium">
+              Theme · བཀོད་པ།:
+            </span>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={isFestive}
+              onClick={() => setVisualTheme("lungta-festive")}
+              className={`px-2.5 py-1 text-xs rounded-sm transition-all cursor-pointer ${
+                isFestive
+                  ? "bg-tibet-gold text-white font-semibold shadow-2xs"
+                  : "text-muted hover:text-foreground"
+              }`}
+            >
+              ✨ 2,000 Years · ལོ་ཉིས་སྟོང་།
+            </button>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={!isFestive}
+              onClick={() => setVisualTheme("sakya-classic")}
+              className={`px-2.5 py-1 text-xs rounded-sm transition-all cursor-pointer ${
+                !isFestive
+                  ? "bg-sakya-crimson text-white font-semibold shadow-2xs"
+                  : "text-muted hover:text-foreground"
+              }`}
+            >
+              🏛️ Sakya Classic · ས་སྐྱ་སྲོལ་རྒྱུན།
+            </button>
+          </div>
         </div>
       </header>
 
       <main className="w-full max-w-4xl mx-auto px-6 py-12 sm:py-16 space-y-16 flex-1 relative z-10">
         {/* Hero */}
         <section className="space-y-6">
-          {isFestive ? (
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-tibet-gold-light/80 border border-tibet-gold/40 text-xs font-semibold text-tibet-gold-rich">
-              <span
-                aria-hidden="true"
-                className="w-2 h-2 rounded-full bg-tibet-gold animate-pulse"
-              />
-              <span>Honoring 20 Centuries of Living Wisdom &amp; Language</span>
-            </div>
-          ) : (
-            <span className="inline-block text-xs uppercase tracking-widest px-2.5 py-1 rounded-sm bg-card-bg border border-border-subtle text-sakya-crimson font-medium">
-              Concept Pilot · 2026–2029 Initiative
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs uppercase tracking-widest px-3 py-1 rounded-full bg-tibet-gold-light border border-tibet-gold/30 text-tibet-gold-rich font-semibold">
+              {t.badgeJubilee}
             </span>
-          )}
+            <span className="text-xs uppercase tracking-widest px-2.5 py-1 rounded-sm bg-card-bg/90 border border-border-subtle text-tibet-crimson font-medium">
+              {t.badgeInitiative}
+            </span>
+          </div>
 
           <p
             lang="bo"
@@ -478,9 +684,7 @@ export default function TibetanCulturePilotPage() {
               isFestive ? "text-tibet-gold-rich" : "text-sakya-gold"
             }`}
           >
-            {isFestive
-              ? "༄༅། །བོད་ཀྱི་རིག་གཞུང་དང་སྐད་ཡིག་ལོ་ཉིས་སྟོང་འཁོར་བའི་དུས་སྟོན།"
-              : "༄༅། །བོད་ཀྱི་རིག་གཞུང་དང་སྐད་ཡིག་དུས་སྟོན།"}
+            ༄༅། །བོད་ཀྱི་རིག་གཞུང་དང་སྐད་ཡིག་ལོ་ཉིས་སྟོང་འཁོར་བའི་དུས་སྟོན།
           </p>
 
           <h1
@@ -488,32 +692,18 @@ export default function TibetanCulturePilotPage() {
             tabIndex={-1}
             className="font-serif text-3xl sm:text-5xl lg:text-6xl font-normal leading-tight text-foreground outline-none tracking-tight"
           >
-            Celebration of Tibetan Culture &amp; Language{" "}
+            {t.heroHeadingPrefix}{" "}
             <span
               className={
                 isFestive ? "text-tibet-crimson italic" : "text-foreground"
               }
             >
-              2,000 Years
+              {t.heroHeadingHighlight}
             </span>
           </h1>
 
           <p className="text-base sm:text-lg text-foreground/90 leading-relaxed max-w-3xl">
-            Honoring over 2,000 years of living Tibetan civilization, literature, spiritual wisdom,
-            and language. This global initiative does not impose rules—instead, it
-            invites <strong>everyone</strong> (monasteries, schools,
-            universities, businesses, poets, artists, children, and
-            individual practitioners worldwide) to{" "}
-            <span
-              className={`underline underline-offset-4 font-medium text-foreground ${
-                isFestive
-                  ? "decoration-tibet-gold decoration-2"
-                  : "decoration-sakya-gold/60"
-              }`}
-            >
-              subscribe an idea and participate in your own authentic way
-            </span>
-            .
+            {t.heroIntro}
           </p>
 
           {/* Emblem / Decal Preview Card */}
@@ -540,18 +730,14 @@ export default function TibetanCulturePilotPage() {
               <div className="space-y-2 text-sm text-center sm:text-left">
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
                   <h2 className="font-serif text-xl font-semibold text-foreground">
-                    The Official Commemorative Decal (Lungta Jubilee)
+                    {t.decalTitle} (Lungta Jubilee)
                   </h2>
                   <span className="text-[11px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-sm bg-tibet-crimson text-white">
-                    Universal Emblem
+                    {t.decalBadge}
                   </span>
                 </div>
                 <p className="text-foreground/80 leading-relaxed">
-                  Created to be printed out and displayed proudly on storefront doors, cars,
-                  laptops, classrooms, home altars, and dharma centers—signaling:{" "}
-                  <em className="font-serif text-tibet-crimson font-medium">
-                    &ldquo;We participate in honoring 2,000 years of Tibetan Culture &amp; Language.&rdquo;
-                  </em>
+                  {t.decalDesc}
                 </p>
               </div>
             </div>
@@ -573,15 +759,10 @@ export default function TibetanCulturePilotPage() {
               </div>
               <div className="space-y-1.5 text-sm text-center sm:text-left">
                 <h2 className="font-serif text-lg font-medium text-foreground">
-                  The Shared Participation Emblem (Classic Sakya)
+                  {t.decalTitle} (Classic Sakya)
                 </h2>
                 <p className="text-muted leading-relaxed">
-                  Designed to be printed as a decal for storefront doors, cars,
-                  laptops, classrooms, and community centers—signaling:{" "}
-                  <em>
-                    &ldquo;We are participating in celebrating 2,000+ years of
-                    Tibetan Culture and Language.&rdquo;
-                  </em>
+                  {t.decalDesc}
                 </p>
               </div>
             </div>
@@ -603,18 +784,14 @@ export default function TibetanCulturePilotPage() {
               <span aria-hidden="true" className="text-sm">
                 {isPlayerOpen ? "✕" : "▶"}
               </span>
-              <span>
-                {isPlayerOpen
-                  ? "Close Video Player · བརྙན་འཕྲིན་སྒོ་རྒྱག"
-                  : "View Video Stream: Pema Ts'al Institute (Pokhara, Nepal) · བརྙན་འཕྲིན།"}
-              </span>
+              <span>{isPlayerOpen ? t.btnVideoOpen : t.btnVideoClosed}</span>
               <span className="px-2 py-0.5 rounded-full bg-white/20 text-[10px] uppercase font-bold tracking-wider">
                 L2 Stream
               </span>
             </button>
 
             <span className="text-xs text-muted">
-              (Ambient video stream continues in the full-width background)
+              {t.videoAmbientNotice}
             </span>
           </div>
 
@@ -668,10 +845,10 @@ export default function TibetanCulturePilotPage() {
                 <div className="absolute bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4 flex flex-col sm:flex-row sm:items-end justify-between gap-2 text-white">
                   <div>
                     <p className="font-serif text-base sm:text-xl font-medium drop-shadow-sm text-white">
-                      Pema Ts&apos;al Sakya Monastic Institute · Living Heritage
+                      {t.videoCaptionTitle}
                     </p>
                     <p className="text-xs sm:text-sm text-white/80 drop-shadow-sm max-w-xl">
-                      Young monks preserving 2,000+ years of classical language, calligraphy, debate, and Buddhist wisdom.
+                      {t.videoCaptionSub}
                     </p>
                   </div>
                   <a
@@ -680,29 +857,29 @@ export default function TibetanCulturePilotPage() {
                     rel="noopener noreferrer"
                     className="text-[11px] uppercase tracking-wider text-tibet-gold hover:text-white underline underline-offset-4 self-start sm:self-auto shrink-0"
                   >
-                    Full Video on YouTube &rarr;
+                    {t.videoYoutubeLink}
                   </a>
                 </div>
               </div>
             </div>
           )}
 
-          {/* The Seven Traditional Offerings to the Buddha (Argham, Pādhya, Pushpe, Dhupe, Āloke, Gandhe, Naivedya) */}
+          {/* The Seven Traditional Offerings to the Buddha */}
           <div className="bg-card-bg/85 backdrop-blur-md border border-border-subtle p-5 sm:p-6 rounded-md shadow-xs space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-1 border-b border-border-subtle/70 pb-3">
               <div>
                 <h3 className="font-serif text-lg sm:text-xl font-medium text-foreground flex items-center gap-2">
-                  <span>The Seven Traditional Offerings to the Buddha</span>
+                  <span>{t.offeringsTitle}</span>
                   <span lang="bo" className="text-xs sm:text-sm text-tibet-gold-rich font-normal">
-                    ༄༅། །སངས་རྒྱས་ལ་མཆོད་པ་བདུན།
+                    {t.offeringsTibetan}
                   </span>
                 </h3>
                 <p className="text-xs text-muted mt-0.5">
-                  Seven sacred outer sensory offerings placed upon the altar, honoring the enlightened body, speech, and mind.
+                  {t.offeringsSub}
                 </p>
               </div>
               <span className="text-[10px] font-semibold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-tibet-gold-light border border-tibet-gold/30 text-tibet-gold-rich self-start sm:self-auto">
-                Sacred Tradition
+                {t.offeringsBadge}
               </span>
             </div>
 
@@ -751,10 +928,10 @@ export default function TibetanCulturePilotPage() {
               id="ways-to-participate-heading"
               className="font-serif text-2xl sm:text-3xl font-normal text-foreground"
             >
-              1. Explore Ways to Participate
+              {t.step1Title}
             </h2>
             <p className="text-sm text-muted">
-              Select your group below to see suggested ways to celebrate 2,000 years of heritage.
+              {t.step1Sub}
             </p>
           </div>
 
@@ -765,6 +942,7 @@ export default function TibetanCulturePilotPage() {
           >
             {ROLES.map((role) => {
               const active = role.id === selectedRole;
+              const label = lang === "bo" ? role.labelBo : role.labelEn;
               return (
                 <button
                   key={role.id}
@@ -777,7 +955,7 @@ export default function TibetanCulturePilotPage() {
                       : "bg-card-bg text-foreground border-border-subtle hover:border-tibet-gold hover:bg-tibet-gold-light/40"
                   }`}
                 >
-                  {role.label}
+                  {label}
                 </button>
               );
             })}
@@ -786,19 +964,19 @@ export default function TibetanCulturePilotPage() {
           <div className="bg-card-bg/70 border border-border-subtle p-6 rounded-sm space-y-4 shadow-2xs">
             <div className="border-b border-border-subtle/80 pb-3">
               <h3 className="font-serif text-xl font-medium text-foreground">
-                {currentRole.label}
+                {lang === "bo" ? currentRole.labelBo : currentRole.labelEn}
               </h3>
               <p className="text-sm text-muted mt-1">
-                {currentRole.description}
+                {lang === "bo" ? currentRole.descBo : currentRole.descEn}
               </p>
             </div>
 
             <div className="space-y-2.5">
               <p className="text-xs uppercase tracking-wider text-tibet-gold-rich font-bold">
-                Suggested ideas for the 2,000 years commemoration (click to select):
+                {t.step1PickPrompt}
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {currentRole.suggestions.map((suggestion) => (
+                {(lang === "bo" ? currentRole.suggestionsBo : currentRole.suggestionsEn).map((suggestion) => (
                   <button
                     key={suggestion}
                     type="button"
@@ -827,10 +1005,10 @@ export default function TibetanCulturePilotPage() {
               id="subscribe-heading"
               className="font-serif text-2xl sm:text-3xl font-normal text-foreground"
             >
-              2. Subscribe Your Commitment
+              {t.step2Title}
             </h2>
             <p className="text-sm text-muted">
-              Register how you, your school, temple, or company celebrate 2,000 years of living heritage.
+              {t.step2Sub}
             </p>
           </div>
 
@@ -844,7 +1022,7 @@ export default function TibetanCulturePilotPage() {
                   htmlFor="participant-name"
                   className="block text-xs uppercase tracking-wider font-semibold text-foreground"
                 >
-                  Your Name or Organization
+                  {t.fieldName}
                 </label>
                 <input
                   id="participant-name"
@@ -853,7 +1031,7 @@ export default function TibetanCulturePilotPage() {
                   autoComplete="name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g., Tenzin Dorje or Lotus Bookshop"
+                  placeholder={t.placeholderName}
                   className="w-full px-3.5 py-2.5 text-sm bg-background border border-border-subtle rounded-sm text-foreground focus:border-tibet-crimson"
                 />
               </div>
@@ -863,7 +1041,7 @@ export default function TibetanCulturePilotPage() {
                   htmlFor="participant-location"
                   className="block text-xs uppercase tracking-wider font-semibold text-foreground"
                 >
-                  City / Country
+                  {t.fieldLocation}
                 </label>
                 <input
                   id="participant-location"
@@ -871,7 +1049,7 @@ export default function TibetanCulturePilotPage() {
                   autoComplete="address-level2"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  placeholder="e.g., New York, USA"
+                  placeholder={t.placeholderLocation}
                   className="w-full px-3.5 py-2.5 text-sm bg-background border border-border-subtle rounded-sm text-foreground focus:border-tibet-crimson"
                 />
               </div>
@@ -882,13 +1060,13 @@ export default function TibetanCulturePilotPage() {
                 htmlFor="participant-pledge"
                 className="block text-xs uppercase tracking-wider font-semibold text-foreground"
               >
-                Our Participation Commitment ({currentRole.label})
+                {t.fieldPledge} ({lang === "bo" ? currentRole.labelBo : currentRole.labelEn})
               </label>
               <span
                 id="pledge-hint"
                 className="block text-xs text-muted pb-1"
               >
-                Describe your recitation, silent meditation, exhibition, class, or sponsorship in your own words.
+                {t.fieldPledgeHint}
               </span>
               <textarea
                 id="participant-pledge"
@@ -906,7 +1084,7 @@ export default function TibetanCulturePilotPage() {
                 type="submit"
                 className="px-7 py-3 bg-tibet-crimson text-white text-sm font-medium rounded-sm hover:bg-tibet-crimson-deep transition-all shadow-sm cursor-pointer"
               >
-                Subscribe Idea &amp; Join Community Register
+                {t.btnSubmit}
               </button>
 
               <div
@@ -931,14 +1109,14 @@ export default function TibetanCulturePilotPage() {
                 id="register-heading"
                 className="font-serif text-2xl sm:text-3xl font-normal text-foreground"
               >
-                3. Community Participation Register
+                {t.step3Title}
               </h2>
               <p className="text-sm text-muted mt-1">
-                See who has subscribed an idea and what people are accomplishing for 2,000 years of Tibetan culture.
+                {t.step3Sub}
               </p>
             </div>
             <span className="text-xs uppercase tracking-widest text-tibet-gold-rich font-bold bg-tibet-gold-light px-3 py-1 rounded-sm border border-tibet-gold/30">
-              {pledges.length} Registered Commitments
+              {pledges.length} {t.registeredCountSuffix}
             </span>
           </div>
 
@@ -964,7 +1142,7 @@ export default function TibetanCulturePilotPage() {
                         : "bg-tibet-crimson/10 text-tibet-crimson border border-tibet-crimson/20"
                     }`}
                   >
-                    {item.status}
+                    {item.status === "Accomplished" ? t.statusAccomplished : t.statusSubscribed}
                   </span>
                 </div>
                 <p className="text-sm sm:text-base text-foreground/90 leading-relaxed font-normal">
@@ -979,13 +1157,13 @@ export default function TibetanCulturePilotPage() {
       <footer className="w-full border-t border-border-subtle/80 text-xs text-muted relative z-10 bg-background/60 backdrop-blur-md">
         <div className="max-w-4xl mx-auto px-6 py-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <p>
-            Celebration of Tibetan Culture &amp; Language 2000 Years (2026–2029) · Vikramasila Foundation
+            {t.footerText}
           </p>
           <Link
             href="/"
             className="text-tibet-crimson hover:underline underline-offset-4 font-medium"
           >
-            &larr; Return to Main Foundation Site
+            {t.footerBack}
           </Link>
         </div>
         {/* Bottom ribbon matching selected visual theme */}
