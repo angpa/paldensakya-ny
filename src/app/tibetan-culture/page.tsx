@@ -161,12 +161,14 @@ const ROLES: RoleConfig[] = [
     suggestionsEn: [
       "Recite the 21 Praises to Tara 1,000 times during the year",
       "Dedicate 18 hours of silent meditation over the course of the year",
+      "Study 'A Minor Treatise on Grammar: Syllabic Cadence' (བརྡ་སྤྲོད་ཕྲན་ཚེགས) by Lama Pema Wangdak",
       "Learn to read and pronounce the 30 letters of the Tibetan Uchen alphabet",
       "Sponsor a child's education or a Tibetan cultural publication",
     ],
     suggestionsBo: [
       "ལོ་གཅིག་ནང་སྒྲོལ་མ་ཕྱག་འཚལ་ཉེར་གཅིག་ཚར་ ༡,༠༠༠ གསུང་འདོན་གནང་བ།",
       "ལོ་གཅིག་གི་རིང་ཞི་གནས་སྒོམ་སྒྲུབ་ཆུ་ཚོད་ ༡༨ རིང་ཉམས་ལེན་གནང་བ།",
+      "བླ་མ་པདྨ་དབང་གྲགས་ཀྱིས་མཛད་པའི་ 'བརྡ་སྤྲོད་ཕྲན་ཚེགས' (ཚེག་འགྲོས་ཀྱི་ལེའུ) ལ་སློབ་གཉེར་གནང་བ།",
       "བོད་ཡིག་དབུ་ཅན་གྱི་གསལ་བྱེད་སུམ་ཅུའི་ཀློག་གདངས་དང་འབྲི་ཀློག་སྦྱོང་བ།",
       "བོད་ཕྲུག་ཅིག་གི་ཤེས་ཡོན་ནམ་བོད་ཀྱི་དཔེ་དེབ་དཔར་སྐྲུན་ལ་སྦྱིན་བདག་གནང་བ།",
     ],
@@ -1051,6 +1053,58 @@ export default function TibetanCulturePilotPage() {
                 </div>
               ))}
             </div>
+          </div>
+        </section>
+
+        {/* Featured Foundation Grammar Treatise */}
+        <section
+          aria-labelledby="grammar-treatise-heading"
+          className="rounded-sm border border-sakya-gold/50 bg-card-bg/85 backdrop-blur-md p-6 sm:p-7 shadow-xs space-y-4"
+        >
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] sm:text-[11px] uppercase tracking-wider font-semibold px-2.5 py-0.5 rounded-full bg-tibet-gold-light border border-tibet-gold/30 text-tibet-gold-rich">
+                  {lang === "bo" ? "གཞུང་ལུགས་གལ་ཆེན།" : "Foundational Study Text · 2,000 Years"}
+                </span>
+                <span className="text-xs text-muted">
+                  {lang === "bo" ? "བླ་མ་པདྨ་དབང་གྲགས" : "Venerable Lama Khenpo Pema Wangdak"}
+                </span>
+              </div>
+              <h3
+                id="grammar-treatise-heading"
+                className="font-serif text-xl sm:text-2xl font-medium text-foreground"
+              >
+                {lang === "bo"
+                  ? "བརྡ་སྤྲོད་ཕྲན་ཚེགས། (ཚེག་འགྲོས་ཀྱི་ལེའུ)"
+                  : "A Minor Treatise on Grammar: The Chapter on Syllabic Cadence"}
+              </h3>
+              <div className="space-y-1.5 pt-1 text-xs sm:text-sm text-foreground/90 font-serif leading-relaxed max-w-2xl border-l-2 border-sakya-gold/60 pl-3">
+                <p className="font-semibold text-foreground">
+                  ༄༅། །རིགས་སྟོབས་ཀྱི་ལམ་ལ་གཙོ་བོར་མ་བྱས་པར་གོམས་པའི་སྟོབས་ལ་གཙོ་བོར་བྱས་ཏེ་བོད་རིགས་བོད་སྐད་སྨྲ་བའི་སྐད་ཡིག་ཤེས་པའི་ལྷན་ཐབས་སུ་བྱས་པ་ཞིག
+                </p>
+                <p className="text-sakya-gold font-medium">
+                  བོད་ཀྱི་ཕ་སྐད་ཀྱི་ཆ་མནའ་སྐད་ཁ་སྐད་ཡིག་སྐད་ཀྱི་ཆུ་བོ་གཅིག་འགྲིལ།
+                </p>
+                <p className="text-xs text-muted font-sans italic pt-0.5">
+                  {lang === "bo"
+                    ? "བོད་ཀྱི་སྐད་ཡིག་དང་བརྡ་སྤྲོད་སློབ་གཉེར་བ་རྣམས་ཀྱི་ཆེད་དུ་བླ་མ་པདྨ་དབང་གྲགས་ཀྱིས་མཛད་པའི་སློབ་དེབ།"
+                    : "\"Created not through abstract dialectics alone, but through the power of habituated practice, to assist Tibetans and Tibetan speakers in mastering the language. The confluence of ancestral speech, colloquial tongue, and literary tradition.\""}
+                </p>
+              </div>
+            </div>
+
+            <a
+              href="/wix-archive/documents/bd1c21_42cbaa9f4c604a9ba48298e4433a98ba.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-5 py-3 bg-sakya-crimson hover:bg-sakya-crimson/90 text-white rounded-xs text-xs sm:text-sm font-medium transition-all shadow-xs flex items-center gap-2 self-start sm:self-auto shrink-0 cursor-pointer"
+            >
+              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              <span>{lang === "bo" ? "ཕྱག་དེབ་ཕབ་ལེན (PDF)" : "Download Treatise (PDF)"}</span>
+            </a>
           </div>
         </section>
 

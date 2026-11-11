@@ -342,3 +342,4 @@ export function ZoomSchedule({ lang, programId = "all" }: ZoomScheduleProps) {
     </div>
   );
 }
+

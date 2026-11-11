@@ -93,7 +93,14 @@ const CONTENT = {
   },
 };
 
-const PRAYER_BOOKS = [
+interface PublicationItem {
+  titleEn: string;
+  titleBo: string;
+  enPdf?: string;
+  boPdf?: string;
+}
+
+const PRAYER_BOOKS: PublicationItem[] = [
   {
     titleEn: "Samantabhadra Wishing Prayer",
     titleBo: "བཟང་སྤྱོད་སྨོན་ལམ། (བརྗོད་པའི་ལེའུ)",
@@ -101,9 +108,13 @@ const PRAYER_BOOKS = [
     boPdf: "/wix-archive/documents/bd1c21_be63e73983f54dd1bd8197d5f4bf4105.pdf",
   },
   {
-    titleEn: "Amitayus Buddha Dharani",
-    titleBo: "ཚེ་དཔག་མེད་ཀྱི་གཟུངས། (ཚེག་འགྲོས་ཀྱི་ལེའུ)",
+    titleEn: "Amitayus Buddha Dharani & Meditation",
+    titleBo: "ཚེ་དཔག་མེད་ཀྱི་གཟུངས།",
     enPdf: "/wix-archive/documents/bd1c21_925bc9a0fe1e4309bc79c5f90ad06ee9.pdf",
+  },
+  {
+    titleEn: "Tibetan Grammar: Syllabic Cadence (Barda Tsek-droy)",
+    titleBo: "བརྡ་སྤྲོད་ཕྲན་ཚེགས། (ཚེག་འགྲོས་ཀྱི་ལེའུ)",
     boPdf: "/wix-archive/documents/bd1c21_42cbaa9f4c604a9ba48298e4433a98ba.pdf",
   },
   {
@@ -587,27 +598,80 @@ export default function HomePage() {
                                 </span>
                               </div>
                               <div className="flex items-center gap-2 shrink-0">
-                                <a
-                                  href={book.enPdf}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  aria-label={`Download ${book.titleEn} in English (PDF)`}
-                                  className="px-2 py-1 bg-background border border-border-subtle rounded-sm hover:border-sakya-crimson hover:text-sakya-crimson transition-colors"
-                                >
-                                  English
-                                </a>
-                                <a
-                                  href={book.boPdf}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  aria-label={`Download ${book.titleBo} in Tibetan (PDF)`}
-                                  className="px-2 py-1 bg-background border border-border-subtle rounded-sm hover:border-sakya-crimson hover:text-sakya-crimson transition-colors font-serif"
-                                >
-                                  བོད་ཡིག
-                                </a>
+                                {book.enPdf && (
+                                  <a
+                                    href={book.enPdf}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    aria-label={`Download ${book.titleEn} in English (PDF)`}
+                                    className="px-2 py-1 bg-background border border-border-subtle rounded-sm hover:border-sakya-crimson hover:text-sakya-crimson transition-colors"
+                                  >
+                                    English
+                                  </a>
+                                )}
+                                {book.boPdf && (
+                                  <a
+                                    href={book.boPdf}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    aria-label={`Download ${book.titleBo} in Tibetan (PDF)`}
+                                    className="px-2 py-1 bg-background border border-border-subtle rounded-sm hover:border-sakya-crimson hover:text-sakya-crimson transition-colors font-serif"
+                                  >
+                                    བོད་ཡིག
+                                  </a>
+                                )}
                               </div>
                             </div>
                           ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {program.id === "tibetan-language" && (
+                      <div className="pt-2">
+                        <div className="p-4 sm:p-5 rounded-sm border border-sakya-gold/40 bg-card-bg/85 space-y-3 shadow-2xs">
+                          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                            <div className="space-y-1.5">
+                              <span className="text-[10px] sm:text-[11px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full bg-sakya-gold/15 text-sakya-gold border border-sakya-gold/30 inline-block">
+                                {lang === "bo" ? "གཞུང་ལུགས་གལ་ཆེན།" : "Featured Classical Grammar Treatise"}
+                              </span>
+                              <h4 className="font-serif text-lg sm:text-xl font-medium text-foreground">
+                                {lang === "bo"
+                                  ? "བརྡ་སྤྲོད་ཕྲན་ཚེགས། (ཚེག་འགྲོས་ཀྱི་ལེའུ)"
+                                  : "A Minor Treatise on Grammar: The Chapter on Syllabic Cadence"}
+                              </h4>
+                              <p className="text-xs text-sakya-crimson font-medium">
+                                {lang === "bo"
+                                  ? "མཛད་པ་པོ། བླ་མ་པདྨ་དབང་གྲགས།"
+                                  : "By Venerable Lama Khenpo Pema Wangdak"}
+                              </p>
+                              <div className="pt-1.5 space-y-1 text-xs text-muted leading-relaxed font-serif max-w-2xl">
+                                <p className="font-semibold text-foreground/90">
+                                  ༄༅། །རིགས་སྟོབས་ཀྱི་ལམ་ལ་གཙོ་བོར་མ་བྱས་པར་གོམས་པའི་སྟོབས་ལ་གཙོ་བོར་བྱས་ཏེ་བོད་རིགས་བོད་སྐད་སྨྲ་བའི་སྐད་ཡིག་ཤེས་པའི་ལྷན་ཐབས་སུ་བྱས་པ་ཞིག
+                                </p>
+                                <p className="text-sakya-gold font-medium">
+                                  བོད་ཀྱི་ཕ་སྐད་ཀྱི་ཆ་མནའ་སྐད་ཁ་སྐད་ཡིག་སྐད་ཀྱི་ཆུ་བོ་གཅིག་འགྲིལ།
+                                </p>
+                                <p className="text-[11px] text-muted italic font-sans pt-0.5">
+                                  {lang === "bo"
+                                    ? "བོད་ཀྱི་སྐད་ཡིག་དང་བརྡ་སྤྲོད་སློབ་གཉེར་བ་རྣམས་ཀྱི་ཆེད་དུ་བླ་མ་པདྨ་དབང་གྲགས་ཀྱིས་མཛད་པའི་སློབ་དེབ།"
+                                    : "Composed to support Tibetans and Tibetan speakers in mastering language and grammar through habituated practice, uniting ancestral roots, living colloquial speech, and literary forms."}
+                                </p>
+                              </div>
+                            </div>
+
+                            <a
+                              href="/wix-archive/documents/bd1c21_42cbaa9f4c604a9ba48298e4433a98ba.pdf"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-4 py-2.5 bg-sakya-crimson hover:bg-sakya-crimson/90 text-white rounded-xs text-xs font-medium transition-all shadow-xs flex items-center gap-2 self-start sm:self-auto shrink-0 cursor-pointer"
+                            >
+                              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                              </svg>
+                              <span>{lang === "bo" ? "ཕྱག་དེབ་ཕབ་ལེན (PDF)" : "Download Treatise (PDF)"}</span>
+                            </a>
+                          </div>
                         </div>
                       </div>
                     )}
