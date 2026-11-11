@@ -311,6 +311,7 @@ const CULTURE_UI = {
     fieldPledgeHint:
       "Describe your recitation, silent meditation, exhibition, class, or sponsorship in your own words.",
     btnSubmit: "Subscribe Idea & Join Community Register",
+    btnSubmitting: "Registering commitment...",
     step3Title: "3. Community Participation Register",
     step3Sub:
       "See who has subscribed an idea and what people are accomplishing for 2,000 years of Tibetan culture.",
@@ -363,6 +364,7 @@ const CULTURE_UI = {
     fieldPledgeHint:
       "ཁྱེད་ཀྱི་ཞལ་འདོན་གྲངས་ཚད། སྒོམ་སྒྲུབ། འགྲེམས་སྟོན། སློབ་ཁྲིད། སྦྱིན་བདག་གི་ལས་གཞི་སོགས་རང་གི་ཚིག་གིས་འབྲི་རོགས།",
     btnSubmit: "དམ་བཅའ་ཐོ་འགོད་དང་མཉམ་ཞུགས་གནང་བ།",
+    btnSubmitting: "དམ་བཅའ་ཐོ་འགོད་བྱེད་བཞིན་པ...",
     step3Title: "༣. མཉམ་ཞུགས་མི་མང་གི་ཐོ་གཞུང་།",
     step3Sub:
       "བོད་ཀྱི་རིག་གཞུང་ལོ་ཉིས་སྟོང་ཆེད་སུས་དམ་བཅའ་བཞག་པ་དང་ཅི་ཞིག་གྲུབ་ཟིན་པར་གཟིགས།",
@@ -441,6 +443,43 @@ export default function TibetanCulturePilotPage() {
     ROLES[0].suggestionsBo[0]
   );
   const [submittedNotice, setSubmittedNotice] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  /* Load persistent pledges from localStorage and server API */
+  useEffect(() => {
+    try {
+      const cached = localStorage.getItem("paldensakya_pledges_v1");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setPledges(parsed);
+        }
+      }
+    } catch {
+      // ignore localStorage parse errors
+    }
+
+    const fetchPledges = async () => {
+      try {
+        const res = await fetch("/api/pledges", { cache: "no-store" });
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.pledges) && data.pledges.length > 0) {
+            setPledges(data.pledges);
+            try {
+              localStorage.setItem("paldensakya_pledges_v1", JSON.stringify(data.pledges));
+            } catch {
+              // ignore localStorage write errors
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load pledges from server:", err);
+      }
+    };
+
+    fetchPledges();
+  }, []);
 
   /* Synchronize both background and player video streams */
   useEffect(() => {
@@ -497,9 +536,9 @@ export default function TibetanCulturePilotPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !customPledge.trim()) return;
+    if (!name.trim() || !customPledge.trim() || isSubmitting) return;
 
     const newEntry: PledgeItem = {
       id: String(Date.now()),
@@ -510,14 +549,54 @@ export default function TibetanCulturePilotPage() {
       status: "Subscribed",
     };
 
-    setPledges((prev) => [newEntry, ...prev]);
+    // Optimistic instant local update
+    const updated = [newEntry, ...pledges];
+    setPledges(updated);
+    try {
+      localStorage.setItem("paldensakya_pledges_v1", JSON.stringify(updated));
+    } catch {
+      // ignore localStorage errors
+    }
+
+    const submittedName = name.trim();
     setName("");
     setLocation("");
     setSubmittedNotice(
       lang === "bo"
-        ? `ཐུགས་རྗེ་ཆེ། ${newEntry.name}། ཁྱེད་ཀྱི་དམ་བཅའ་མི་མང་ཐོ་གཞུང་དུ་བཀོད་ཟིན།`
-        : `Thank you, ${newEntry.name}. Your participation pledge has been added to the community register.`
+        ? `ཐུགས་རྗེ་ཆེ། ${submittedName}། ཁྱེད་ཀྱི་དམ་བཅའ་མི་མང་ཐོ་གཞུང་དུ་བཀོད་ཟིན།`
+        : `Thank you, ${submittedName}. Your participation pledge has been added to the community register.`
     );
+
+    // Persist to server / Vercel Blob store
+    setIsSubmitting(true);
+    try {
+      const res = await fetch("/api/pledges", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newEntry.name,
+          location: newEntry.location,
+          roleLabel: newEntry.roleLabel,
+          pledge: newEntry.pledge,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.pledges) && data.pledges.length > 0) {
+          setPledges(data.pledges);
+          try {
+            localStorage.setItem("paldensakya_pledges_v1", JSON.stringify(data.pledges));
+          } catch {
+            // ignore localStorage errors
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Failed to persist pledge to server:", err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const isFestive = visualTheme === "lungta-festive";
@@ -1139,9 +1218,32 @@ export default function TibetanCulturePilotPage() {
             <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
               <button
                 type="submit"
-                className="px-7 py-3 bg-tibet-crimson text-white text-sm font-medium rounded-sm hover:bg-tibet-crimson-deep transition-all shadow-sm cursor-pointer"
+                disabled={isSubmitting}
+                className="px-7 py-3 bg-tibet-crimson text-white text-sm font-medium rounded-sm hover:bg-tibet-crimson-deep transition-all shadow-sm cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-2"
               >
-                {t.btnSubmit}
+                {isSubmitting && (
+                  <svg
+                    className="animate-spin -ml-1 mr-1.5 h-4 w-4 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
+                )}
+                <span>{isSubmitting ? t.btnSubmitting : t.btnSubmit}</span>
               </button>
 
               <div
