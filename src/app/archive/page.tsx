@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import pagesData from "../../../scraped-data/pages.json";
 import mediaManifest from "../../../scraped-data/media-manifest.json";
+import { DevconnectGallery } from "@/components/DevconnectGallery";
 
 type Language = "en" | "bo";
 
@@ -243,47 +244,26 @@ export default function WixArchivePage() {
           </div>
         </section>
 
-        {/* 3. All 94 Downloaded Images Gallery */}
+        {/* 3. All 94 Downloaded Images: Ultra-Modern Devconnect Gallery */}
         <section
           aria-labelledby="images-heading"
           className="space-y-6 pt-6 border-t border-border-subtle"
         >
-          <h2
-            id="images-heading"
-            className="font-serif text-2xl sm:text-3xl font-normal text-foreground"
-          >
-            {t.secImagesTitle} ({mediaManifest.images.length})
-          </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            {mediaManifest.images.map((img) => (
-              <figure
-                key={img.filename}
-                className="bg-card-bg/60 border border-border-subtle rounded-sm overflow-hidden flex flex-col justify-between"
-              >
-                <a
-                  href={img.localPublicPath}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block aspect-4/3 bg-background overflow-hidden"
-                >
-                  <img
-                    src={img.localPublicPath}
-                    alt={`Archived media ${img.filename.replaceAll("_", "-")}`}
-                    width={300}
-                    height={225}
-                    loading="lazy"
-                    className="w-full h-full object-contain hover:scale-105 transition-transform"
-                  />
-                </a>
-                <figcaption className="p-2.5 text-[11px] text-muted border-t border-border-subtle space-y-0.5">
-                  <p className="font-mono truncate text-foreground">
-                    {img.filename}
-                  </p>
-                  <p>{Math.round(img.bytes / 1024)} KB</p>
-                </figcaption>
-              </figure>
-            ))}
+          <div className="space-y-1">
+            <h2
+              id="images-heading"
+              className="font-serif text-2xl sm:text-3xl font-normal text-foreground"
+            >
+              {t.secImagesTitle} ({mediaManifest.images.length})
+            </h2>
+            <p className="text-xs sm:text-sm text-muted">
+              {lang === "bo"
+                ? "Wix ཡིག་མཛོད་ནས་ཕབ་ལེན་བྱས་པའི་སྐུ་པར་ ༩༤ ལ་བླ་མ་བརྒྱུད་པ་དང་ཆོ་ག གསུང་ཆོས། པདྨ་ཚལ་སློབ་གྲྭ། མཆོད་རྫས་བཅས་ཀྱི་སྡེ་ཚན་ལྟར་གཟིགས་ཆོག"
+                : "Explore all 94 high-resolution archival photographs categorized by Lineage Masters, Pujas, Teachings, Pema Ts'al Schools, and Sacred Art."}
+            </p>
           </div>
+
+          <DevconnectGallery lang={lang} />
         </section>
       </main>
 
