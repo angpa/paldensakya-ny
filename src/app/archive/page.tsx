@@ -62,7 +62,7 @@ export default function WixArchivePage() {
       </div>
 
       {/* Header */}
-      <header className="w-full max-w-5xl mx-auto px-6 pt-8 pb-6 flex flex-wrap items-center justify-between gap-4 border-b border-border-subtle">
+      <header className="w-full max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto px-6 sm:px-8 pt-8 pb-6 flex flex-wrap items-center justify-between gap-4 border-b border-border-subtle">
         <a
           href="#archive-heading"
           className="visually-hidden focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-sakya-crimson focus:text-white focus:rounded-sm text-sm"
@@ -119,7 +119,7 @@ export default function WixArchivePage() {
         </div>
       </header>
 
-      <main className="w-full max-w-5xl mx-auto px-6 py-12 sm:py-16 space-y-16 flex-1">
+      <main className="w-full max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto px-6 sm:px-8 py-12 sm:py-16 space-y-16 flex-1">
         {/* Intro */}
         <section className="space-y-4">
           <p lang="bo" className="text-sm sm:text-base text-sakya-gold tracking-wide font-serif">
@@ -287,7 +287,7 @@ export default function WixArchivePage() {
         </section>
       </main>
 
-      <footer className="w-full max-w-5xl mx-auto px-6 py-10 border-t border-border-subtle text-xs text-muted flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <footer className="w-full max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto px-6 sm:px-8 py-10 border-t border-border-subtle text-xs text-muted flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <p>{t.footerNotice}</p>
         <Link
           href="/"

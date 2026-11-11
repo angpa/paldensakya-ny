@@ -650,7 +650,7 @@ export default function TibetanCulturePilotPage() {
       )}
 
       {/* Header */}
-      <header className="w-full max-w-4xl mx-auto px-6 pt-8 pb-6 flex flex-wrap items-center justify-between gap-4 border-b border-border-subtle/80 relative z-10 bg-background/60 backdrop-blur-md rounded-b-sm">
+      <header className="w-full max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto px-6 sm:px-8 pt-8 pb-6 flex flex-wrap items-center justify-between gap-4 border-b border-border-subtle/80 relative z-10 bg-background/60 backdrop-blur-md rounded-b-sm">
         <a
           href="#culture-heading"
           className="visually-hidden focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-tibet-crimson focus:text-white focus:rounded-sm text-sm"
@@ -749,7 +749,7 @@ export default function TibetanCulturePilotPage() {
         </div>
       </header>
 
-      <main className="w-full max-w-4xl mx-auto px-6 py-12 sm:py-16 space-y-16 flex-1 relative z-10">
+      <main className="w-full max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto px-6 sm:px-8 py-12 sm:py-16 space-y-16 flex-1 relative z-10">
         {/* Hero */}
         <section className="space-y-6">
           <div className="flex flex-wrap items-center gap-2">
@@ -1368,7 +1368,7 @@ export default function TibetanCulturePilotPage() {
       </main>
 
       <footer className="w-full border-t border-border-subtle/80 text-xs text-muted relative z-10 bg-background/60 backdrop-blur-md">
-        <div className="max-w-4xl mx-auto px-6 py-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto px-6 sm:px-8 py-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <p>
             {t.footerText}
           </p>

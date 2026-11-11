@@ -271,7 +271,7 @@ export default function HomePage() {
       </div>
 
       {/* Header */}
-      <header className="w-full max-w-3xl mx-auto px-6 pt-10 pb-6 flex items-center justify-between border-b border-border-subtle/70">
+      <header className="w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto px-6 sm:px-8 pt-10 pb-6 flex items-center justify-between border-b border-border-subtle/70">
         <a
           href="#main-heading"
           className="visually-hidden focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-sakya-crimson focus:text-white focus:rounded-sm focus:text-sm"
@@ -365,7 +365,7 @@ export default function HomePage() {
       </header>
 
       {/* Main Content */}
-      <main className="w-full max-w-3xl mx-auto px-6 py-16 sm:py-24 space-y-20 flex-1">
+      <main className="w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto px-6 sm:px-8 py-16 sm:py-24 space-y-20 flex-1">
         {/* Foundation Description */}
         <section id="foundation" className="space-y-8">
           <div className="space-y-3">
@@ -760,7 +760,7 @@ export default function HomePage() {
       </main>
 
       {/* Footer */}
-      <footer className="w-full max-w-3xl mx-auto px-6 py-10 border-t border-border-subtle text-xs text-muted flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <footer className="w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto px-6 sm:px-8 py-10 border-t border-border-subtle text-xs text-muted flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <p>{t.footerCopy}</p>
         </div>

@@ -66,6 +66,23 @@ body {
   font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
 }
 
+/* Responsive root scaling for wide, ultrawide, and high-DPI displays (Solarmax Ultrawide, 1440p, 4K) */
+@media (min-width: 1440px) {
+  :root {
+    font-size: 17px;
+  }
+}
+@media (min-width: 1920px) {
+  :root {
+    font-size: 18px;
+  }
+}
+@media (min-width: 2560px) {
+  :root {
+    font-size: 19px;
+  }
+}
+
 /* Accessible visually-hidden utility that reveals on focus (for skip links) */
 .visually-hidden:where(:not(:focus-within, :active)) {
   position: absolute !important;
