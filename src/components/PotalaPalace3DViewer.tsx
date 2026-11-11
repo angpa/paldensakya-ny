@@ -272,13 +272,210 @@ function createGildedTibetanRoof(w: number, d: number, h: number) {
     roofGroup.add(finial);
   });
 
-  // Central Dharma Wheel (Chokhor)
+  // Central Dharma Wheel (Chokhor) & Sacred Nyi-Da (Crescent Moon + Sun + Flaming Jewel) Finial
   const wheelGeo = new THREE.TorusGeometry(0.12, 0.03, 8, 16);
   const wheel = new THREE.Mesh(wheelGeo, goldMat);
   wheel.position.set(0, h * 1.06, 0);
   roofGroup.add(wheel);
 
+  // Crescent Moon Cradle (Zla-ba)
+  const crescentGeo = new THREE.TorusGeometry(0.08, 0.02, 8, 16, Math.PI);
+  crescentGeo.rotateZ(Math.PI);
+  const crescent = new THREE.Mesh(crescentGeo, goldMat);
+  crescent.position.set(0, h * 1.24, 0);
+  roofGroup.add(crescent);
+
+  // Sun Disc (Nyi-ma) & Top Jyoti Jewel
+  const sunDisc = new THREE.Mesh(new THREE.SphereGeometry(0.055, 12, 12), goldMat);
+  sunDisc.position.set(0, h * 1.28, 0);
+  roofGroup.add(sunDisc);
+
   return roofGroup;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Helper: Radial Glow Texture for 3D Sun & Moon Halos
+   ══════════════════════════════════════════════════════════════════════════ */
+function createCelestialGlowTexture(
+  coreColor: string,
+  midColor: string,
+  outerColor: string
+) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 256;
+  canvas.height = 256;
+  const ctx = canvas.getContext("2d")!;
+  const grad = ctx.createRadialGradient(128, 128, 8, 128, 128, 126);
+  grad.addColorStop(0, coreColor);
+  grad.addColorStop(0.35, midColor);
+  grad.addColorStop(0.7, outerColor);
+  grad.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 256, 256);
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Helper: Create 3D Radiant Golden Sun (ཉི་མ།) & Luminous Moon (ཟླ་བ།)
+   ══════════════════════════════════════════════════════════════════════════ */
+function createSunCelestialBody() {
+  const sunGroup = new THREE.Group();
+
+  // 1. Core Radiant Solar Sphere
+  const sunCoreMat = new THREE.MeshBasicMaterial({
+    color: "#fef08a",
+  });
+  const sunSphere = new THREE.Mesh(
+    new THREE.SphereGeometry(0.95, 32, 32),
+    sunCoreMat
+  );
+  sunGroup.add(sunSphere);
+
+  // 2. Inner Golden Corona Shell
+  const shellMat = new THREE.MeshStandardMaterial({
+    color: "#f59e0b",
+    emissive: "#f59e0b",
+    emissiveIntensity: 1.4,
+    roughness: 0.2,
+    metalness: 0.6,
+    transparent: true,
+    opacity: 0.85,
+  });
+  const sunRing = new THREE.Mesh(
+    new THREE.TorusGeometry(1.22, 0.045, 12, 48),
+    shellMat
+  );
+  sunGroup.add(sunRing);
+
+  // 3. 12 Rotating Tibetan Solar Rays
+  const raysGroup = new THREE.Group();
+  raysGroup.name = "solarRays";
+  const rayMat = new THREE.MeshBasicMaterial({ color: "#fbbf24" });
+  const rayCount = 12;
+  for (let i = 0; i < rayCount; i++) {
+    const angle = (i / rayCount) * Math.PI * 2;
+    const ray = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.55, 6), rayMat);
+    ray.position.set(Math.cos(angle) * 1.35, Math.sin(angle) * 1.35, 0);
+    ray.rotation.z = angle - Math.PI / 2;
+    raysGroup.add(ray);
+  }
+  sunGroup.add(raysGroup);
+
+  // 4. Volumetric Solar Halo Sprite
+  const glowTex = createCelestialGlowTexture(
+    "rgba(254, 240, 138, 0.95)",
+    "rgba(251, 191, 36, 0.55)",
+    "rgba(234, 88, 12, 0.15)"
+  );
+  const spriteMat = new THREE.SpriteMaterial({
+    map: glowTex,
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+  const glowSprite = new THREE.Sprite(spriteMat);
+  glowSprite.scale.set(6.5, 6.5, 1);
+  sunGroup.add(glowSprite);
+
+  return sunGroup;
+}
+
+function createMoonCelestialBody() {
+  const moonGroup = new THREE.Group();
+
+  // Procedural subtle lunar crater canvas texture
+  const mCanvas = document.createElement("canvas");
+  mCanvas.width = 256;
+  mCanvas.height = 256;
+  const mCtx = mCanvas.getContext("2d")!;
+  mCtx.fillStyle = "#e0f2fe";
+  mCtx.fillRect(0, 0, 256, 256);
+  for (let i = 0; i < 28; i++) {
+    const cx = Math.random() * 256;
+    const cy = Math.random() * 256;
+    const r = 4 + Math.random() * 18;
+    mCtx.fillStyle = i % 2 === 0 ? "rgba(186, 230, 253, 0.65)" : "rgba(148, 163, 184, 0.35)";
+    mCtx.beginPath();
+    mCtx.arc(cx, cy, r, 0, Math.PI * 2);
+    mCtx.fill();
+  }
+  const moonTex = new THREE.CanvasTexture(mCanvas);
+  moonTex.colorSpace = THREE.SRGBColorSpace;
+
+  // 1. Pearlescent Lunar Orb
+  const moonOrbMat = new THREE.MeshStandardMaterial({
+    map: moonTex,
+    color: "#f0f9ff",
+    emissive: "#bae6fd",
+    emissiveIntensity: 0.85,
+    roughness: 0.45,
+    metalness: 0.15,
+  });
+  const moonOrb = new THREE.Mesh(
+    new THREE.SphereGeometry(0.82, 32, 32),
+    moonOrbMat
+  );
+  moonGroup.add(moonOrb);
+
+  // 2. Sculpted Tibetan Crescent Cradle (Zla-tshes) embracing the Moon
+  const crescentMat = new THREE.MeshStandardMaterial({
+    color: "#f8fafc",
+    emissive: "#7dd3fc",
+    emissiveIntensity: 0.9,
+    roughness: 0.25,
+    metalness: 0.7,
+  });
+  const crescentCradle = new THREE.Mesh(
+    new THREE.TorusGeometry(0.96, 0.16, 16, 48, Math.PI * 1.28),
+    crescentMat
+  );
+  crescentCradle.rotation.z = Math.PI * 0.86;
+  moonGroup.add(crescentCradle);
+
+  // 3. Orbiting Silver Starlight Ring
+  const starRingGroup = new THREE.Group();
+  starRingGroup.name = "lunarStars";
+  const ringMesh = new THREE.Mesh(
+    new THREE.TorusGeometry(1.28, 0.025, 10, 48),
+    new THREE.MeshBasicMaterial({
+      color: "#bae6fd",
+      transparent: true,
+      opacity: 0.65,
+    })
+  );
+  starRingGroup.add(ringMesh);
+
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2;
+    const starDot = new THREE.Mesh(
+      new THREE.OctahedronGeometry(0.08, 0),
+      new THREE.MeshBasicMaterial({ color: "#ffffff" })
+    );
+    starDot.position.set(Math.cos(a) * 1.28, Math.sin(a) * 1.28, 0);
+    starRingGroup.add(starDot);
+  }
+  moonGroup.add(starRingGroup);
+
+  // 4. Volumetric Silvery-Blue Lunar Halo Sprite
+  const moonGlowTex = createCelestialGlowTexture(
+    "rgba(240, 249, 255, 0.92)",
+    "rgba(125, 211, 252, 0.48)",
+    "rgba(56, 189, 248, 0.12)"
+  );
+  const moonSpriteMat = new THREE.SpriteMaterial({
+    map: moonGlowTex,
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+  const moonGlowSprite = new THREE.Sprite(moonSpriteMat);
+  moonGlowSprite.scale.set(5.8, 5.8, 1);
+  moonGroup.add(moonGlowSprite);
+
+  return moonGroup;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -347,6 +544,13 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
   const [copiedPromptId, setCopiedPromptId] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const [screenHotspots, setScreenHotspots] = useState<ScreenHotspotPos[]>([]);
+  const [screenCelestials, setScreenCelestials] = useState<{
+    sun: { x: number; y: number; visible: boolean };
+    moon: { x: number; y: number; visible: boolean };
+  }>({
+    sun: { x: 0, y: 0, visible: false },
+    moon: { x: 0, y: 0, visible: false },
+  });
 
   // Three.js Object Refs for live updates without rebuilding scene
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -357,6 +561,8 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
   const customGlbGroupRef = useRef<THREE.Group | null>(null);
   const islandFoliageGroupRef = useRef<THREE.Group | null>(null);
   const mountainMeshRef = useRef<THREE.Mesh | null>(null);
+  const sunBodyRef = useRef<THREE.Group | null>(null);
+  const moonBodyRef = useRef<THREE.Group | null>(null);
   const cameraTargetGoalRef = useRef<{
     pos: THREE.Vector3;
     look: THREE.Vector3;
@@ -1049,6 +1255,19 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     scene.add(particles);
 
     /* ──────────────────────────────────────────────────────────────────
+       I. SACRED SUN (ཉི་མ།) & MOON (ཟླ་བ།) IN THE HIMALAYAN SKY (NYI-DA)
+       ────────────────────────────────────────────────────────────────── */
+    const sunBody = createSunCelestialBody();
+    sunBody.position.set(6.8, 10.4, -2.2);
+    proceduralGroup.add(sunBody);
+    sunBodyRef.current = sunBody;
+
+    const moonBody = createMoonCelestialBody();
+    moonBody.position.set(-6.8, 10.4, -2.2);
+    proceduralGroup.add(moonBody);
+    moonBodyRef.current = moonBody;
+
+    /* ──────────────────────────────────────────────────────────────────
        Animation & 3D Hotspot Projection Loop
        ────────────────────────────────────────────────────────────────── */
     let animFrameId: number;
@@ -1068,8 +1287,12 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
 
       controls.update();
 
-      // Gentle upward drift of golden stardust
+      // Gentle upward drift of golden stardust & rotation of Sun/Moon rings
       particles.rotation.y += 0.0006;
+      const solarRays = sunBody.getObjectByName("solarRays");
+      if (solarRays) solarRays.rotation.z += 0.004;
+      const lunarStars = moonBody.getObjectByName("lunarStars");
+      if (lunarStars) lunarStars.rotation.z -= 0.003;
 
       renderer.render(scene, camera);
 
@@ -1086,6 +1309,26 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
         return { id: hs.id, x, y, visible };
       });
       setScreenHotspots(projected);
+
+      // Project 3D Sun & Moon positions for interactive sky badges
+      tempVec.copy(sunBody.position).add(new THREE.Vector3(0, -1.5, 0));
+      tempVec.project(camera);
+      const sunX = (tempVec.x * 0.5 + 0.5) * currentW;
+      const sunY = (-(tempVec.y * 0.5) + 0.5) * currentH;
+      const sunVis =
+        tempVec.z < 1 && sunX >= 20 && sunX <= currentW - 20 && sunY >= 20 && sunY <= currentH - 20;
+
+      tempVec.copy(moonBody.position).add(new THREE.Vector3(0, -1.5, 0));
+      tempVec.project(camera);
+      const moonX = (tempVec.x * 0.5 + 0.5) * currentW;
+      const moonY = (-(tempVec.y * 0.5) + 0.5) * currentH;
+      const moonVis =
+        tempVec.z < 1 && moonX >= 20 && moonX <= currentW - 20 && moonY >= 20 && moonY <= currentH - 20;
+
+      setScreenCelestials({
+        sun: { x: sunX, y: sunY, visible: sunVis },
+        moon: { x: moonX, y: moonY, visible: moonVis },
+      });
     };
 
     animate();
@@ -1132,6 +1375,8 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
       sun.position.set(14, 22, 16);
       spot.intensity = 0;
       wallEmissive = 0.04;
+      if (sunBodyRef.current) sunBodyRef.current.scale.setScalar(1.15);
+      if (moonBodyRef.current) moonBodyRef.current.scale.setScalar(0.9);
     } else if (atmosphere === "sunset") {
       scene.background = new THREE.Color("#180d14");
       scene.fog = new THREE.FogExp2("#180d14", 0.014);
@@ -1142,6 +1387,8 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
       sun.position.set(-18, 9, 14);
       spot.intensity = 1.2;
       wallEmissive = 0.45;
+      if (sunBodyRef.current) sunBodyRef.current.scale.setScalar(1.12);
+      if (moonBodyRef.current) moonBodyRef.current.scale.setScalar(1.12);
     } else {
       // Sacred Night Mode: illuminated windows & upward architectural floodlights
       scene.background = new THREE.Color("#05050a");
@@ -1153,6 +1400,8 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
       sun.position.set(-10, 18, -10);
       spot.intensity = 3.6;
       wallEmissive = 1.35;
+      if (sunBodyRef.current) sunBodyRef.current.scale.setScalar(0.82);
+      if (moonBodyRef.current) moonBodyRef.current.scale.setScalar(1.25);
     }
 
     // Update emissive window glow on all palace walls
@@ -1489,6 +1738,59 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
           {/* Three.js WebGL Mount Container */}
           <div ref={mountRef} className="w-full h-full min-h-[500px] sm:min-h-[600px] cursor-grab active:cursor-grabbing" />
 
+          {/* 3D Projected Sun (ཉི་མ།) & Moon (ཟླ་བ།) Sky Badges */}
+          {!customModelName && screenCelestials.sun.visible && (
+            <button
+              type="button"
+              onClick={() => {
+                setAtmosphere("sunlight");
+                playResonance(528);
+              }}
+              style={{
+                left: `${screenCelestials.sun.x}px`,
+                top: `${screenCelestials.sun.y}px`,
+                transform: "translate(-50%, -50%)",
+              }}
+              className={`absolute z-10 px-2.5 py-0.5 rounded-full font-mono text-[10px] transition-all cursor-pointer flex items-center gap-1 border ${
+                atmosphere === "sunlight"
+                  ? "bg-amber-400 text-black font-bold border-white shadow-[0_0_15px_rgba(251,191,36,0.9)]"
+                  : "bg-black/70 hover:bg-amber-400/90 text-amber-200 hover:text-black border-amber-400/50"
+              }`}
+              title="Click to activate Lhasa Sunlight"
+            >
+              <span>☀️</span>
+              <span lang="bo" className="font-serif">
+                {lang === "bo" ? "ཉི་མ།" : "Sun"}
+              </span>
+            </button>
+          )}
+
+          {!customModelName && screenCelestials.moon.visible && (
+            <button
+              type="button"
+              onClick={() => {
+                setAtmosphere("night");
+                playResonance(432);
+              }}
+              style={{
+                left: `${screenCelestials.moon.x}px`,
+                top: `${screenCelestials.moon.y}px`,
+                transform: "translate(-50%, -50%)",
+              }}
+              className={`absolute z-10 px-2.5 py-0.5 rounded-full font-mono text-[10px] transition-all cursor-pointer flex items-center gap-1 border ${
+                atmosphere === "night"
+                  ? "bg-sky-300 text-black font-bold border-white shadow-[0_0_15px_rgba(125,211,252,0.9)]"
+                  : "bg-black/70 hover:bg-sky-300/90 text-sky-200 hover:text-black border-sky-300/50"
+              }`}
+              title="Click to activate Sacred Night Moon"
+            >
+              <span>🌙</span>
+              <span lang="bo" className="font-serif">
+                {lang === "bo" ? "ཟླ་བ།" : "Moon"}
+              </span>
+            </button>
+          )}
+
           {/* 3D Projected Interactive Hotspot Pins */}
           {showHotspots &&
             !customModelName &&
@@ -1792,3 +2094,4 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
 }
 
 export default PotalaPalace3DViewer;
+
