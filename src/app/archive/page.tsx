@@ -1,8 +1,57 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import pagesData from "../../../scraped-data/pages.json";
 import mediaManifest from "../../../scraped-data/media-manifest.json";
 
+type Language = "en" | "bo";
+
+const ARCHIVE_UI = {
+  en: {
+    back: "Back to Main Foundation Site",
+    badge: "Complete Wix Backup · vikramasila.org",
+    motto: "༄༅། །བི་ཀྲ་མ་ཤཱི་ལ་ཚོགས་པའི་དྲྭ་ཚིགས་ཡིག་མཛོད་ཉར་ཚགས།",
+    heading: "Complete Archive of vikramasila.org",
+    sub: "Every page, photograph, logo, and downloadable PDF prayer book from the existing Wix website has been backed up locally into this repository.",
+    pagesScraped: "Pages Scraped (scraped-data/pages.json)",
+    originalImages: "Original Images (public/wix-archive/images/)",
+    prayerBooks: "PDF Prayer Books (public/wix-archive/documents/)",
+    secPdfsTitle: "1. Backed-Up PDF Prayer Books",
+    secPagesTitle: "2. All Scraped Pages",
+    secPagesSub: "Click any page below to read its complete extracted text and image references.",
+    linesLabel: "lines",
+    imagesLabel: "images",
+    metaDesc: "Meta description:",
+    secImagesTitle: "3. All Downloaded Images",
+    footerNotice: "Local archive stored in `/scraped-data` and `/public/wix-archive`",
+    footerBack: "← Return to Main Foundation Site",
+  },
+  bo: {
+    back: "དགེ་རྩ་ཚོགས་པའི་དྲྭ་ཚིགས་གཙོ་བོར་ཕྱིར་ལོག",
+    badge: "vikramasila.org ཡིག་མཛོད་ཆ་ཚང་ཉར་ཚགས།",
+    motto: "༄༅། །བི་ཀྲ་མ་ཤཱི་ལ་ཚོགས་པའི་དྲྭ་ཚིགས་ཡིག་མཛོད་ཉར་ཚགས།",
+    heading: "vikramasila.org དྲྭ་ཚིགས་ཀྱི་ཡིག་མཛོད་ཆ་ཚང་།",
+    sub: "སྔོན་ཡོད་ Wix དྲྭ་ཚིགས་ཀྱི་ཤོག་ངོས་དང་སྐུ་པར། མཚོན་རྟགས། ཆོས་སྤྱོད་ཞལ་འདོན་གྱི་ PDF ཡིག་ཆ་ཡོངས་རྫོགས་ཡིག་མཛོད་འདིར་ཉར་ཚགས་ཞུས་ཡོད།",
+    pagesScraped: "ཤོག་ངོས་བསྡུ་ལེན་བྱས་པ (scraped-data/pages.json)",
+    originalImages: "སྐུ་པར་དང་པར་རིས (public/wix-archive/images/)",
+    prayerBooks: "ཆོས་སྤྱོད་ PDF ཕྱག་དེབ (public/wix-archive/documents/)",
+    secPdfsTitle: "༡. ཉར་ཚགས་བྱས་པའི་ཆོས་སྤྱོད་ PDF ཕྱག་དེབ།",
+    secPagesTitle: "༢. བསྡུ་ལེན་བྱས་པའི་ཤོག་ངོས་ཡོངས་རྫོགས།",
+    secPagesSub: "གཤམ་གྱི་ཤོག་ངོས་ལ་མནན་ཏེ་ཡིག་ཆ་ཆ་ཚང་དང་པར་རིས་ཁག་ལ་གཟིགས།",
+    linesLabel: "ཡིག་ཕྲེང་།",
+    imagesLabel: "པར་རིས།",
+    metaDesc: "ངོ་སྤྲོད་མདོར་བསྡུས།:",
+    secImagesTitle: "༣. ཕབ་ལེན་བྱས་པའི་སྐུ་པར་དང་པར་རིས་ཡོངས་རྫོགས།",
+    footerNotice: "ཡིག་མཛོད་ཉར་ཚགས་ས་གནས `/scraped-data` དང་ `/public/wix-archive`",
+    footerBack: "← དགེ་རྩ་ཚོགས་པའི་དྲྭ་ཚིགས་གཙོ་བོར་ཕྱིར་ལོག",
+  },
+};
+
 export default function WixArchivePage() {
+  const [lang, setLang] = useState<Language>("bo");
+  const t = ARCHIVE_UI[lang];
+
   return (
     <div className="min-h-screen flex flex-col justify-between">
       {/* Top Sakya stripe */}
@@ -26,31 +75,65 @@ export default function WixArchivePage() {
           className="inline-flex items-center gap-2 text-sm text-muted hover:text-sakya-crimson transition-colors"
         >
           <span aria-hidden="true">&larr;</span>
-          <span>Back to Minimalist Foundation Pilot</span>
+          <span>{t.back}</span>
         </Link>
 
-        <span className="text-xs uppercase tracking-widest px-2.5 py-1 rounded-sm bg-card-bg border border-border-subtle text-sakya-crimson font-medium">
-          Complete Wix Backup · vikramasila.org
-        </span>
+        <div className="flex items-center gap-3">
+          {/* Language Switcher Toggle */}
+          <div
+            role="radiogroup"
+            aria-label="Language selection"
+            className="flex items-center rounded-sm border border-border-subtle bg-card-bg p-0.5 shadow-2xs"
+          >
+            <button
+              type="button"
+              role="radio"
+              aria-checked={lang === "en"}
+              onClick={() => setLang("en")}
+              className={`px-2.5 py-1 text-xs rounded-xs font-medium transition-colors cursor-pointer ${
+                lang === "en"
+                  ? "bg-sakya-crimson text-white"
+                  : "text-muted hover:text-foreground"
+              }`}
+            >
+              English
+            </button>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={lang === "bo"}
+              onClick={() => setLang("bo")}
+              className={`px-2.5 py-1 text-xs rounded-xs font-medium transition-colors cursor-pointer ${
+                lang === "bo"
+                  ? "bg-sakya-crimson text-white font-serif"
+                  : "text-muted hover:text-foreground font-serif"
+              }`}
+            >
+              བོད་ཡིག
+            </button>
+          </div>
+
+          <span className="text-xs uppercase tracking-widest px-2.5 py-1 rounded-sm bg-card-bg border border-border-subtle text-sakya-crimson font-medium">
+            {t.badge}
+          </span>
+        </div>
       </header>
 
       <main className="w-full max-w-5xl mx-auto px-6 py-12 sm:py-16 space-y-16 flex-1">
         {/* Intro */}
         <section className="space-y-4">
           <p lang="bo" className="text-sm sm:text-base text-sakya-gold tracking-wide font-serif">
-            ༄༅། །བི་ཀྲ་མ་ཤཱི་ལ་ཚོགས་པའི་དྲྭ་ཚིགས་ཡིག་མཛོད་ཉར་ཚགས།
+            {t.motto}
           </p>
           <h1
             id="archive-heading"
             tabIndex={-1}
             className="font-serif text-3xl sm:text-5xl font-normal text-foreground outline-none"
           >
-            Complete Archive of vikramasila.org
+            {t.heading}
           </h1>
           <p className="text-sm sm:text-base text-muted leading-relaxed max-w-3xl">
-            Every page, photograph, logo, and downloadable PDF prayer book from
-            the existing Wix website has been backed up locally into this
-            repository.
+            {t.sub}
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
@@ -59,7 +142,7 @@ export default function WixArchivePage() {
                 {pagesData.length}
               </span>
               <span className="text-xs uppercase tracking-wider text-muted">
-                Pages Scraped (`scraped-data/pages.json`)
+                {t.pagesScraped}
               </span>
             </div>
             <div className="p-4 rounded-sm bg-card-bg border border-border-subtle">
@@ -67,7 +150,7 @@ export default function WixArchivePage() {
                 {mediaManifest.images.length}
               </span>
               <span className="text-xs uppercase tracking-wider text-muted">
-                Original Images (`public/wix-archive/images/`)
+                {t.originalImages}
               </span>
             </div>
             <div className="p-4 rounded-sm bg-card-bg border border-border-subtle">
@@ -75,7 +158,7 @@ export default function WixArchivePage() {
                 {mediaManifest.documents.length}
               </span>
               <span className="text-xs uppercase tracking-wider text-muted">
-                PDF Prayer Books (`public/wix-archive/documents/`)
+                {t.prayerBooks}
               </span>
             </div>
           </div>
@@ -90,7 +173,7 @@ export default function WixArchivePage() {
             id="pdfs-heading"
             className="font-serif text-2xl sm:text-3xl font-normal text-foreground"
           >
-            1. Backed-Up PDF Prayer Books ({mediaManifest.documents.length})
+            {t.secPdfsTitle} ({mediaManifest.documents.length})
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {mediaManifest.documents.map((doc) => (
@@ -121,11 +204,10 @@ export default function WixArchivePage() {
             id="pages-heading"
             className="font-serif text-2xl sm:text-3xl font-normal text-foreground"
           >
-            2. All Scraped Pages ({pagesData.length})
+            {t.secPagesTitle} ({pagesData.length})
           </h2>
           <p className="text-xs text-muted">
-            Click any page below to read its complete extracted text and image
-            references.
+            {t.secPagesSub}
           </p>
 
           <div className="divide-y divide-border-subtle border-y border-border-subtle">
@@ -141,13 +223,13 @@ export default function WixArchivePage() {
                     </span>
                   </div>
                   <span className="text-xs text-muted shrink-0">
-                    {page.textLines.length} lines · {page.images.length} images
+                    {page.textLines.length} {t.linesLabel} · {page.images.length} {t.imagesLabel}
                   </span>
                 </summary>
                 <div className="mt-3 pt-3 border-t border-border-subtle/60 space-y-2 text-xs text-muted pl-3">
                   {page.description && (
                     <p className="italic text-foreground/80">
-                      Meta description: {page.description}
+                      {t.metaDesc} {page.description}
                     </p>
                   )}
                   <div className="max-h-64 overflow-y-auto bg-card-bg/50 p-3 rounded-sm space-y-1.5 text-foreground/90">
@@ -170,7 +252,7 @@ export default function WixArchivePage() {
             id="images-heading"
             className="font-serif text-2xl sm:text-3xl font-normal text-foreground"
           >
-            3. All Downloaded Images ({mediaManifest.images.length})
+            {t.secImagesTitle} ({mediaManifest.images.length})
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {mediaManifest.images.map((img) => (
@@ -205,13 +287,13 @@ export default function WixArchivePage() {
         </section>
       </main>
 
-      <footer className="w-full max-w-5xl mx-auto px-6 py-10 border-t border-border-subtle text-xs text-muted flex items-center justify-between">
-        <p>Local archive stored in `/scraped-data` and `/public/wix-archive`</p>
+      <footer className="w-full max-w-5xl mx-auto px-6 py-10 border-t border-border-subtle text-xs text-muted flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <p>{t.footerNotice}</p>
         <Link
           href="/"
           className="text-sakya-crimson hover:underline underline-offset-4 font-medium"
         >
-          &larr; Return to Main Foundation Site
+          {t.footerBack}
         </Link>
       </footer>
     </div>

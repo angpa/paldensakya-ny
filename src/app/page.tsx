@@ -242,7 +242,7 @@ const PROGRAMS = [
 ];
 
 export default function HomePage() {
-  const [lang, setLang] = useState<Language>("en");
+  const [lang, setLang] = useState<Language>("bo");
   const t = CONTENT[lang];
 
   return (

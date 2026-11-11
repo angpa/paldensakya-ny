@@ -422,7 +422,7 @@ const INITIAL_PLEDGES: PledgeItem[] = [
 ];
 
 export default function TibetanCulturePilotPage() {
-  const [lang, setLang] = useState<Language>("en");
+  const [lang, setLang] = useState<Language>("bo");
   const t = CULTURE_UI[lang];
   const bgVideoRef = useRef<HTMLVideoElement>(null);
   const playerVideoRef = useRef<HTMLVideoElement>(null);
@@ -436,7 +436,7 @@ export default function TibetanCulturePilotPage() {
   const [name, setName] = useState("");
   const [location, setLocation] = useState("");
   const [customPledge, setCustomPledge] = useState(
-    ROLES[0].suggestionsEn[0]
+    ROLES[0].suggestionsBo[0]
   );
   const [submittedNotice, setSubmittedNotice] = useState("");
 
