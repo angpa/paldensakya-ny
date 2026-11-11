@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import TibetanInteractiveOdyssey from "@/components/TibetanInteractiveOdyssey";
 
 interface BuddhistOffering {
   id: string;
@@ -1107,6 +1108,9 @@ export default function TibetanCulturePilotPage() {
             </a>
           </div>
         </section>
+
+        {/* 3D Interactive Cultural Odyssey (Inspired by Jasmin Karatas) */}
+        <TibetanInteractiveOdyssey lang={lang} />
 
         {/* Step 1: Choose how you participate */}
         <section

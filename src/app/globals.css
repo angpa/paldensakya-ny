@@ -141,3 +141,12 @@ summary::-webkit-details-marker {
 .tibet-seal-glow {
   box-shadow: 0 0 0 1px var(--tibet-gold), 0 8px 24px -4px rgba(197, 155, 39, 0.25);
 }
+
+@keyframes floating-gentle {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}

@@ -424,3 +424,4 @@ export function DevconnectGallery({ lang }: DevconnectGalleryProps) {
     </div>
   );
 }
+
