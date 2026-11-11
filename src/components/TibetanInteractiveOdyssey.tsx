@@ -447,17 +447,30 @@ const VILLAGE_LANDMARKS: CulturalLandmark[] = [
 
 export function TibetanInteractiveOdyssey({ lang }: { lang: Language }) {
   const [viewMode, setViewMode] = useState<ViewMode>("village");
+  const [timeOfDay, setTimeOfDay] = useState<"golden" | "night">("golden");
+  const [cameraPreset, setCameraPreset] = useState<"isometric" | "aerial" | "promenade">("isometric");
   const [activeLandmark, setActiveLandmark] = useState<CulturalLandmark | null>(null);
   const [hoveredLandmark, setHoveredLandmark] = useState<CulturalLandmark | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [isAudioActive, setIsAudioActive] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const [targetRotate, setTargetRotate] = useState({ rx: 18, ry: -12 });
+  const [targetRotate, setTargetRotate] = useState({ rx: 22, ry: -14 });
 
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const audioTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const applyCameraPreset = (preset: "isometric" | "aerial" | "promenade") => {
+    setCameraPreset(preset);
+    if (preset === "isometric") {
+      setTargetRotate({ rx: 22, ry: -14 });
+    } else if (preset === "aerial") {
+      setTargetRotate({ rx: 52, ry: 0 });
+    } else if (preset === "promenade") {
+      setTargetRotate({ rx: 8, ry: -6 });
+    }
+  };
 
   /* ══════════════════════════════════════════════════════════════════
      Authentic Himalayan Acoustic Synthesizer (Web Audio API)
@@ -628,21 +641,29 @@ export function TibetanInteractiveOdyssey({ lang }: { lang: Language }) {
       color: string;
     }[] = [];
 
-    const colors = [
-      "rgba(217, 163, 39, ",  // Himalayan Gold
-      "rgba(244, 212, 122, ", // Morning Sunlight
-      "rgba(255, 255, 255, ", // Glacial Mist
-      "rgba(56, 189, 248, ",  // Turquoise Sky
-    ];
+    const colors =
+      timeOfDay === "night"
+        ? [
+            "rgba(255, 255, 255, ", // Bright Diamond Star
+            "rgba(251, 191, 36, ",  // Warm Golden Ember
+            "rgba(251, 146, 60, ",  // Campfire Spark
+            "rgba(147, 197, 253, ", // Pale Starlight
+          ]
+        : [
+            "rgba(217, 163, 39, ",  // Himalayan Gold
+            "rgba(244, 212, 122, ", // Morning Sunlight
+            "rgba(255, 255, 255, ", // Glacial Mist
+            "rgba(56, 189, 248, ",  // Turquoise Sky
+          ];
 
-    for (let i = 0; i < 48; i++) {
+    for (let i = 0; i < 52; i++) {
       particles.push({
         x: Math.random() * width,
         y: Math.random() * height,
         size: Math.random() * 2.2 + 0.6,
-        vx: (Math.random() - 0.5) * 0.3,
-        vy: -Math.random() * 0.4 - 0.1, // Drifts gently upward like morning valley hearth smoke
-        alpha: Math.random() * 0.5 + 0.2,
+        vx: (Math.random() - 0.5) * (timeOfDay === "night" ? 0.15 : 0.3),
+        vy: timeOfDay === "night" ? -Math.random() * 0.25 : -Math.random() * 0.4 - 0.1,
+        alpha: Math.random() * 0.6 + 0.25,
         color: colors[Math.floor(Math.random() * colors.length)],
       });
     }
@@ -677,7 +698,7 @@ export function TibetanInteractiveOdyssey({ lang }: { lang: Language }) {
       cancelAnimationFrame(animId);
       window.removeEventListener("resize", onResize);
     };
-  }, []);
+  }, [timeOfDay]);
 
   const currentInspector = hoveredLandmark || activeLandmark || VILLAGE_LANDMARKS[0];
 
@@ -755,6 +776,78 @@ export function TibetanInteractiveOdyssey({ lang }: { lang: Language }) {
             )}
           </button>
 
+          {/* Time of Day Atmosphere Switch (Diorama Lighting) */}
+          <button
+            type="button"
+            onClick={() => setTimeOfDay(timeOfDay === "golden" ? "night" : "golden")}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5 border ${
+              timeOfDay === "night"
+                ? "bg-indigo-950/80 border-indigo-400 text-indigo-200 shadow-xs"
+                : "bg-amber-950/40 border-amber-500/70 text-amber-300 shadow-xs"
+            }`}
+            title="Toggle Day / Night Himalayan Starlight atmosphere"
+          >
+            <span>{timeOfDay === "night" ? "🌙" : "☀️"}</span>
+            <span className="font-mono text-[11px]">
+              {timeOfDay === "night"
+                ? lang === "bo"
+                  ? "དགོང་མོ"
+                  : "Starlight"
+                : lang === "bo"
+                ? "ཉི་འོད"
+                : "Golden"}
+            </span>
+          </button>
+
+          {/* Camera Perspective Presets (Diorama Angle) */}
+          {viewMode === "village" && (
+            <div
+              role="radiogroup"
+              aria-label="Camera angle preset"
+              className="flex items-center rounded-full border border-border-subtle bg-card-bg/90 p-0.5 text-xs shadow-2xs"
+            >
+              <button
+                type="button"
+                role="radio"
+                aria-checked={cameraPreset === "isometric"}
+                onClick={() => applyCameraPreset("isometric")}
+                className={`px-2.5 py-1 rounded-full text-[11px] font-mono transition-all cursor-pointer ${
+                  cameraPreset === "isometric"
+                    ? "bg-tibet-gold text-black font-semibold shadow-2xs"
+                    : "text-muted hover:text-foreground"
+                }`}
+              >
+                {lang === "bo" ? "ཟུར་མཐོང" : "Isometric"}
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={cameraPreset === "aerial"}
+                onClick={() => applyCameraPreset("aerial")}
+                className={`px-2.5 py-1 rounded-full text-[11px] font-mono transition-all cursor-pointer ${
+                  cameraPreset === "aerial"
+                    ? "bg-tibet-gold text-black font-semibold shadow-2xs"
+                    : "text-muted hover:text-foreground"
+                }`}
+              >
+                {lang === "bo" ? "དགུང་མཐོང" : "Aerial"}
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={cameraPreset === "promenade"}
+                onClick={() => applyCameraPreset("promenade")}
+                className={`px-2.5 py-1 rounded-full text-[11px] font-mono transition-all cursor-pointer ${
+                  cameraPreset === "promenade"
+                    ? "bg-tibet-gold text-black font-semibold shadow-2xs"
+                    : "text-muted hover:text-foreground"
+                }`}
+              >
+                {lang === "bo" ? "གཤམ་མཐོང" : "Ground"}
+              </button>
+            </div>
+          )}
+
           {/* Perspective Switcher */}
           <div
             role="radiogroup"
@@ -815,10 +908,16 @@ export function TibetanInteractiveOdyssey({ lang }: { lang: Language }) {
           ref={containerRef}
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
-          className="relative w-full min-h-[620px] sm:min-h-[700px] rounded-sm border border-sakya-gold/40 bg-gradient-to-b from-[#0a0807] via-[#140f0c] to-[#080706] overflow-hidden shadow-2xl p-4 sm:p-8 flex flex-col justify-between select-none"
+          className={`relative w-full min-h-[620px] sm:min-h-[700px] rounded-sm border ${
+            timeOfDay === "night" ? "border-indigo-400/40" : "border-sakya-gold/40"
+          } ${
+            timeOfDay === "night"
+              ? "bg-gradient-to-b from-[#05040a] via-[#090716] to-[#040308]"
+              : "bg-gradient-to-b from-[#0a0807] via-[#140f0c] to-[#080706]"
+          } overflow-hidden shadow-2xl p-4 sm:p-8 flex flex-col justify-between select-none transition-colors duration-700`}
           style={{ perspective: "1300px" }}
         >
-          {/* Background Canvas: Floating Golden Stardust & Morning Mountain Mist */}
+          {/* Background Canvas: Floating Golden Stardust & Mountain Mist/Stars */}
           <canvas
             ref={canvasRef}
             className="absolute inset-0 w-full h-full pointer-events-none opacity-85"
@@ -837,20 +936,26 @@ export function TibetanInteractiveOdyssey({ lang }: { lang: Language }) {
               <polygon points="0,240 80,120 180,180 320,80 440,160 580,60 720,150 860,70 1000,160 1000,240" opacity="0.3" />
               {/* Mid Snowcaps */}
               <polygon points="0,240 140,100 260,170 390,70 510,140 660,50 800,130 920,85 1000,140 1000,240" opacity="0.5" />
-              {/* Glowing Glacier Peaks */}
-              <polygon points="370,70 390,70 410,100 375,100" fill="#fef08a" opacity="0.7" />
-              <polygon points="640,50 660,50 680,85 645,85" fill="#fef08a" opacity="0.8" />
+              {/* Glowing Glacier Peaks: Golden Sunrise vs Silvery Moonlight */}
+              <polygon points="370,70 390,70 410,100 375,100" fill={timeOfDay === "night" ? "#bae6fd" : "#fef08a"} opacity="0.8" />
+              <polygon points="640,50 660,50 680,85 645,85" fill={timeOfDay === "night" ? "#bae6fd" : "#fef08a"} opacity="0.9" />
             </svg>
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#140f0c]/60 to-[#140f0c]" />
+            <div
+              className={`absolute inset-0 bg-gradient-to-b from-transparent ${
+                timeOfDay === "night" ? "via-[#090716]/60 to-[#090716]" : "via-[#140f0c]/60 to-[#140f0c]"
+              }`}
+            />
           </div>
 
-          {/* Central Radial Golden Sun Spotlight following cursor */}
+          {/* Central Radial Golden Sun/Moon Spotlight following cursor */}
           <div
             className="absolute inset-0 pointer-events-none transition-transform duration-700 ease-out"
             style={{
               background: `radial-gradient(circle 420px at ${50 + mousePos.x * 40}% ${
                 50 + mousePos.y * 40
-              }%, rgba(217, 163, 39, 0.20), transparent 75%)`,
+              }%, ${
+                timeOfDay === "night" ? "rgba(147, 197, 253, 0.16)" : "rgba(217, 163, 39, 0.20)"
+              }, transparent 75%)`,
             }}
           />
 
@@ -865,10 +970,10 @@ export function TibetanInteractiveOdyssey({ lang }: { lang: Language }) {
             </div>
             <div className="flex items-center gap-3">
               <span className="hidden md:inline text-white/40">
-                ELEVATION 3,650M · HIMALAYAN HIGHLAND ARCHITECTURE
+                LIGHT: {timeOfDay.toUpperCase()} · CAM: {cameraPreset.toUpperCase()} · ELEV 3,650M
               </span>
               <span className="text-tibet-gold-light px-2 py-0.5 rounded-xs bg-white/5 border border-white/10">
-                {currentInspector.soundType.toUpperCase()} ACOUSTIC ({currentInspector.freq} HZ)
+                {currentInspector.soundType.toUpperCase()} ({currentInspector.freq} HZ)
               </span>
             </div>
           </div>
@@ -881,18 +986,27 @@ export function TibetanInteractiveOdyssey({ lang }: { lang: Language }) {
               transformStyle: "preserve-3d",
             }}
           >
-            {/* The Stylized Ground Base of the Tibetan Settlement */}
+            {/* The Stylized Volumetric Ground Diorama Slab */}
             <div
-              className="absolute w-[360px] h-[360px] sm:w-[580px] sm:h-[580px] rounded-2xl border border-sakya-gold/30 bg-gradient-to-br from-[#1a1411]/90 via-[#221b16]/80 to-[#120e0c]/95 shadow-[0_20px_50px_rgba(0,0,0,0.8)] pointer-events-none"
+              className={`absolute w-[360px] h-[360px] sm:w-[580px] sm:h-[580px] rounded-2xl border-4 ${
+                timeOfDay === "night"
+                  ? "border-amber-500/25 bg-gradient-to-br from-[#0e0b18]/95 via-[#181326]/90 to-[#08060f]/95 shadow-[0_30px_70px_rgba(0,0,0,0.95)]"
+                  : "border-amber-600/40 bg-gradient-to-br from-[#1c1511]/95 via-[#271d18]/90 to-[#120e0c]/95 shadow-[0_30px_70px_rgba(0,0,0,0.9)]"
+              } pointer-events-none transition-colors duration-700`}
               style={{
-                transform: "translateZ(0px) rotateX(45deg)",
+                transform: "translateZ(-15px) rotateX(45deg)",
               }}
             >
               {/* Stepped mountain terrace curves etched into ground */}
               <div className="absolute inset-4 rounded-xl border border-amber-600/20" />
               <div className="absolute inset-16 rounded-xl border border-dashed border-amber-500/15" />
               {/* Flowing mountain stream path */}
-              <div className="absolute top-0 bottom-0 left-1/3 w-3 bg-gradient-to-b from-cyan-600/30 via-cyan-400/20 to-cyan-500/30 blur-[1px] transform -rotate-12" />
+              <div className="absolute top-0 bottom-0 left-1/3 w-3 bg-gradient-to-b from-cyan-600/40 via-cyan-400/30 to-cyan-500/40 blur-[1px] transform -rotate-12" />
+              {/* Extruded Cliff Rock Strata Slab Edge */}
+              <div
+                aria-hidden="true"
+                className="absolute -bottom-5 inset-x-0 h-6 rounded-b-2xl bg-gradient-to-b from-black/80 to-black/95 border-x-4 border-b-4 border-amber-950/70"
+              />
             </div>
 
             {/* 8 Interactive Cultural Landmarks Positioned on the Village Stage */}
@@ -924,6 +1038,17 @@ export function TibetanInteractiveOdyssey({ lang }: { lang: Language }) {
                     <div
                       className={`absolute inset-0 rounded-sm bg-gradient-to-br ${landmark.bgGlowClass} opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none`}
                     />
+
+                    {/* Warm Night Lantern Window Glow (when Night mode is active) */}
+                    {timeOfDay === "night" && (
+                      <div
+                        aria-hidden="true"
+                        className="absolute top-2 right-2 w-3 h-3 rounded-full bg-amber-400 blur-[2px] animate-pulse pointer-events-none"
+                        style={{
+                          boxShadow: "0 0 10px 2px rgba(251, 191, 36, 0.8)",
+                        }}
+                      />
+                    )}
 
                     {/* Miniature Building Model SVG */}
                     <div
