@@ -435,6 +435,7 @@ export default function TibetanCulturePilotPage() {
   const playerVideoRef = useRef<HTMLVideoElement>(null);
   const [videoSpeed, setVideoSpeed] = useState<"1x" | "1.5x" | "2x">("1.5x");
   const [isPlayerOpen, setIsPlayerOpen] = useState(true);
+  const [perfMode, setPerfMode] = useState<"standard" | "eco">("standard");
   const [visualTheme, setVisualTheme] =
     useState<VisualTheme>("lungta-festive");
   const [selectedRole, setSelectedRole] =
@@ -484,45 +485,57 @@ export default function TibetanCulturePilotPage() {
     fetchPledges();
   }, []);
 
-  /* Synchronize both background and player video streams */
+  /* Video Playback Speed Adjustment */
   useEffect(() => {
-    const player = playerVideoRef.current;
-    const bg = bgVideoRef.current;
-    if (!player || !bg) return;
-
     const rateMap = { "1x": 1.0, "1.5x": 1.5, "2x": 2.0 };
     const rate = rateMap[videoSpeed];
-    player.playbackRate = rate;
-    bg.playbackRate = rate;
+    if (playerVideoRef.current) playerVideoRef.current.playbackRate = rate;
+    if (bgVideoRef.current) bgVideoRef.current.playbackRate = rate;
+  }, [videoSpeed]);
 
-    const syncTime = () => {
-      if (Math.abs(bg.currentTime - player.currentTime) > 0.15) {
-        bg.currentTime = player.currentTime;
+  /* High-Performance Stall-Free Video Management:
+     Never seek continuously on timeupdate. When player is open, pause the background
+     video to prevent dual-stream decoding stalls on mobile GPU. */
+  useEffect(() => {
+    const bg = bgVideoRef.current;
+    const player = playerVideoRef.current;
+    if (!bg) return;
+
+    if (perfMode === "eco") {
+      bg.pause();
+      return;
+    }
+
+    if (isPlayerOpen) {
+      bg.pause();
+      if (player) {
+        player.play().catch(() => {});
+      }
+    } else {
+      bg.play().catch(() => {});
+    }
+  }, [isPlayerOpen, perfMode]);
+
+  /* Pause all decoding when tab or window is hidden to save battery & CPU */
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.hidden) {
+        bgVideoRef.current?.pause();
+        playerVideoRef.current?.pause();
+      } else {
+        if (!isPlayerOpen && perfMode === "standard") {
+          bgVideoRef.current?.play().catch(() => {});
+        } else if (isPlayerOpen) {
+          playerVideoRef.current?.play().catch(() => {});
+        }
       }
     };
-
-    player.addEventListener("timeupdate", syncTime);
-    player.addEventListener("seeking", syncTime);
-    player.addEventListener("seeked", syncTime);
-
-    return () => {
-      player.removeEventListener("timeupdate", syncTime);
-      player.removeEventListener("seeking", syncTime);
-      player.removeEventListener("seeked", syncTime);
-    };
-  }, [isPlayerOpen, videoSpeed]);
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, [isPlayerOpen, perfMode]);
 
   const handleSpeedChange = (spd: "1x" | "1.5x" | "2x") => {
     setVideoSpeed(spd);
-    const rateMap = { "1x": 1.0, "1.5x": 1.5, "2x": 2.0 };
-    const rate = rateMap[spd];
-    if (playerVideoRef.current) playerVideoRef.current.playbackRate = rate;
-    if (bgVideoRef.current) {
-      bgVideoRef.current.playbackRate = rate;
-      if (playerVideoRef.current) {
-        bgVideoRef.current.currentTime = playerVideoRef.current.currentTime;
-      }
-    }
   };
 
   const currentRole =
@@ -613,16 +626,20 @@ export default function TibetanCulturePilotPage() {
         aria-hidden="true"
         className="fixed inset-0 z-0 overflow-hidden pointer-events-none select-none"
       >
-        <video
-          ref={bgVideoRef}
-          autoPlay
-          loop
-          muted
-          playsInline
-          preload="auto"
-          className="w-full h-full object-cover opacity-60 sm:opacity-70 transition-opacity"
-          src="/videos/pema-tsal-loop-fast.mp4"
-        />
+        {perfMode === "standard" ? (
+          <video
+            ref={bgVideoRef}
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="metadata"
+            className="w-full h-full object-cover opacity-60 sm:opacity-70 transition-opacity"
+            src="/videos/pema-tsal-loop-fast.mp4"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-b from-[#181310] via-[#221a16] to-[#120e0c] opacity-80" />
+        )}
         {/* Soft atmospheric gradient: ensures video is clearly visible while keeping text sharp & readable */}
         <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/40 to-background/80" />
       </div>
@@ -747,6 +764,29 @@ export default function TibetanCulturePilotPage() {
               🏛️ Sakya Classic · ས་སྐྱ་སྲོལ་རྒྱུན།
             </button>
           </div>
+
+          {/* Performance Switcher Pill */}
+          <button
+            type="button"
+            onClick={() => setPerfMode(perfMode === "standard" ? "eco" : "standard")}
+            className={`px-2.5 py-1 text-xs rounded-sm transition-all cursor-pointer flex items-center gap-1.5 border ${
+              perfMode === "eco"
+                ? "bg-emerald-950/80 border-emerald-500/60 text-emerald-300 font-mono shadow-2xs"
+                : "bg-card-bg/90 border-border-subtle text-muted hover:text-foreground font-mono"
+            }`}
+            title="Toggle 60 FPS Eco performance mode for mobile and battery saving"
+          >
+            <span>{perfMode === "eco" ? "⚡" : "✦"}</span>
+            <span>
+              {perfMode === "eco"
+                ? lang === "bo"
+                  ? "༦༠ FPS འགུལ་མེད"
+                  : "60 FPS Eco"
+                : lang === "bo"
+                ? "གློག་བརྙན་རྒྱུན"
+                : "Ambient Video"}
+            </span>
+          </button>
         </div>
       </header>
 
