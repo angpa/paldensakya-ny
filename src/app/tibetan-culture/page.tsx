@@ -492,28 +492,30 @@ export default function TibetanCulturePilotPage() {
     if (bgVideoRef.current) bgVideoRef.current.playbackRate = rate;
   }, [videoSpeed]);
 
-  /* High-Performance Stall-Free Video Management:
-     Never seek continuously on timeupdate. When player is open, pause the background
-     video to prevent dual-stream decoding stalls on mobile GPU. */
+  /* Background Video Playback: Always keep ambient video flowing unless in Eco mode */
   useEffect(() => {
     const bg = bgVideoRef.current;
-    const player = playerVideoRef.current;
     if (!bg) return;
 
     if (perfMode === "eco") {
       bg.pause();
-      return;
-    }
-
-    if (isPlayerOpen) {
-      bg.pause();
-      if (player) {
-        player.play().catch(() => {});
-      }
     } else {
+      bg.muted = true;
       bg.play().catch(() => {});
     }
-  }, [isPlayerOpen, perfMode]);
+  }, [perfMode]);
+
+  /* Ensure player video plays when expanded */
+  useEffect(() => {
+    const player = playerVideoRef.current;
+    const bg = bgVideoRef.current;
+    if (isPlayerOpen && player) {
+      if (bg && Math.abs(player.currentTime - bg.currentTime) > 1) {
+        player.currentTime = bg.currentTime;
+      }
+      player.play().catch(() => {});
+    }
+  }, [isPlayerOpen]);
 
   /* Pause all decoding when tab or window is hidden to save battery & CPU */
   useEffect(() => {
@@ -522,9 +524,10 @@ export default function TibetanCulturePilotPage() {
         bgVideoRef.current?.pause();
         playerVideoRef.current?.pause();
       } else {
-        if (!isPlayerOpen && perfMode === "standard") {
+        if (perfMode === "standard") {
           bgVideoRef.current?.play().catch(() => {});
-        } else if (isPlayerOpen) {
+        }
+        if (isPlayerOpen) {
           playerVideoRef.current?.play().catch(() => {});
         }
       }
@@ -632,7 +635,8 @@ export default function TibetanCulturePilotPage() {
             loop
             muted
             playsInline
-            preload="metadata"
+            preload="auto"
+            onLoadedData={(e) => (e.target as HTMLVideoElement).play().catch(() => {})}
             className="w-full h-full object-cover opacity-60 sm:opacity-70 transition-opacity"
             src="/videos/pema-tsal-loop-fast.mp4"
           />
