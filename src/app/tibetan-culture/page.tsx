@@ -197,13 +197,13 @@ export default function TibetanCulturePilotPage() {
   const isFestive = visualTheme === "lungta-festive";
 
   return (
-    <div className="min-h-screen flex flex-col justify-between relative isolate">
+    <div className="min-h-screen flex flex-col justify-between relative">
       {/* ══════════════════════════════════════════════════════════════════
           Full-width Ambient Background Video (L2 High-Speed Background)
           ══════════════════════════════════════════════════════════════════ */}
       <div
         aria-hidden="true"
-        className="fixed inset-0 -z-20 overflow-hidden pointer-events-none select-none"
+        className="fixed inset-0 z-0 overflow-hidden pointer-events-none select-none"
       >
         <video
           autoPlay
@@ -211,18 +211,18 @@ export default function TibetanCulturePilotPage() {
           muted
           playsInline
           preload="auto"
-          className="w-full h-full object-cover opacity-20 sm:opacity-25 transition-opacity"
+          className="w-full h-full object-cover opacity-60 sm:opacity-70 transition-opacity"
           src="/videos/pema-tsal-loop-fast.mp4"
         />
-        {/* Subtle backdrop overlay to ensure contrast and readability */}
-        <div className="absolute inset-0 bg-background/88 backdrop-blur-[1px]" />
+        {/* Soft atmospheric gradient: ensures video is clearly visible while keeping text sharp & readable */}
+        <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/40 to-background/80" />
       </div>
 
       {/* Top ribbon: Sacred 5 Lungta Elements or Traditional 3 Sakya Stripes */}
       {isFestive ? (
         <div
           aria-hidden="true"
-          className="lungta-ribbon h-2 transition-all duration-300"
+          className="lungta-ribbon h-2 transition-all duration-300 relative z-10"
         >
           <div />
           <div />
@@ -233,7 +233,7 @@ export default function TibetanCulturePilotPage() {
       ) : (
         <div
           aria-hidden="true"
-          className="w-full h-1.5 grid grid-cols-3 transition-all duration-300"
+          className="w-full h-1.5 grid grid-cols-3 transition-all duration-300 relative z-10"
         >
           <div className="bg-sakya-terracotta" />
           <div className="bg-border-subtle" />
@@ -242,7 +242,7 @@ export default function TibetanCulturePilotPage() {
       )}
 
       {/* Header */}
-      <header className="w-full max-w-4xl mx-auto px-6 pt-8 pb-6 flex flex-wrap items-center justify-between gap-4 border-b border-border-subtle">
+      <header className="w-full max-w-4xl mx-auto px-6 pt-8 pb-6 flex flex-wrap items-center justify-between gap-4 border-b border-border-subtle/80 relative z-10 bg-background/60 backdrop-blur-md rounded-b-sm">
         <a
           href="#culture-heading"
           className="visually-hidden focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-tibet-crimson focus:text-white focus:rounded-sm text-sm"
@@ -262,10 +262,10 @@ export default function TibetanCulturePilotPage() {
         <div
           role="radiogroup"
           aria-label="Select visual style"
-          className="flex items-center gap-1 p-1 rounded-sm bg-card-bg border border-border-subtle"
+          className="flex items-center gap-1 p-1 rounded-sm bg-card-bg/90 backdrop-blur-md border border-border-subtle shadow-2xs"
         >
           <span className="text-[11px] uppercase tracking-wider text-muted px-2 font-medium">
-            Theme / བཀོད་པ།:
+            Theme · བཀོད་པ།:
           </span>
           <button
             type="button"
@@ -278,7 +278,7 @@ export default function TibetanCulturePilotPage() {
                 : "text-muted hover:text-foreground"
             }`}
           >
-            ✨ 2,000 Years (Lungta &amp; Gold) / ལོ་ཉིས་སྟོང་།
+            ✨ 2,000 Years (Lungta &amp; Gold) · ལོ་ཉིས་སྟོང་།
           </button>
           <button
             type="button"
@@ -291,12 +291,12 @@ export default function TibetanCulturePilotPage() {
                 : "text-muted hover:text-foreground"
             }`}
           >
-            🏛️ Sakya Classic / ས་སྐྱ་སྲོལ་རྒྱུན།
+            🏛️ Sakya Classic · ས་སྐྱ་སྲོལ་རྒྱུན།
           </button>
         </div>
       </header>
 
-      <main className="w-full max-w-4xl mx-auto px-6 py-12 sm:py-16 space-y-16 flex-1">
+      <main className="w-full max-w-4xl mx-auto px-6 py-12 sm:py-16 space-y-16 flex-1 relative z-10">
         {/* Hero */}
         <section className="space-y-6">
           {isFestive ? (
@@ -764,7 +764,7 @@ export default function TibetanCulturePilotPage() {
         </section>
       </main>
 
-      <footer className="w-full border-t border-border-subtle text-xs text-muted">
+      <footer className="w-full border-t border-border-subtle/80 text-xs text-muted relative z-10 bg-background/60 backdrop-blur-md">
         <div className="max-w-4xl mx-auto px-6 py-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <p>
             Celebration of Tibetan Culture &amp; Language 2000 Years (2026–2029) · Vikramasila Foundation
