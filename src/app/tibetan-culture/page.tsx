@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Link from "next/link";
 
 type ParticipantRole =
@@ -139,6 +139,8 @@ const INITIAL_PLEDGES: PledgeItem[] = [
 ];
 
 export default function TibetanCulturePilotPage() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [videoSpeed, setVideoSpeed] = useState<"1x" | "1.5x" | "2x">("1.5x");
   const [visualTheme, setVisualTheme] =
     useState<VisualTheme>("lungta-festive");
   const [selectedRole, setSelectedRole] =
@@ -150,6 +152,14 @@ export default function TibetanCulturePilotPage() {
     ROLES[0].suggestions[0]
   );
   const [submittedNotice, setSubmittedNotice] = useState("");
+
+  const handleSpeedChange = (spd: "1x" | "1.5x" | "2x") => {
+    setVideoSpeed(spd);
+    if (videoRef.current) {
+      const rateMap = { "1x": 1.0, "1.5x": 1.5, "2x": 2.0 };
+      videoRef.current.playbackRate = rateMap[spd];
+    }
+  };
 
   const currentRole =
     ROLES.find((r) => r.id === selectedRole) ?? ROLES[0];
@@ -234,7 +244,7 @@ export default function TibetanCulturePilotPage() {
           className="flex items-center gap-1 p-1 rounded-sm bg-card-bg border border-border-subtle"
         >
           <span className="text-[11px] uppercase tracking-wider text-muted px-2 font-medium">
-            Estilo / Theme:
+            Theme / བཀོད་པ།:
           </span>
           <button
             type="button"
@@ -247,7 +257,7 @@ export default function TibetanCulturePilotPage() {
                 : "text-muted hover:text-foreground"
             }`}
           >
-            ✨ 2000 Años (Lungta &amp; Oro)
+            ✨ 2,000 Years (Lungta &amp; Gold) / ལོ་ཉིས་སྟོང་།
           </button>
           <button
             type="button"
@@ -260,7 +270,7 @@ export default function TibetanCulturePilotPage() {
                 : "text-muted hover:text-foreground"
             }`}
           >
-            🏛️ Clásico Sakya (Editorial)
+            🏛️ Sakya Classic / ས་སྐྱ་སྲོལ་རྒྱུན།
           </button>
         </div>
       </header>
@@ -396,6 +406,73 @@ export default function TibetanCulturePilotPage() {
               </div>
             </div>
           )}
+
+          {/* L2 Fast-Paced Visual Stream · Pema Ts'al Monastic Institute */}
+          <div className="relative overflow-hidden rounded-md border border-border-subtle bg-black/95 shadow-md">
+            <div className="relative aspect-video sm:aspect-21/9 w-full overflow-hidden">
+              <video
+                ref={videoRef}
+                autoPlay
+                loop
+                muted
+                playsInline
+                preload="auto"
+                className="w-full h-full object-cover opacity-85 transition-opacity"
+                src="/videos/pema-tsal-loop-fast.mp4"
+              />
+              <div className="absolute inset-0 bg-linear-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
+
+              {/* L2 High-Frequency Badge */}
+              <div className="absolute top-3 left-3 sm:top-4 sm:left-4 flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md text-[10px] sm:text-[11px] font-semibold tracking-wider uppercase text-white border border-white/20">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  L2 Fast Stream · {videoSpeed}
+                </span>
+                <span className="hidden sm:inline-block px-2.5 py-1 rounded-full bg-tibet-gold/80 backdrop-blur-md text-[10px] sm:text-[11px] font-bold tracking-wider uppercase text-white">
+                  Pokhara, Nepal · Pema Ts&apos;al
+                </span>
+              </div>
+
+              {/* Video Speed Toggle */}
+              <div className="absolute top-3 right-3 sm:top-4 sm:right-4 flex items-center gap-1 bg-black/70 backdrop-blur-md rounded-full p-1 border border-white/20 text-white text-[10px] sm:text-[11px]">
+                <span className="px-2 text-white/70">Velocidad:</span>
+                {(["1x", "1.5x", "2x"] as const).map((spd) => (
+                  <button
+                    key={spd}
+                    type="button"
+                    onClick={() => handleSpeedChange(spd)}
+                    className={`px-2 py-0.5 rounded-full transition-colors cursor-pointer ${
+                      videoSpeed === spd
+                        ? "bg-white text-black font-bold"
+                        : "text-white/70 hover:text-white"
+                    }`}
+                  >
+                    {spd}
+                  </button>
+                ))}
+              </div>
+
+              {/* Bottom Caption Overlay */}
+              <div className="absolute bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4 flex flex-col sm:flex-row sm:items-end justify-between gap-2 text-white">
+                <div>
+                  <p className="font-serif text-base sm:text-xl font-medium drop-shadow-sm text-white">
+                    Pema Ts&apos;al Sakya Monastic Institute · Living Heritage
+                  </p>
+                  <p className="text-xs sm:text-sm text-white/80 drop-shadow-sm max-w-xl">
+                    Young monks preserving 2,000+ years of classical language, calligraphy, debate, and Buddhist wisdom.
+                  </p>
+                </div>
+                <a
+                  href="https://www.youtube.com/watch?v=T9o-r5kd2h8"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[11px] uppercase tracking-wider text-tibet-gold hover:text-white underline underline-offset-4 self-start sm:self-auto shrink-0"
+                >
+                  Full Video on YouTube &rarr;
+                </a>
+              </div>
+            </div>
+          </div>
         </section>
 
         {/* Step 1: Choose how you participate */}

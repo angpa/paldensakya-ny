@@ -37,6 +37,9 @@ export default function WixArchivePage() {
       <main className="w-full max-w-5xl mx-auto px-6 py-12 sm:py-16 space-y-16 flex-1">
         {/* Intro */}
         <section className="space-y-4">
+          <p lang="bo" className="text-sm sm:text-base text-sakya-gold tracking-wide font-serif">
+            ༄༅། །བི་ཀྲ་མ་ཤཱི་ལ་ཚོགས་པའི་དྲྭ་ཚིགས་ཡིག་མཛོད་ཉར་ཚགས།
+          </p>
           <h1
             id="archive-heading"
             tabIndex={-1}
@@ -47,8 +50,7 @@ export default function WixArchivePage() {
           <p className="text-sm sm:text-base text-muted leading-relaxed max-w-3xl">
             Every page, photograph, logo, and downloadable PDF prayer book from
             the existing Wix website has been backed up locally into this
-            repository so you can safely cancel Wix whenever the domain is
-            pointed to Azure.
+            repository.
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
