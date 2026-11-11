@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { ZoomSchedule } from "@/components/ZoomSchedule";
 
 type Language = "en" | "bo";
 
@@ -133,18 +134,22 @@ const PROGRAMS = [
     titleEn: "Daily Prayers & Liturgy",
     titleBo: "ཉིན་རེའི་ཞལ་འདོན།",
     summaryEn:
-      "Morning and evening lineage supplications, Samantabhadra Wishing Prayer, Medicine Buddha, and downloadable prayer books.",
+      "Morning and evening lineage supplications, Samantabhadra Wishing Prayer, Medicine Buddha, and downloadable prayer books on Zoom.",
     summaryBo:
-      "ཞོགས་པ་དང་དགོང་མོའི་བརྒྱུད་འདེབས་དང་བཟང་སྤྱོད་སྨོན་ལམ། སྨན་བླའི་མདོ་ཆོག་སོགས་ཀྱི་ཉམས་ལེན།",
-    scheduleEn: "Every Day · Morning & Evening Practice",
-    scheduleBo: "ཉིན་ལྟར་ཞོགས་པ་དང་དགོང་མོ།",
+      "ཞོགས་པ་དང་དགོང་མོའི་བརྒྱུད་འདེབས་དང་བཟང་སྤྱོད་སྨོན་ལམ། སྨན་བླའི་མདོ་ཆོག་སོགས་ཀྱི་ཉམས་ལེན་ Zoom བརྒྱུད།",
+    scheduleEn: "Daily on Zoom · Morning (7:00 AM NY) & Evening (8:30 PM NY)",
+    scheduleBo: "ཉིན་ལྟར་ Zoom བརྒྱུད། ཞོགས་པའི་ཆུ་ཚོད་ ༧:༠༠ དང་དགོང་མོའི་ཆུ་ཚོད་ ༨:༣༠ (NY)།",
     detailsEn: [
+      "Morning Session: 7:00 AM – 7:30 AM (NY Time) · Live on Zoom",
+      "Evening Session: 8:30 PM – 9:00 PM (NY Time) · Live on Zoom",
       "Samantabhadra's 'Noble Wishing Prayer' (Zangcho Mönlam) & Refuge/Bodhicitta",
       "Medicine Buddha Sutra & Mantra Recitation ('The Buddha Who Heals the World')",
       "Amitayus Buddha Long-Life Dharani & Three Deities Long Life Prayer",
       "The Timeless Practice of Sojong (observed from 7:00 AM to 7:00 AM on sacred lunar days)",
     ],
     detailsBo: [
+      "ཞོགས་པའི་ཆུ་ཚོད: ༧:༠༠–༧:༣༠ (ནིའུ་ཡོག་དུས་ཚོད) · Zoom ཐོག་མཉམ་ཚོགས།",
+      "དགོང་མོའི་ཆུ་ཚོད: ༨:༣༠–༩:༠༠ (ནིའུ་ཡོག་དུས་ཚོད) · Zoom ཐོག་མཉམ་ཚོགས།",
       "བཟང་སྤྱོད་སྨོན་ལམ་དང་སྐྱབས་འགྲོ་སེམས་བསྐྱེད།",
       "སྨན་བླའི་མདོ་ཆོག་དང་གཟུངས་སྔགས་གསུང་འདོན།",
       "ཚེ་དཔག་མེད་ཀྱི་གཟུངས་དང་ཚེ་ལྷ་རྣམ་གསུམ་གྱི་ཞལ་འདོན།",
@@ -161,22 +166,22 @@ const PROGRAMS = [
     titleEn: "Weekly Green Tara Practice & Meditation",
     titleBo: "སྒྲོལ་མ་བཞི་ཆོག་དང་སྒོམ།",
     summaryEn:
-      "Green Tara Four Mandala Practice and Sitting Meditation led by Venerable Khenpo Pema Wangdak.",
+      "Green Tara Four Mandala Practice and Sitting Meditation led by Venerable Khenpo Pema Wangdak on Zoom.",
     summaryBo:
-      "མཁན་པོ་པདྨ་དབང་གྲགས་མཆོག་ནས་དབུ་ཁྲིད་གནང་བའི་སྒྲོལ་མ་བཞི་ཆོག་དང་ཞི་གནས་སྒོམ།",
-    scheduleEn: "Every Sunday on Zoom · 12:00 PM – 1:30 PM & 2:00 PM – 3:00 PM (EDT)",
-    scheduleBo: "གཟའ་ཉི་མ་ནམ་ཡིན་ལ་ Zoom བརྒྱུད་ཉིན་གུང་ ༡༢:༠༠ ནས་ ༡:༣༠ དང་ ༢:༠༠ ནས་ ༣:༠༠ བར།",
+      "མཁན་པོ་པདྨ་དབང་གྲགས་མཆོག་ནས་དབུ་ཁྲིད་གནང་བའི་སྒྲོལ་མ་བཞི་ཆོག་དང་ཞི་གནས་སྒོམ་ Zoom བརྒྱུད།",
+    scheduleEn: "Every Sunday on Zoom · 12:00 PM – 1:30 PM & 2:00 PM – 3:00 PM (NY)",
+    scheduleBo: "གཟའ་ཉི་མ་ནམ་ཡིན་ལ་ Zoom བརྒྱུད་ཉིན་གུང་ ༡༢:༠༠ ནས་ ༡:༣༠ དང་ ༢:༠༠ ནས་ ༣:༠༠ བར (NY)།",
     detailsEn: [
-      "12:00 PM – 1:30 PM (EDT): Green Tara Four Mandala Practice (Dolma Shichok) and Twenty-One Praises to Tara",
-      "2:00 PM – 3:00 PM (EDT): Guided & Silent Sitting Meditation",
+      "12:00 PM – 1:30 PM (NY Time): Green Tara Four Mandala Practice (Dolma Shichok) and Twenty-One Praises to Tara",
+      "2:00 PM – 3:00 PM (NY Time): Guided & Silent Sitting Meditation",
       "Co-hosted with Sakya Kachod Choling & Palden Sakya Centers",
-      "Everyone is welcome to join; there are no prerequisites (contact paldensakya@vikramasila.org for the Zoom link)",
+      "Everyone is welcome to join; there are no prerequisites (direct Zoom link provided below)",
     ],
     detailsBo: [
-      "ཉིན་གུང་ ༡༢:༠༠–༡:༣༠: སྒྲོལ་མ་ཕྱག་འཚལ་ཉེར་གཅིག་དང་སྒྲོལ་མ་བཞི་ཆོག་གསུང་འདོན།",
-      "ཉིན་གུང་ ༢:༠༠–༣:༠༠: ཞི་གནས་སྒོམ་སྒྲུབ་ཀྱི་ལམ་སྟོན་དང་མཉམ་སྒོམ།",
+      "ཉིན་གུང་ ༡༢:༠༠–༡:༣༠ (ནིའུ་ཡོག): སྒྲོལ་མ་ཕྱག་འཚལ་ཉེར་གཅིག་དང་སྒྲོལ་མ་བཞི་ཆོག་གསུང་འདོན།",
+      "ཉིན་གུང་ ༢:༠༠–༣:༠༠ (ནིའུ་ཡོག): ཞི་གནས་སྒོམ་སྒྲུབ་ཀྱི་ལམ་སྟོན་དང་མཉམ་སྒོམ།",
       "དཔལ་ལྡན་ས་སྐྱའི་ཆོས་ཚོགས་དང་ས་སྐྱ་མཁའ་སྤྱོད་ཆོས་གླིང་ནས་མཉམ་སྦྲེལ་གོ་སྒྲིག་ཞུས།",
-      "སེར་སྐྱ་མི་མང་ཀུན་མཉམ་ཞུགས་གནང་ཆོག (Zoom འབྲེལ་ཐག་ཆེད་ paldensakya@vikramasila.org ལ་འབྲེལ་གཏུགས་གནང་རོགས)།",
+      "སེར་སྐྱ་མི་མང་ཀུན་མཉམ་ཞུགས་གནང་ཆོག (Zoom འབྲེལ་ཐག་གཤམ་དུ་གསལ)།",
     ],
     noteEn: "Tara Puja with Four Mandala Offerings is also available by request for blessings and removing obstacles.",
     noteBo: "བར་ཆད་ཞི་བ་དང་དགེ་མཚན་རྒྱས་ཕྱིར་དམིགས་བསལ་སྒྲོལ་མ་བཞི་ཆོག་གསུང་འདོན་ཡང་མངགས་ཆོག",
@@ -466,6 +471,9 @@ export default function HomePage() {
             </span>
           </div>
 
+          {/* Featured Live Zoom Practice Schedule with Automatic Season Timezone Adjustment */}
+          <ZoomSchedule lang={lang} programId="all" />
+
           <div className="divide-y divide-border-subtle border-y border-border-subtle">
             {PROGRAMS.map((program) => {
               const category = lang === "bo" ? program.categoryBo : program.categoryEn;
@@ -523,6 +531,12 @@ export default function HomePage() {
                     <p className="text-xs uppercase tracking-wider text-sakya-gold font-semibold">
                       {schedule}
                     </p>
+
+                    {(program.id === "daily-prayers" || program.id === "weekly-tara") && (
+                      <div className="pt-1">
+                        <ZoomSchedule lang={lang} programId={program.id} />
+                      </div>
+                    )}
 
                     {program.image && (
                       <div className="flex items-center gap-4 py-1">
