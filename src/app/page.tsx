@@ -779,6 +779,13 @@ export default function HomePage() {
             <span>{t.pilotLink}</span>
             <span aria-hidden="true">&rarr;</span>
           </Link>
+          <Link
+            href="/odyssey"
+            className="inline-flex items-center gap-1.5 text-tibet-gold-rich hover:underline underline-offset-4 font-medium"
+          >
+            <span>{lang === "bo" ? "༣D ཞིང་ཁམས (བཀྲ་ཤིས་རྟགས་བརྒྱད)" : "3D Odyssey (Ashtamangala)"}</span>
+            <span aria-hidden="true">&rarr;</span>
+          </Link>
         </div>
       </footer>
     </div>

@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import TibetanInteractiveOdyssey from "@/components/TibetanInteractiveOdyssey";
 
 interface BuddhistOffering {
   id: string;
@@ -676,13 +675,23 @@ export default function TibetanCulturePilotPage() {
           Skip to main content
         </a>
 
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-sm text-muted hover:text-tibet-crimson transition-colors"
-        >
-          <span aria-hidden="true">&larr;</span>
-          <span>{t.back}</span>
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-sm text-muted hover:text-tibet-crimson transition-colors"
+          >
+            <span aria-hidden="true">&larr;</span>
+            <span>{t.back}</span>
+          </Link>
+          <span className="text-border-subtle">|</span>
+          <Link
+            href="/odyssey"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-tibet-gold-rich hover:text-tibet-crimson transition-colors"
+          >
+            <span>🪐</span>
+            <span>{lang === "bo" ? "༣D ཞིང་ཁམས" : "3D Odyssey"}</span>
+          </Link>
+        </div>
 
         {/* Controls: Language Switcher & Theme Switcher */}
         <div className="flex flex-wrap items-center gap-2.5">
@@ -1149,8 +1158,61 @@ export default function TibetanCulturePilotPage() {
           </div>
         </section>
 
-        {/* 3D Interactive Cultural Odyssey (Inspired by Jasmin Karatas) */}
-        <TibetanInteractiveOdyssey lang={lang} />
+        {/* Dedicated 3D Spatial Odyssey Gateway (Fast-Loading Portal) */}
+        <section
+          aria-labelledby="odyssey-portal-heading"
+          className="relative overflow-hidden rounded-sm border border-sakya-gold/50 bg-gradient-to-r from-[#140f0d] via-[#1a1411] to-[#120e0d] text-white p-6 sm:p-8 shadow-lg"
+        >
+          {/* Subtle background glow */}
+          <div
+            aria-hidden="true"
+            className="absolute top-0 right-0 w-80 h-80 bg-tibet-gold/15 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"
+          />
+
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="space-y-2 max-w-2xl">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-tibet-gold animate-pulse" />
+                <span className="text-[10px] sm:text-[11px] uppercase tracking-widest font-mono font-semibold px-2.5 py-0.5 rounded-full bg-tibet-gold/20 border border-tibet-gold/40 text-tibet-gold">
+                  {lang === "bo"
+                    ? "༢༠༠༠ ལོ་འཁོར་གྱི་ཉམས་མྱོང་ཁྱད་པར་ཅན།"
+                    : "Interactive 3D Spatial Experience"}
+                </span>
+                <span className="text-[10px] font-mono text-white/40 uppercase hidden sm:inline">
+                  DEDICATED IMMERSIVE PAGE
+                </span>
+              </div>
+
+              <h2
+                id="odyssey-portal-heading"
+                lang="bo"
+                className="font-serif text-2xl sm:text-3xl font-medium text-tibet-gold-light tracking-tight"
+              >
+                {lang === "bo"
+                  ? "༄༅། །བཀྲ་ཤིས་རྟགས་བརྒྱད་དང་འབྱུང་ལྔའི་༣D ཞིང་ཁམས།"
+                  : "The 3D Sacred Odyssey: Ashtamangala & 5 Elements"}
+              </h2>
+
+              <p className="text-xs sm:text-sm text-white/80 leading-relaxed font-serif">
+                {lang === "bo"
+                  ? "བཀྲ་ཤིས་རྟགས་བརྒྱད་ཀྱི་དཀྱིལ་འཁོར་དང་འབྱུང་བ་ལྔའི་དོན་སྙིང་ལ་གཟིགས་པའི་༣D ཞིང་ཁམས་ཆ་ཚང་ཤོག་ངོས་ལོགས་སུ་བཀོད་ཡོད།"
+                  : "Explore the 3D celestial mandala orbit, gyroscopic spatial matrix, and singing bowl acoustic resonances on our dedicated high-performance realm."}
+              </p>
+            </div>
+
+            <Link
+              href="/odyssey"
+              className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-sm bg-tibet-gold hover:bg-tibet-gold-rich text-black font-semibold text-xs sm:text-sm transition-all shadow-md hover:scale-102 self-start md:self-auto shrink-0 cursor-pointer"
+            >
+              <span>🪐</span>
+              <span>
+                {lang === "bo"
+                  ? "༣D ཞིང་ཁམས་སུ་ཞུགས ↗"
+                  : "Enter 3D Spatial Odyssey ↗"}
+              </span>
+            </Link>
+          </div>
+        </section>
 
         {/* Step 1: Choose how you participate */}
         <section
