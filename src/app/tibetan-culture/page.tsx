@@ -11,6 +11,8 @@ type ParticipantRole =
   | "artist"
   | "youth";
 
+type VisualTheme = "lungta-festive" | "sakya-classic";
+
 interface RoleConfig {
   id: ParticipantRole;
   label: string;
@@ -137,6 +139,8 @@ const INITIAL_PLEDGES: PledgeItem[] = [
 ];
 
 export default function TibetanCulturePilotPage() {
+  const [visualTheme, setVisualTheme] =
+    useState<VisualTheme>("lungta-festive");
   const [selectedRole, setSelectedRole] =
     useState<ParticipantRole>("individual");
   const [pledges, setPledges] = useState<PledgeItem[]>(INITIAL_PLEDGES);
@@ -179,98 +183,219 @@ export default function TibetanCulturePilotPage() {
     );
   };
 
+  const isFestive = visualTheme === "lungta-festive";
+
   return (
     <div className="min-h-screen flex flex-col justify-between">
-      {/* Top Sakya stripe */}
-      <div aria-hidden="true" className="w-full h-1.5 grid grid-cols-3">
-        <div className="bg-sakya-terracotta" />
-        <div className="bg-border-subtle" />
-        <div className="bg-sakya-slate" />
-      </div>
+      {/* Top ribbon: Sacred 5 Lungta Elements or Traditional 3 Sakya Stripes */}
+      {isFestive ? (
+        <div
+          aria-hidden="true"
+          className="lungta-ribbon h-2 transition-all duration-300"
+        >
+          <div />
+          <div />
+          <div />
+          <div />
+          <div />
+        </div>
+      ) : (
+        <div
+          aria-hidden="true"
+          className="w-full h-1.5 grid grid-cols-3 transition-all duration-300"
+        >
+          <div className="bg-sakya-terracotta" />
+          <div className="bg-border-subtle" />
+          <div className="bg-sakya-slate" />
+        </div>
+      )}
 
       {/* Header */}
       <header className="w-full max-w-4xl mx-auto px-6 pt-8 pb-6 flex flex-wrap items-center justify-between gap-4 border-b border-border-subtle">
         <a
           href="#culture-heading"
-          className="visually-hidden focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-sakya-crimson focus:text-white focus:rounded-sm text-sm"
+          className="visually-hidden focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-tibet-crimson focus:text-white focus:rounded-sm text-sm"
         >
           Skip to main content
         </a>
 
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-sm text-muted hover:text-sakya-crimson transition-colors"
+          className="inline-flex items-center gap-2 text-sm text-muted hover:text-tibet-crimson transition-colors"
         >
           <span aria-hidden="true">&larr;</span>
           <span>Back to Vikramasila Foundation · Palden Sakya</span>
         </Link>
 
-        <span className="text-xs uppercase tracking-widest px-2.5 py-1 rounded-sm bg-card-bg border border-border-subtle text-sakya-crimson font-medium">
-          Concept Pilot · 2026–2029 Initiative
-        </span>
+        {/* Theme Switcher Toggle */}
+        <div
+          role="radiogroup"
+          aria-label="Select visual style"
+          className="flex items-center gap-1 p-1 rounded-sm bg-card-bg border border-border-subtle"
+        >
+          <span className="text-[11px] uppercase tracking-wider text-muted px-2 font-medium">
+            Estilo / Theme:
+          </span>
+          <button
+            type="button"
+            role="radio"
+            aria-checked={isFestive}
+            onClick={() => setVisualTheme("lungta-festive")}
+            className={`px-2.5 py-1 text-xs rounded-sm transition-all cursor-pointer ${
+              isFestive
+                ? "bg-tibet-gold text-white font-semibold shadow-2xs"
+                : "text-muted hover:text-foreground"
+            }`}
+          >
+            ✨ 2000 Años (Lungta &amp; Oro)
+          </button>
+          <button
+            type="button"
+            role="radio"
+            aria-checked={!isFestive}
+            onClick={() => setVisualTheme("sakya-classic")}
+            className={`px-2.5 py-1 text-xs rounded-sm transition-all cursor-pointer ${
+              !isFestive
+                ? "bg-sakya-crimson text-white font-semibold shadow-2xs"
+                : "text-muted hover:text-foreground"
+            }`}
+          >
+            🏛️ Clásico Sakya (Editorial)
+          </button>
+        </div>
       </header>
 
       <main className="w-full max-w-4xl mx-auto px-6 py-12 sm:py-16 space-y-16 flex-1">
         {/* Hero */}
         <section className="space-y-6">
+          {isFestive ? (
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-tibet-gold-light/80 border border-tibet-gold/40 text-xs font-semibold text-tibet-gold-rich">
+              <span
+                aria-hidden="true"
+                className="w-2 h-2 rounded-full bg-tibet-gold animate-pulse"
+              />
+              <span>Honoring 20 Centuries of Living Wisdom &amp; Language</span>
+            </div>
+          ) : (
+            <span className="inline-block text-xs uppercase tracking-widest px-2.5 py-1 rounded-sm bg-card-bg border border-border-subtle text-sakya-crimson font-medium">
+              Concept Pilot · 2026–2029 Initiative
+            </span>
+          )}
+
           <p
             lang="bo"
-            className="text-base sm:text-lg text-sakya-gold tracking-wide"
+            className={`text-lg sm:text-xl tracking-wide font-serif ${
+              isFestive ? "text-tibet-gold-rich" : "text-sakya-gold"
+            }`}
           >
-            ༄༅། །བོད་ཀྱི་རིག་གཞུང་དང་སྐད་ཡིག་དུས་སྟོན།
+            {isFestive
+              ? "༄༅། །བོད་ཀྱི་རིག་གཞུང་དང་སྐད་ཡིག་ལོ་ཉིས་སྟོང་འཁོར་བའི་དུས་སྟོན།"
+              : "༄༅། །བོད་ཀྱི་རིག་གཞུང་དང་སྐད་ཡིག་དུས་སྟོན།"}
           </p>
 
           <h1
             id="culture-heading"
             tabIndex={-1}
-            className="font-serif text-3xl sm:text-5xl font-normal leading-tight text-foreground outline-none"
+            className="font-serif text-3xl sm:text-5xl lg:text-6xl font-normal leading-tight text-foreground outline-none tracking-tight"
           >
-            International Celebration of Tibetan Culture &amp; Language
-            (2026–2029)
+            Celebration of Tibetan Culture &amp; Language{" "}
+            <span
+              className={
+                isFestive ? "text-tibet-crimson italic" : "text-foreground"
+              }
+            >
+              2,000 Years
+            </span>
           </h1>
 
           <p className="text-base sm:text-lg text-foreground/90 leading-relaxed max-w-3xl">
-            Honoring over 2,000 years of living Tibetan civilization, wisdom,
-            and language. This platform does not tell you what to do—instead, it
+            Honoring over 2,000 years of living Tibetan civilization, literature, spiritual wisdom,
+            and language. This global initiative does not impose rules—instead, it
             invites <strong>everyone</strong> (monasteries, schools,
-            universities, restaurants, writers, artists, children, and
-            individuals) to{" "}
-            <span className="underline decoration-sakya-gold/60 underline-offset-4">
-              subscribe an idea and participate in your own way
+            universities, businesses, poets, artists, children, and
+            individual practitioners worldwide) to{" "}
+            <span
+              className={`underline underline-offset-4 font-medium text-foreground ${
+                isFestive
+                  ? "decoration-tibet-gold decoration-2"
+                  : "decoration-sakya-gold/60"
+              }`}
+            >
+              subscribe an idea and participate in your own authentic way
             </span>
             .
           </p>
 
-          {/* Emblem / Decal Preview Card ("A logo that can be printed out on doors, cars, computers") */}
-          <div className="bg-card-bg border border-border-subtle p-6 rounded-sm flex flex-col sm:flex-row items-center gap-6">
-            <div className="w-24 h-24 rounded-full border-2 border-sakya-crimson bg-background flex flex-col items-center justify-center text-center p-2 shrink-0 shadow-xs">
-              <span
-                lang="bo"
-                className="text-xs text-sakya-crimson font-semibold"
-              >
-                བོད་ཀྱི་སྐད་ཡིག
-              </span>
-              <span className="font-serif text-xs font-bold tracking-wider uppercase text-foreground mt-0.5">
-                TIBET 2026–29
-              </span>
-              <span className="text-[9px] uppercase tracking-widest text-sakya-gold mt-0.5">
-                We Participate
-              </span>
+          {/* Emblem / Decal Preview Card */}
+          {isFestive ? (
+            <div className="tibet-gold-gradient border border-tibet-gold/40 p-6 sm:p-8 rounded-md flex flex-col sm:flex-row items-center gap-6 tibet-seal-glow">
+              <div className="relative w-28 h-28 rounded-full border-4 border-tibet-gold bg-background flex flex-col items-center justify-center text-center p-2.5 shrink-0 shadow-md">
+                <div className="absolute inset-1 rounded-full border border-dashed border-tibet-crimson/40 pointer-events-none" />
+                <span
+                  lang="bo"
+                  className="text-xs text-tibet-crimson font-bold leading-none"
+                >
+                  བོད་ཡིག
+                </span>
+                <span className="font-serif text-[11px] font-bold tracking-wider uppercase text-foreground mt-1">
+                  2,000 YEARS
+                </span>
+                <span className="text-[9px] font-bold uppercase tracking-widest text-tibet-gold-rich mt-0.5">
+                  2026–2029
+                </span>
+                <span className="text-[8px] uppercase tracking-wider text-muted font-medium mt-0.5">
+                  We Participate
+                </span>
+              </div>
+              <div className="space-y-2 text-sm text-center sm:text-left">
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                  <h2 className="font-serif text-xl font-semibold text-foreground">
+                    The Official Commemorative Decal (Lungta Jubilee)
+                  </h2>
+                  <span className="text-[11px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-sm bg-tibet-crimson text-white">
+                    Universal Emblem
+                  </span>
+                </div>
+                <p className="text-foreground/80 leading-relaxed">
+                  Created to be printed out and displayed proudly on storefront doors, cars,
+                  laptops, classrooms, home altars, and dharma centers—signaling:{" "}
+                  <em className="font-serif text-tibet-crimson font-medium">
+                    &ldquo;We participate in honoring 2,000 years of Tibetan Culture &amp; Language.&rdquo;
+                  </em>
+                </p>
+              </div>
             </div>
-            <div className="space-y-1.5 text-sm">
-              <h2 className="font-serif text-lg font-medium text-foreground">
-                The Shared Participation Emblem
-              </h2>
-              <p className="text-muted leading-relaxed">
-                Designed to be printed as a decal for storefront doors, cars,
-                laptops, classrooms, and community centers—signaling:{" "}
-                <em>
-                  &ldquo;We are participating in celebrating 2,000+ years of
-                  Tibetan Culture and Language.&rdquo;
-                </em>
-              </p>
+          ) : (
+            <div className="bg-card-bg border border-border-subtle p-6 rounded-sm flex flex-col sm:flex-row items-center gap-6">
+              <div className="w-24 h-24 rounded-full border-2 border-sakya-crimson bg-background flex flex-col items-center justify-center text-center p-2 shrink-0 shadow-xs">
+                <span
+                  lang="bo"
+                  className="text-xs text-sakya-crimson font-semibold"
+                >
+                  བོད་ཀྱི་སྐད་ཡིག
+                </span>
+                <span className="font-serif text-xs font-bold tracking-wider uppercase text-foreground mt-0.5">
+                  TIBET 2026–29
+                </span>
+                <span className="text-[9px] uppercase tracking-widest text-sakya-gold mt-0.5">
+                  We Participate
+                </span>
+              </div>
+              <div className="space-y-1.5 text-sm text-center sm:text-left">
+                <h2 className="font-serif text-lg font-medium text-foreground">
+                  The Shared Participation Emblem (Classic Sakya)
+                </h2>
+                <p className="text-muted leading-relaxed">
+                  Designed to be printed as a decal for storefront doors, cars,
+                  laptops, classrooms, and community centers—signaling:{" "}
+                  <em>
+                    &ldquo;We are participating in celebrating 2,000+ years of
+                    Tibetan Culture and Language.&rdquo;
+                  </em>
+                </p>
+              </div>
             </div>
-          </div>
+          )}
         </section>
 
         {/* Step 1: Choose how you participate */}
@@ -286,15 +411,14 @@ export default function TibetanCulturePilotPage() {
               1. Explore Ways to Participate
             </h2>
             <p className="text-sm text-muted">
-              Select your role below to see examples of commitments you can
-              adopt or adapt in your own way.
+              Select your group below to see suggested ways to celebrate 2,000 years of heritage.
             </p>
           </div>
 
           <div
             role="group"
             aria-label="Filter suggestions by participant category"
-            className="flex flex-wrap gap-2"
+            className="flex flex-wrap gap-2.5"
           >
             {ROLES.map((role) => {
               const active = role.id === selectedRole;
@@ -304,10 +428,10 @@ export default function TibetanCulturePilotPage() {
                   type="button"
                   aria-pressed={active}
                   onClick={() => handleRoleSelect(role.id)}
-                  className={`px-3.5 py-2 text-xs sm:text-sm rounded-sm border transition-colors cursor-pointer ${
+                  className={`px-4 py-2.5 text-xs sm:text-sm rounded-sm border transition-all cursor-pointer font-medium ${
                     active
-                      ? "bg-sakya-crimson text-white border-sakya-crimson font-medium"
-                      : "bg-card-bg text-foreground border-border-subtle hover:border-sakya-crimson"
+                      ? "bg-tibet-crimson text-white border-tibet-crimson shadow-sm"
+                      : "bg-card-bg text-foreground border-border-subtle hover:border-tibet-gold hover:bg-tibet-gold-light/40"
                   }`}
                 >
                   {role.label}
@@ -316,8 +440,8 @@ export default function TibetanCulturePilotPage() {
             })}
           </div>
 
-          <div className="bg-card-bg/60 border border-border-subtle p-6 rounded-sm space-y-4">
-            <div>
+          <div className="bg-card-bg/70 border border-border-subtle p-6 rounded-sm space-y-4 shadow-2xs">
+            <div className="border-b border-border-subtle/80 pb-3">
               <h3 className="font-serif text-xl font-medium text-foreground">
                 {currentRole.label}
               </h3>
@@ -326,20 +450,20 @@ export default function TibetanCulturePilotPage() {
               </p>
             </div>
 
-            <div className="space-y-2">
-              <p className="text-xs uppercase tracking-wider text-sakya-gold font-semibold">
-                Click an idea to use it in your pledge below, or write your own:
+            <div className="space-y-2.5">
+              <p className="text-xs uppercase tracking-wider text-tibet-gold-rich font-bold">
+                Suggested ideas for the 2,000 years commemoration (click to select):
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {currentRole.suggestions.map((suggestion) => (
                   <button
                     key={suggestion}
                     type="button"
                     onClick={() => setCustomPledge(suggestion)}
-                    className={`text-left p-3 rounded-sm border text-sm transition-colors cursor-pointer ${
+                    className={`text-left p-3.5 rounded-sm border text-sm transition-all cursor-pointer leading-relaxed ${
                       customPledge === suggestion
-                        ? "border-sakya-crimson bg-background text-foreground font-medium"
-                        : "border-border-subtle bg-background/60 text-muted hover:text-foreground hover:border-sakya-gold"
+                        ? "border-tibet-gold bg-tibet-gold-light/60 text-foreground font-medium shadow-2xs"
+                        : "border-border-subtle bg-background/80 text-muted hover:text-foreground hover:border-tibet-crimson/50"
                     }`}
                   >
                     &ldquo;{suggestion}&rdquo;
@@ -363,14 +487,13 @@ export default function TibetanCulturePilotPage() {
               2. Subscribe Your Commitment
             </h2>
             <p className="text-sm text-muted">
-              Register how you, your school, monastery, or business are
-              participating.
+              Register how you, your school, temple, or company celebrate 2,000 years of living heritage.
             </p>
           </div>
 
           <form
             onSubmit={handleSubmit}
-            className="bg-card-bg/70 border border-border-subtle p-6 sm:p-8 rounded-sm space-y-5"
+            className="bg-card-bg/80 border border-border-subtle p-6 sm:p-8 rounded-sm space-y-5 shadow-2xs"
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div className="space-y-1.5">
@@ -388,7 +511,7 @@ export default function TibetanCulturePilotPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g., Tenzin Dorje or Lotus Bookshop"
-                  className="w-full px-3.5 py-2.5 text-sm bg-background border border-border-subtle rounded-sm text-foreground"
+                  className="w-full px-3.5 py-2.5 text-sm bg-background border border-border-subtle rounded-sm text-foreground focus:border-tibet-crimson"
                 />
               </div>
 
@@ -406,7 +529,7 @@ export default function TibetanCulturePilotPage() {
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   placeholder="e.g., New York, USA"
-                  className="w-full px-3.5 py-2.5 text-sm bg-background border border-border-subtle rounded-sm text-foreground"
+                  className="w-full px-3.5 py-2.5 text-sm bg-background border border-border-subtle rounded-sm text-foreground focus:border-tibet-crimson"
                 />
               </div>
             </div>
@@ -416,14 +539,13 @@ export default function TibetanCulturePilotPage() {
                 htmlFor="participant-pledge"
                 className="block text-xs uppercase tracking-wider font-semibold text-foreground"
               >
-                How We Are Participating ({currentRole.label})
+                Our Participation Commitment ({currentRole.label})
               </label>
               <span
                 id="pledge-hint"
                 className="block text-xs text-muted pb-1"
               >
-                Describe your goal, recitation count, meditation hours, event,
-                or sponsorship in your own words.
+                Describe your recitation, silent meditation, exhibition, class, or sponsorship in your own words.
               </span>
               <textarea
                 id="participant-pledge"
@@ -432,22 +554,22 @@ export default function TibetanCulturePilotPage() {
                 aria-describedby="pledge-hint"
                 value={customPledge}
                 onChange={(e) => setCustomPledge(e.target.value)}
-                className="w-full px-3.5 py-2.5 text-sm bg-background border border-border-subtle rounded-sm text-foreground"
+                className="w-full px-3.5 py-2.5 text-sm bg-background border border-border-subtle rounded-sm text-foreground focus:border-tibet-crimson"
               />
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
               <button
                 type="submit"
-                className="px-6 py-2.5 bg-sakya-crimson text-white text-sm font-medium rounded-sm hover:opacity-95 transition-opacity cursor-pointer"
+                className="px-7 py-3 bg-tibet-crimson text-white text-sm font-medium rounded-sm hover:bg-tibet-crimson-deep transition-all shadow-sm cursor-pointer"
               >
-                Subscribe Idea &amp; Join Register
+                Subscribe Idea &amp; Join Community Register
               </button>
 
               <div
                 role="status"
                 aria-live="polite"
-                className="text-xs sm:text-sm text-sakya-crimson font-medium"
+                className="text-xs sm:text-sm text-tibet-crimson font-medium"
               >
                 {submittedNotice}
               </div>
@@ -455,7 +577,7 @@ export default function TibetanCulturePilotPage() {
           </form>
         </section>
 
-        {/* Step 3: Community Register ("Who is subscribed for what, and who has done what") */}
+        {/* Step 3: Community Register */}
         <section
           aria-labelledby="register-heading"
           className="space-y-6 pt-6 border-t border-border-subtle"
@@ -469,11 +591,10 @@ export default function TibetanCulturePilotPage() {
                 3. Community Participation Register
               </h2>
               <p className="text-sm text-muted mt-1">
-                See who has subscribed an idea and what participants around the
-                world are accomplishing.
+                See who has subscribed an idea and what people are accomplishing for 2,000 years of Tibetan culture.
               </p>
             </div>
-            <span className="text-xs uppercase tracking-widest text-sakya-gold font-semibold">
+            <span className="text-xs uppercase tracking-widest text-tibet-gold-rich font-bold bg-tibet-gold-light px-3 py-1 rounded-sm border border-tibet-gold/30">
               {pledges.length} Registered Commitments
             </span>
           </div>
@@ -494,16 +615,16 @@ export default function TibetanCulturePilotPage() {
                     </span>
                   </div>
                   <span
-                    className={`text-xs uppercase tracking-wider font-semibold px-2 py-0.5 rounded-sm ${
+                    className={`text-xs uppercase tracking-wider font-semibold px-2.5 py-0.5 rounded-sm ${
                       item.status === "Accomplished"
-                        ? "bg-sakya-gold/15 text-sakya-gold"
-                        : "bg-sakya-crimson/10 text-sakya-crimson"
+                        ? "bg-lungta-green/15 text-lungta-green border border-lungta-green/30"
+                        : "bg-tibet-crimson/10 text-tibet-crimson border border-tibet-crimson/20"
                     }`}
                   >
                     {item.status}
                   </span>
                 </div>
-                <p className="text-sm sm:text-base text-foreground/90 leading-relaxed">
+                <p className="text-sm sm:text-base text-foreground/90 leading-relaxed font-normal">
                   &ldquo;{item.pledge}&rdquo;
                 </p>
               </li>
@@ -512,17 +633,34 @@ export default function TibetanCulturePilotPage() {
         </section>
       </main>
 
-      <footer className="w-full max-w-4xl mx-auto px-6 py-10 border-t border-border-subtle text-xs text-muted flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <p>
-          Pilot prototype prepared for Venerable Khenpo Pema Wangdak ·
-          Vikramasila Foundation
-        </p>
-        <Link
-          href="/"
-          className="text-sakya-crimson hover:underline underline-offset-4 font-medium"
-        >
-          &larr; Return to Main Foundation Site
-        </Link>
+      <footer className="w-full border-t border-border-subtle text-xs text-muted">
+        <div className="max-w-4xl mx-auto px-6 py-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <p>
+            Celebration of Tibetan Culture &amp; Language 2000 Years (2026–2029) · Vikramasila Foundation
+          </p>
+          <Link
+            href="/"
+            className="text-tibet-crimson hover:underline underline-offset-4 font-medium"
+          >
+            &larr; Return to Main Foundation Site
+          </Link>
+        </div>
+        {/* Bottom ribbon matching selected visual theme */}
+        {isFestive ? (
+          <div aria-hidden="true" className="lungta-ribbon h-1.5">
+            <div />
+            <div />
+            <div />
+            <div />
+            <div />
+          </div>
+        ) : (
+          <div aria-hidden="true" className="w-full h-1 grid grid-cols-3">
+            <div className="bg-sakya-terracotta" />
+            <div className="bg-border-subtle" />
+            <div className="bg-sakya-slate" />
+          </div>
+        )}
       </footer>
     </div>
   );

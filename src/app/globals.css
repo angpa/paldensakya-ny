@@ -10,6 +10,23 @@
   --sakya-terracotta: #b85d35;
   --sakya-gold: #9a7b4f;
   --sakya-slate: #2c3e50;
+
+  /* Celebration of Tibetan Culture & Language 2000 Years Tokens */
+  --tibet-gold: #c59b27;
+  --tibet-gold-rich: #a07812;
+  --tibet-gold-light: #fbf6ea;
+  --tibet-crimson: #85181a;
+  --tibet-crimson-deep: #5b0c0e;
+  --tibet-amber: #d97706;
+  --tibet-turquoise: #0f766e;
+  --tibet-lapis: #1e40af;
+  
+  /* Sacred Lungta 5 Elements Palette (Blue, White, Red, Green, Yellow) */
+  --lungta-blue: #1d4ed8;
+  --lungta-white: #f8fafc;
+  --lungta-red: #dc2626;
+  --lungta-green: #15803d;
+  --lungta-yellow: #eab308;
 }
 
 @theme inline {
@@ -22,6 +39,23 @@
   --color-sakya-terracotta: var(--sakya-terracotta);
   --color-sakya-gold: var(--sakya-gold);
   --color-sakya-slate: var(--sakya-slate);
+
+  /* 2000 Years Celebration Tokens */
+  --color-tibet-gold: var(--tibet-gold);
+  --color-tibet-gold-rich: var(--tibet-gold-rich);
+  --color-tibet-gold-light: var(--tibet-gold-light);
+  --color-tibet-crimson: var(--tibet-crimson);
+  --color-tibet-crimson-deep: var(--tibet-crimson-deep);
+  --color-tibet-amber: var(--tibet-amber);
+  --color-tibet-turquoise: var(--tibet-turquoise);
+  --color-tibet-lapis: var(--tibet-lapis);
+
+  --color-lungta-blue: var(--lungta-blue);
+  --color-lungta-white: var(--lungta-white);
+  --color-lungta-red: var(--lungta-red);
+  --color-lungta-green: var(--lungta-green);
+  --color-lungta-yellow: var(--lungta-yellow);
+
   --font-sans: var(--font-sans);
   --font-serif: var(--font-serif);
 }
@@ -57,4 +91,36 @@ summary {
 }
 summary::-webkit-details-marker {
   display: none;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Celebration of Tibetan Culture & Language 2000 Years Utilities
+   ══════════════════════════════════════════════════════════════════ */
+
+/* The sacred 5 Lungta elements ribbon (Space, Air, Fire, Water, Earth) */
+.lungta-ribbon {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  width: 100%;
+}
+
+.lungta-ribbon > :nth-child(1) { background-color: var(--lungta-blue); }
+.lungta-ribbon > :nth-child(2) { background-color: var(--lungta-white); }
+.lungta-ribbon > :nth-child(3) { background-color: var(--lungta-red); }
+.lungta-ribbon > :nth-child(4) { background-color: var(--lungta-green); }
+.lungta-ribbon > :nth-child(5) { background-color: var(--lungta-yellow); }
+
+/* Festive golden glow and gradient */
+.tibet-gold-gradient {
+  background: linear-gradient(135deg, #fbf7ee 0%, #f6edd6 50%, #faecd0 100%);
+}
+
+.tibet-gold-banner {
+  background: linear-gradient(135deg, var(--tibet-crimson) 0%, var(--tibet-crimson-deep) 100%);
+  color: #fff;
+}
+
+/* Commemorative 2000 Years Seal / Medallion */
+.tibet-seal-glow {
+  box-shadow: 0 0 0 1px var(--tibet-gold), 0 8px 24px -4px rgba(197, 155, 39, 0.25);
 }
