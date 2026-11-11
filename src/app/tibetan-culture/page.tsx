@@ -290,6 +290,7 @@ const CULTURE_UI = {
     videoCaptionSub:
       "Young monks preserving 2,000+ years of classical language, calligraphy, debate, and Buddhist wisdom.",
     videoYoutubeLink: "Full Video on YouTube →",
+    videoMapsLink: "Google Maps (Pokhara, Nepal) ↗",
     offeringsTitle: "The Seven Traditional Offerings to the Buddha",
     offeringsTibetan: "༄༅། །སངས་རྒྱས་ལ་མཆོད་པ་བདུན།",
     offeringsSub:
@@ -341,6 +342,7 @@ const CULTURE_UI = {
     videoCaptionSub:
       "དགེ་འདུན་པ་གཞོན་ནུ་རྣམས་ཀྱིས་ལོ་ཉིས་སྟོང་ལྷག་གི་སྐད་ཡིག་དང་ཡིག་གཟུགས། རྩོད་པ། ནང་ཆོས་ཀྱི་ལྟ་གྲུབ་ཉམས་པ་མེད་པར་འཛིན་སྐྱོང་གནང་བཞིན་པ།",
     videoYoutubeLink: "YouTube ཐོག་བརྙན་འཕྲིན་ཆ་ཚང་གཟིགས། →",
+    videoMapsLink: "གུ་གྷལ་ས་ཁྲ། (པོ་ཁ་ར་བལ་ཡུལ) ↗",
     offeringsTitle: "སངས་རྒྱས་ལ་མཆོད་པ་བདུན།",
     offeringsTibetan: "༄༅། །སངས་རྒྱས་ལ་མཆོད་པ་བདུན།",
     offeringsSub:
@@ -812,14 +814,39 @@ export default function TibetanCulturePilotPage() {
                 <div className="absolute inset-0 bg-linear-to-t from-black/85 via-transparent to-black/35 pointer-events-none" />
 
                 {/* L2 High-Frequency Badge */}
-                <div className="absolute top-3 left-3 sm:top-4 sm:left-4 flex flex-wrap items-center gap-2">
+                <div className="absolute top-3 left-3 sm:top-4 sm:left-4 flex flex-wrap items-center gap-2 z-10">
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md text-[10px] sm:text-[11px] font-semibold tracking-wider uppercase text-white border border-white/20">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                     L2 Fast Stream · {videoSpeed}
                   </span>
-                  <span className="hidden sm:inline-block px-2.5 py-1 rounded-full bg-tibet-gold/80 backdrop-blur-md text-[10px] sm:text-[11px] font-bold tracking-wider uppercase text-white">
-                    Pokhara, Nepal · Pema Ts&apos;al
-                  </span>
+                  <a
+                    href="https://www.google.com/maps/search/?api=1&query=Pema+Ts%27al+Sakya+Monastic+Institute+Pokhara+Nepal"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="View Pema Ts'al Sakya Monastic Institute on Google Maps"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-tibet-gold/85 hover:bg-tibet-gold backdrop-blur-md text-[10px] sm:text-[11px] font-bold tracking-wider uppercase text-white hover:text-white transition-all shadow-xs hover:shadow-md cursor-pointer group"
+                  >
+                    <svg
+                      aria-hidden="true"
+                      className="w-3 h-3 text-white transition-transform group-hover:scale-110 shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                    </svg>
+                    <span>Pokhara, Nepal · Pema Ts&apos;al ↗</span>
+                  </a>
                 </div>
 
                 {/* Video Speed Toggle */}
@@ -842,7 +869,7 @@ export default function TibetanCulturePilotPage() {
                 </div>
 
                 {/* Bottom Caption Overlay */}
-                <div className="absolute bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4 flex flex-col sm:flex-row sm:items-end justify-between gap-2 text-white">
+                <div className="absolute bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4 flex flex-col sm:flex-row sm:items-end justify-between gap-2 text-white z-10">
                   <div>
                     <p className="font-serif text-base sm:text-xl font-medium drop-shadow-sm text-white">
                       {t.videoCaptionTitle}
@@ -851,14 +878,44 @@ export default function TibetanCulturePilotPage() {
                       {t.videoCaptionSub}
                     </p>
                   </div>
-                  <a
-                    href="https://www.youtube.com/watch?v=T9o-r5kd2h8"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[11px] uppercase tracking-wider text-tibet-gold hover:text-white underline underline-offset-4 self-start sm:self-auto shrink-0"
-                  >
-                    {t.videoYoutubeLink}
-                  </a>
+                  <div className="flex flex-wrap items-center gap-3 self-start sm:self-auto shrink-0">
+                    <a
+                      href="https://www.google.com/maps/search/?api=1&query=Pema+Ts%27al+Sakya+Monastic+Institute+Pokhara+Nepal"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[11px] uppercase tracking-wider text-tibet-gold hover:text-white underline underline-offset-4 flex items-center gap-1"
+                    >
+                      <svg
+                        aria-hidden="true"
+                        className="w-3 h-3 text-tibet-gold"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                      </svg>
+                      {t.videoMapsLink}
+                    </a>
+                    <span className="text-white/40 text-xs hidden sm:inline">·</span>
+                    <a
+                      href="https://www.youtube.com/watch?v=T9o-r5kd2h8"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[11px] uppercase tracking-wider text-tibet-gold hover:text-white underline underline-offset-4"
+                    >
+                      {t.videoYoutubeLink}
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>
