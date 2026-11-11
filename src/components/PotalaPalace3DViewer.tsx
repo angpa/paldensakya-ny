@@ -12,7 +12,7 @@ import {
   POTALA_REFERENCE_ASSETS,
 } from "@/data/potalaPalaceData";
 
-type AtmosphereMode = "sunlight" | "sunset" | "night";
+type AtmosphereMode = "sunlight" | "night";
 type BaseStyle = "island" | "maquette";
 type CameraViewPreset = "diorama" | "hero" | "elevation" | "summit";
 
@@ -1259,11 +1259,13 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
        ────────────────────────────────────────────────────────────────── */
     const sunBody = createSunCelestialBody();
     sunBody.position.set(6.8, 10.4, -2.2);
+    sunBody.visible = true;
     proceduralGroup.add(sunBody);
     sunBodyRef.current = sunBody;
 
     const moonBody = createMoonCelestialBody();
     moonBody.position.set(-6.8, 10.4, -2.2);
+    moonBody.visible = false;
     proceduralGroup.add(moonBody);
     moonBodyRef.current = moonBody;
 
@@ -1316,14 +1318,24 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
       const sunX = (tempVec.x * 0.5 + 0.5) * currentW;
       const sunY = (-(tempVec.y * 0.5) + 0.5) * currentH;
       const sunVis =
-        tempVec.z < 1 && sunX >= 20 && sunX <= currentW - 20 && sunY >= 20 && sunY <= currentH - 20;
+        sunBody.visible &&
+        tempVec.z < 1 &&
+        sunX >= 20 &&
+        sunX <= currentW - 20 &&
+        sunY >= 20 &&
+        sunY <= currentH - 20;
 
       tempVec.copy(moonBody.position).add(new THREE.Vector3(0, -1.5, 0));
       tempVec.project(camera);
       const moonX = (tempVec.x * 0.5 + 0.5) * currentW;
       const moonY = (-(tempVec.y * 0.5) + 0.5) * currentH;
       const moonVis =
-        tempVec.z < 1 && moonX >= 20 && moonX <= currentW - 20 && moonY >= 20 && moonY <= currentH - 20;
+        moonBody.visible &&
+        tempVec.z < 1 &&
+        moonX >= 20 &&
+        moonX <= currentW - 20 &&
+        moonY >= 20 &&
+        moonY <= currentH - 20;
 
       setScreenCelestials({
         sun: { x: sunX, y: sunY, visible: sunVis },
@@ -1353,7 +1365,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
   }, []);
 
   /* ══════════════════════════════════════════════════════════════════════
-     Update Atmosphere Lighting (Sunlight / Sunset / Night Illumination)
+     Update Atmosphere Lighting (Sunlight / Night Illumination)
      ══════════════════════════════════════════════════════════════════════ */
   useEffect(() => {
     const scene = sceneRef.current;
@@ -1375,22 +1387,15 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
       sun.position.set(14, 22, 16);
       spot.intensity = 0;
       wallEmissive = 0.04;
-      if (sunBodyRef.current) sunBodyRef.current.scale.setScalar(1.15);
-      if (moonBodyRef.current) moonBodyRef.current.scale.setScalar(0.9);
-    } else if (atmosphere === "sunset") {
-      scene.background = new THREE.Color("#180d14");
-      scene.fog = new THREE.FogExp2("#180d14", 0.014);
-      ambient.color.set("#fed7aa");
-      ambient.intensity = 0.85;
-      sun.color.set("#fb923c");
-      sun.intensity = 2.8;
-      sun.position.set(-18, 9, 14);
-      spot.intensity = 1.2;
-      wallEmissive = 0.45;
-      if (sunBodyRef.current) sunBodyRef.current.scale.setScalar(1.12);
-      if (moonBodyRef.current) moonBodyRef.current.scale.setScalar(1.12);
+      if (sunBodyRef.current) {
+        sunBodyRef.current.visible = true;
+        sunBodyRef.current.scale.setScalar(1.15);
+      }
+      if (moonBodyRef.current) {
+        moonBodyRef.current.visible = false;
+      }
     } else {
-      // Sacred Night Mode: illuminated windows & upward architectural floodlights
+      // Sacred Night Mode: illuminated windows, upward floodlights & 3D Moon
       scene.background = new THREE.Color("#05050a");
       scene.fog = new THREE.FogExp2("#05050a", 0.015);
       ambient.color.set("#93c5fd");
@@ -1400,8 +1405,13 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
       sun.position.set(-10, 18, -10);
       spot.intensity = 3.6;
       wallEmissive = 1.35;
-      if (sunBodyRef.current) sunBodyRef.current.scale.setScalar(0.82);
-      if (moonBodyRef.current) moonBodyRef.current.scale.setScalar(1.25);
+      if (sunBodyRef.current) {
+        sunBodyRef.current.visible = false;
+      }
+      if (moonBodyRef.current) {
+        moonBodyRef.current.visible = true;
+        moonBodyRef.current.scale.setScalar(1.25);
+      }
     }
 
     // Update emissive window glow on all palace walls
@@ -1654,28 +1664,39 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
               : "❄️ White Maquette"}
           </button>
 
-          {/* Atmosphere Lighting Switch */}
-          <button
-            type="button"
-            onClick={() =>
-              setAtmosphere((a) =>
-                a === "sunlight" ? "sunset" : a === "sunset" ? "night" : "sunlight"
-              )
-            }
-            className="px-2.5 py-1.5 rounded-sm bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-200 font-mono text-[11px] transition-colors cursor-pointer"
-          >
-            {atmosphere === "sunlight"
-              ? lang === "bo"
-                ? "☀️ ལྷ་སའི་ཉི་འོད"
-                : "☀️ Lhasa Sun"
-              : atmosphere === "sunset"
-              ? lang === "bo"
-                ? "🌅 མཚམས་སྤྲིན"
-                : "🌅 Golden Sunset"
-              : lang === "bo"
-              ? "🌙 མཚན་མོའི་གློག་འོད"
-              : "🌙 Night Glow"}
-          </button>
+          {/* Atmosphere Lighting Switch: Sun vs Night */}
+          <div className="flex items-center rounded-sm bg-white/5 border border-white/15 p-0.5 font-mono text-[11px]">
+            <button
+              type="button"
+              onClick={() => {
+                setAtmosphere("sunlight");
+                playResonance(528);
+              }}
+              className={`px-2.5 py-1 rounded-xs transition-all cursor-pointer flex items-center gap-1 ${
+                atmosphere === "sunlight"
+                  ? "bg-amber-400 text-black font-bold shadow-xs"
+                  : "text-amber-200/75 hover:text-amber-200"
+              }`}
+            >
+              <span>☀️</span>
+              <span>{lang === "bo" ? "ཉི་མ།" : "Sun"}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setAtmosphere("night");
+                playResonance(432);
+              }}
+              className={`px-2.5 py-1 rounded-xs transition-all cursor-pointer flex items-center gap-1 ${
+                atmosphere === "night"
+                  ? "bg-sky-300 text-black font-bold shadow-xs"
+                  : "text-sky-200/75 hover:text-sky-200"
+              }`}
+            >
+              <span>🌙</span>
+              <span>{lang === "bo" ? "མཚན་མོ།" : "Night"}</span>
+            </button>
+          </div>
 
           {/* Auto-Rotate Toggle */}
           <button
