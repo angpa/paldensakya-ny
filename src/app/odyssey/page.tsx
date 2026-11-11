@@ -10,10 +10,10 @@ const ODYSSEY_UI = {
   en: {
     backCulture: "← Back to Tibetan Culture",
     backHome: "Home",
-    badge: "Interactive Spatial Realm · 2,000 Years",
-    title: "3D Tibetan Sacred Odyssey",
+    badge: "Interactive 3D Miniature Village · 2,000 Years",
+    title: "3D Living Tibetan Village & Cultural Heritage",
     subtitle:
-      "A dedicated spatial exploration of the Eight Auspicious Symbols (Ashtamangala) and the Five Elements (Lungta), inspired by timeless Buddhist cosmology and modern interactive digital craft.",
+      "A spatial celebration of authentic Tibetan culture and daily life: stone homesteads, nomad yak-hair tents, barley terraces, folk dance squares, herbal tea houses, and ancient handicrafts across 2,000 years of civilization.",
     sacredCenter: "Palden Sakya Center · New York",
     footerText:
       "Palden Sakya Center · Dedicated to the preservation of Tibetan living culture and Buddha Dharma.",
@@ -21,10 +21,10 @@ const ODYSSEY_UI = {
   bo: {
     backCulture: "← བོད་ཀྱི་རིག་གཞུང་ལ་ཕྱིར་ལོག",
     backHome: "གཙོ་ངོས།",
-    badge: "༢༠༠༠ ལོ་འཁོར་གྱི་༣D ཞིང་ཁམས།",
-    title: "༄༅། །བཀྲ་ཤིས་རྟགས་བརྒྱད་དང་འབྱུང་ལྔའི་༣D ཞིང་ཁམས།",
+    badge: "བོད་ཀྱི་ཡུལ་ལྗོངས་གྲོང་གསེབ་༣D",
+    title: "༄༅། །བོད་ཀྱི་སྲོལ་རྒྱུན་གྲོང་གསེབ་དང་འཚོ་བའི་རིག་གཞུང་༣D།",
     subtitle:
-      "བོད་ཀྱི་རིག་གཞུང་དང་ནང་དོན་རིག་པའི་བཀྲ་ཤིས་རྟགས་བརྒྱད་དང་རླུང་རྟ་འབྱུང་བ་ལྔའི་དོན་སྙིང་ལ་གཟིགས་པའི་༣D ཉམས་མྱོང་ཁྱད་པར་ཅན།",
+      "བོད་ཀྱི་ཐུན་མོང་མ་ཡིན་པའི་རྡོ་ཁང་དང་སྦྲ་ནག ནས་ཞིང་། གཞས་ར། ལག་ཤེས་བཟོ་གྲྭ་སོགས་ལོ་ངོ་ཉིས་སྟོང་རིང་གི་འཚོ་བའི་གོམས་གཤིས་དང་དམངས་ཁྲོད་རིག་གནས་ལ་གཟིགས་པའི་༣D ཞིང་ཁམས།",
     sacredCenter: "ནིའུ་ཡོག་དཔལ་ལྡན་ས་སྐྱའི་ཆོས་ཚོགས།",
     footerText:
       "ནིའུ་ཡོག་དཔལ་ལྡན་ས་སྐྱའི་ཆོས་ཚོགས། བོད་ཀྱི་སྐད་ཡིག་རིག་གཞུང་དང་དམ་ཆོས་ཉར་ཚགས་ཆེད།",

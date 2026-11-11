@@ -783,7 +783,7 @@ export default function HomePage() {
             href="/odyssey"
             className="inline-flex items-center gap-1.5 text-tibet-gold-rich hover:underline underline-offset-4 font-medium"
           >
-            <span>{lang === "bo" ? "༣D ཞིང་ཁམས (བཀྲ་ཤིས་རྟགས་བརྒྱད)" : "3D Odyssey (Ashtamangala)"}</span>
+            <span>{lang === "bo" ? "༣D གྲོང་གསེབ (བོད་ཀྱི་རིག་གཞུང)" : "3D Tibetan Village (Living Culture)"}</span>
             <span aria-hidden="true">&rarr;</span>
           </Link>
         </div>

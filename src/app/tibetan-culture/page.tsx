@@ -688,8 +688,8 @@ export default function TibetanCulturePilotPage() {
             href="/odyssey"
             className="inline-flex items-center gap-1.5 text-xs font-medium text-tibet-gold-rich hover:text-tibet-crimson transition-colors"
           >
-            <span>🪐</span>
-            <span>{lang === "bo" ? "༣D ཞིང་ཁམས" : "3D Odyssey"}</span>
+            <span>🏔️</span>
+            <span>{lang === "bo" ? "གྲོང་གསེབ་༣D" : "3D Village"}</span>
           </Link>
         </div>
 
@@ -1158,7 +1158,7 @@ export default function TibetanCulturePilotPage() {
           </div>
         </section>
 
-        {/* Dedicated 3D Spatial Odyssey Gateway (Fast-Loading Portal) */}
+        {/* Dedicated 3D Spatial Village Gateway (Fast-Loading Portal) */}
         <section
           aria-labelledby="odyssey-portal-heading"
           className="relative overflow-hidden rounded-sm border border-sakya-gold/50 bg-gradient-to-r from-[#140f0d] via-[#1a1411] to-[#120e0d] text-white p-6 sm:p-8 shadow-lg"
@@ -1175,11 +1175,11 @@ export default function TibetanCulturePilotPage() {
                 <span className="w-2 h-2 rounded-full bg-tibet-gold animate-pulse" />
                 <span className="text-[10px] sm:text-[11px] uppercase tracking-widest font-mono font-semibold px-2.5 py-0.5 rounded-full bg-tibet-gold/20 border border-tibet-gold/40 text-tibet-gold">
                   {lang === "bo"
-                    ? "༢༠༠༠ ལོ་འཁོར་གྱི་ཉམས་མྱོང་ཁྱད་པར་ཅན།"
-                    : "Interactive 3D Spatial Experience"}
+                    ? "བོད་ཀྱི་ཡུལ་ལྗོངས་གྲོང་གསེབ་༣D"
+                    : "Interactive 3D Tibetan Village"}
                 </span>
                 <span className="text-[10px] font-mono text-white/40 uppercase hidden sm:inline">
-                  DEDICATED IMMERSIVE PAGE
+                  FOLK LIFE · NOMADS · ARCHITECTURE · CRAFTS
                 </span>
               </div>
 
@@ -1189,14 +1189,14 @@ export default function TibetanCulturePilotPage() {
                 className="font-serif text-2xl sm:text-3xl font-medium text-tibet-gold-light tracking-tight"
               >
                 {lang === "bo"
-                  ? "༄༅། །བཀྲ་ཤིས་རྟགས་བརྒྱད་དང་འབྱུང་ལྔའི་༣D ཞིང་ཁམས།"
-                  : "The 3D Sacred Odyssey: Ashtamangala & 5 Elements"}
+                  ? "༄༅། །བོད་ཀྱི་སྲོལ་རྒྱུན་གྲོང་གསེབ་དང་འཚོ་བའི་རིག་གཞུང་༣D།"
+                  : "The 3D Living Tibetan Village: 2,000 Years of Culture"}
               </h2>
 
               <p className="text-xs sm:text-sm text-white/80 leading-relaxed font-serif">
                 {lang === "bo"
-                  ? "བཀྲ་ཤིས་རྟགས་བརྒྱད་ཀྱི་དཀྱིལ་འཁོར་དང་འབྱུང་བ་ལྔའི་དོན་སྙིང་ལ་གཟིགས་པའི་༣D ཞིང་ཁམས་ཆ་ཚང་ཤོག་ངོས་ལོགས་སུ་བཀོད་ཡོད།"
-                  : "Explore the 3D celestial mandala orbit, gyroscopic spatial matrix, and singing bowl acoustic resonances on our dedicated high-performance realm."}
+                  ? "བོད་ཀྱི་རྡོ་ཁང་དང་སྦྲ་ནག ནས་ཞིང་། གཞས་ར། ལག་ཤེས་བཟོ་གྲྭ་སོགས་འཚོ་བའི་གོམས་གཤིས་ཆ་ཚང་ལ་གཟིགས་པའི་༣D ཞིང་ཁམས་ཤོག་ངོས་ལོགས་སུ་བཀོད་ཡོད།"
+                  : "Explore the miniature 3D Himalayan settlement: stone homesteads, nomad yak-hair tents, barley terraces, folk dance squares, weaving studios, and herbal medicine houses on our dedicated realm."}
               </p>
             </div>
 
@@ -1204,11 +1204,11 @@ export default function TibetanCulturePilotPage() {
               href="/odyssey"
               className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-sm bg-tibet-gold hover:bg-tibet-gold-rich text-black font-semibold text-xs sm:text-sm transition-all shadow-md hover:scale-102 self-start md:self-auto shrink-0 cursor-pointer"
             >
-              <span>🪐</span>
+              <span>🏔️</span>
               <span>
                 {lang === "bo"
-                  ? "༣D ཞིང་ཁམས་སུ་ཞུགས ↗"
-                  : "Enter 3D Spatial Odyssey ↗"}
+                  ? "གྲོང་གསེབ་ཏུ་ཞུགས ↗"
+                  : "Explore 3D Village ↗"}
               </span>
             </Link>
           </div>

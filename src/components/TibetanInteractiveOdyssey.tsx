@@ -1,251 +1,458 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 
 type Language = "en" | "bo";
-type ViewMode = "mandala" | "matrix" | "archive";
+type ViewMode = "village" | "bento" | "chronicle";
 
-interface AuspiciousSign {
+interface CulturalLandmark {
   id: string;
-  tibetan: string;
-  sanskrit: string;
-  nameEn: string;
   nameBo: string;
-  meaningEn: string;
-  meaningBo: string;
-  blessingEn: string;
-  blessingBo: string;
-  element: "space" | "air" | "fire" | "water" | "earth";
-  elementBo: string;
-  elementEn: string;
+  nameEn: string;
+  categoryBo: string;
+  categoryEn: string;
+  locationBo: string;
+  locationEn: string;
+  descriptionBo: string;
+  descriptionEn: string;
+  practicesBo: string[];
+  practicesEn: string[];
+  soundType: "hearth" | "horn" | "stream" | "lute" | "herbal" | "loom" | "wind" | "bell";
+  freq: number;
   colorClass: string;
   borderClass: string;
   bgGlowClass: string;
-  freq: number; // Web Audio chime frequency in Hz
-  svgPath: React.ReactNode;
+  coords: { x: number; y: number; z: number }; // Isometric grid coordinates on village plateau
+  svgModel: React.ReactNode;
 }
 
-const AUSPICIOUS_SIGNS: AuspiciousSign[] = [
+const VILLAGE_LANDMARKS: CulturalLandmark[] = [
   {
-    id: "wheel",
-    tibetan: "ཆོས་ཀྱི་འཁོར་ལོ།",
-    sanskrit: "Dharmachakra",
-    nameEn: "The Golden Dharma Wheel",
-    nameBo: "ཆོས་ཀྱི་འཁོར་ལོ།",
-    meaningEn: "The eternal turning of the Buddha's teachings of wisdom and boundless compassion across realms and centuries.",
-    meaningBo: "སྟོན་པ་ཤཱཀྱ་ཐུབ་པའི་དམ་ཆོས་འཁོར་ལོ་རིམ་པ་གསུམ་བསྐོར་བའི་བདེན་པའི་སྙིང་པོ།",
-    blessingEn: "Bestows the wisdom to overcome ignorance and guides the mind on the eightfold path.",
-    blessingBo: "མ་རིག་མུན་པ་སེལ་ཞིང་ཡེ་ཤེས་ཀྱི་སྣང་བ་རྒྱས་པའི་རྟེན་འབྲེལ།",
-    element: "space",
-    elementBo: "ནམ་མཁའ།",
-    elementEn: "Space",
+    id: "homestead",
+    nameBo: "ཁང་པ། · རྡོ་ཁང་སྲོལ་རྒྱུན།",
+    nameEn: "The Stone Homestead & Hearth",
+    categoryBo: "འཚོ་བའི་རིག་གཞུང་དང་མགྲོན་བསུ།",
+    categoryEn: "Domestic Living & Hospitality",
+    locationBo: "གྲོང་གསེབ་དཀྱིལ་གྱི་གཞིས་ཀ",
+    locationEn: "Central Village Settlement",
+    descriptionBo:
+      "བོད་ཀྱི་སྲོལ་རྒྱུན་རྡོ་ཁང་ནི་རྡོ་དང་ཤིང་ལས་བསྐྲུན་ཞིང་སྒེའུ་ཁུང་ལ་ནག་རིས་དང་ཐོག་ཁར་དར་ལྕོག་བཙུགས་ཡོད། ཐབ་ཚང་དུ་ཇ་བསྲུབས་མ་དང་རྩམ་པ། མར་ཁུ་བཅས་ཀྱིས་མགྲོན་པོར་སྣེ་ལེན་བྱེད་པའི་དྲོ་སྐྱིད་ཀྱི་གནས་མཆོག་ཡིན།",
+    descriptionEn:
+      "Traditional multi-story whitewashed stone homesteads built with timber lintels, black trapezoidal window frames, and flat roofs adorned with prayer flags. The hearth is the heart of family hospitality, where churned salted butter tea (Po Cha) and roasted barley flour (Tsampa) are shared with warmth and reverence.",
+    practicesBo: [
+      "ཇ་སྲུབ་མདོང་ནང་ཇ་བསྲུབས་པ་དང་མར་དང་ཚྭ་སྦྱོར་བ།",
+      "ནས་རྩམ་པ་མར་ཁུ་དང་ལྷན་དུ་བརྫིས་ཏེ་ཟ་བའི་གོམས་གཤིས།",
+      "དགུན་དུས་ཐབ་ཀའི་མཐའ་སྐོར་དུ་ཁྱིམ་ཚང་མཉམ་འཛོམས་ཀྱི་གཏམ་རྒྱུད།",
+    ],
+    practicesEn: [
+      "Churning tea leaves, yak butter, and salt in tall wooden dongmo churns.",
+      "Kneading fragrant roasted highland barley flour into savory tsampa dough.",
+      "Gathering around the central wood-fired hearth for multi-generational oral storytelling.",
+    ],
+    soundType: "hearth",
+    freq: 432,
     colorClass: "text-amber-400",
     borderClass: "border-amber-400/50",
     bgGlowClass: "from-amber-500/25 to-amber-700/5",
-    freq: 432,
-    svgPath: (
-      <>
-        <circle cx="12" cy="12" r="9" strokeWidth="1.8" />
-        <circle cx="12" cy="12" r="3.5" strokeWidth="1.8" />
-        <line x1="12" y1="3" x2="12" y2="8.5" strokeWidth="1.8" />
-        <line x1="12" y1="15.5" x2="12" y2="21" strokeWidth="1.8" />
-        <line x1="3" y1="12" x2="8.5" y2="12" strokeWidth="1.8" />
-        <line x1="15.5" y1="12" x2="21" y2="12" strokeWidth="1.8" />
-        <line x1="5.6" y1="5.6" x2="9.5" y2="9.5" strokeWidth="1.8" />
-        <line x1="14.5" y1="14.5" x2="18.4" y2="18.4" strokeWidth="1.8" />
-        <line x1="18.4" y1="5.6" x2="14.5" y2="9.5" strokeWidth="1.8" />
-        <line x1="9.5" y1="14.5" x2="5.6" y2="18.4" strokeWidth="1.8" />
-      </>
+    coords: { x: 30, y: 55, z: 20 },
+    svgModel: (
+      /* Traditional Stone Homestead with Black Windows & Rooftop Flag */
+      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" className="w-full h-full">
+        {/* House walls */}
+        <polygon points="12,56 16,24 48,24 52,56" strokeWidth="2.5" className="fill-stone-100/90 stroke-amber-500/80" />
+        {/* Flat parapet roof */}
+        <rect x="14" y="20" width="36" height="5" strokeWidth="2" className="fill-amber-900 stroke-amber-600" />
+        {/* Penba frieze trim */}
+        <rect x="15" y="24" width="34" height="2" className="fill-red-800" />
+        {/* Black trapezoid windows */}
+        <polygon points="22,34 24,30 30,30 32,34" className="fill-stone-900 stroke-amber-400/80" strokeWidth="1.2" />
+        <polygon points="34,34 36,30 42,30 44,34" className="fill-stone-900 stroke-amber-400/80" strokeWidth="1.2" />
+        {/* Heavy timber entrance doorway */}
+        <rect x="27" y="44" width="10" height="12" className="fill-stone-900 stroke-amber-500" strokeWidth="1.5" />
+        <line x1="27" y1="44" x2="37" y2="44" strokeWidth="2" className="stroke-amber-300" />
+        {/* Rooftop prayer flag pole */}
+        <line x1="46" y1="20" x2="46" y2="8" strokeWidth="1.5" className="stroke-stone-300" />
+        <polygon points="46,8 54,11 46,14" className="fill-amber-400 stroke-amber-500" strokeWidth="1" />
+        {/* Hearth smoke swirl */}
+        <path d="M22,18 Q20,12 24,8 Q28,4 25,2" strokeWidth="1.2" strokeLinecap="round" className="stroke-white/40" />
+      </svg>
     ),
   },
   {
-    id: "lotus",
-    tibetan: "པདྨ།",
-    sanskrit: "Padma",
-    nameEn: "The Sacred Lotus",
-    nameBo: "དྲི་མེད་པདྨ།",
-    meaningEn: "Emerging unstained from the mud, representing primordial purity of mind, speech, and body amid worldly existence.",
-    meaningBo: "འདམ་ལས་སྐྱེས་ཀྱང་འདམ་གྱིས་མ་གོས་པའི་རྣམ་དག་སྐུ་གསུང་ཐུགས་ཀྱི་མཚོན་དོན།",
-    blessingEn: "Purifies negative deeds and unfolds the innate radiant compassion within.",
-    blessingBo: "ལས་ངན་སྒྲིབ་པ་དག་ཅིང་རང་བྱུང་སྙིང་རྗེའི་མེ་ཏོག་རྒྱས་པའི་རྟེན་འབྲེལ།",
-    element: "water",
-    elementBo: "ཆུ།",
-    elementEn: "Water",
-    colorClass: "text-rose-400",
-    borderClass: "border-rose-400/50",
-    bgGlowClass: "from-rose-500/25 to-rose-700/5",
-    freq: 528,
-    svgPath: (
-      <>
-        <path d="M12 3c-2 4-4 8-4 12a4 4 0 008 0c0-4-2-8-4-12z" strokeWidth="1.8" />
-        <path d="M12 15c-3-2-6-1-7 2 1 3 4 4 7 4" strokeWidth="1.8" />
-        <path d="M12 15c3-2 6-1 7 2-1 3-4 4-7 4" strokeWidth="1.8" />
-        <path d="M12 21v-3" strokeWidth="1.8" />
-      </>
+    id: "nomad-tent",
+    nameBo: "སྦྲ་ནག · འབྲོག་པའི་རྫི་སྦྲ།",
+    nameEn: "The Black Yak-Hair Nomad Tent",
+    categoryBo: "འབྲོག་པའི་འཚོ་བ་དང་རང་བྱུང་ཁམས།",
+    categoryEn: "Pastoral Nomadism & High Plateau Ecology",
+    locationBo: "སྤང་རི་མཐོན་པོའི་འབྲོག་ས།",
+    locationEn: "Alpine Summer Pastures",
+    descriptionBo:
+      "གཡག་རྩིད་ལས་བཐགས་པའི་སྦྲ་ནག་ནི་བོད་ཀྱི་འབྲོག་པའི་ཐུན་མོང་མ་ཡིན་པའི་སྡོད་གནས་ཡིན། ཆར་རླུང་དང་གྲང་ངར་འགོག་ཅིང་རྩྭ་ཐང་གི་རང་དབང་དང་གཡག་ལུག་འཚོ་སྐྱོང་གི་རིག་གཞུང་མཚོན་པར་བྱེད།",
+    descriptionEn:
+      "Handwoven from the coarse, weather-resistant outer hair of the yak, the ba-nak (black tent) is the resilient mobile sanctuary of the Drokpa (Tibetan pastoralists). It breathes open in fair weather and tightens against blizzard winds, embodying harmonious existence on the world's highest plateau.",
+    practicesBo: [
+      "གཡག་ལུག་རྩྭ་ཁར་འདེབས་པ་དང་འབྲོག་གླུ་ལེན་པའི་གོམས་སྲོལ།",
+      "འོ་མ་དཀྲོགས་ཏེ་མར་དང་ཐུད་བཟོ་བའི་ལག་རྩལ།",
+      "དུས་ཚིགས་བཞིར་རྩྭ་ཁ་བརྗེ་བའི་རང་བྱུང་སྲུང་སྐྱོབ་ཀྱི་ཤེས་རབ།",
+    ],
+    practicesEn: [
+      "Herding yaks across high meadows while singing resonant pastoral mountain songs (glu).",
+      "Churning rich milk into golden butter, hard dried curd (chhurpi), and wholesome cheeses.",
+      "Rotating seasonal pastures in profound reverence for plateau ecological equilibrium.",
+    ],
+    soundType: "horn",
+    freq: 196,
+    colorClass: "text-stone-300",
+    borderClass: "border-stone-400/50",
+    bgGlowClass: "from-stone-500/25 to-stone-700/5",
+    coords: { x: 70, y: 25, z: 25 },
+    svgModel: (
+      /* Nomad Yak-Hair Tent with Ridge Poles, Guy Lines & Smoke Hole */
+      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" className="w-full h-full">
+        {/* Tent Body */}
+        <polygon points="6,52 32,20 58,52" strokeWidth="2.5" className="fill-stone-900 stroke-stone-400" />
+        {/* Central Ridge opening for smoke */}
+        <line x1="28" y1="20" x2="36" y2="20" strokeWidth="3" className="stroke-amber-400" />
+        <path d="M32,18 Q34,12 31,6" strokeWidth="1.2" strokeLinecap="round" className="stroke-white/30" />
+        {/* Exterior Guy Lines and Wooden Stakes */}
+        <line x1="16" y1="36" x2="2" y2="52" strokeWidth="1.2" className="stroke-stone-500" />
+        <line x1="48" y1="36" x2="62" y2="52" strokeWidth="1.2" className="stroke-stone-500" />
+        {/* Wooden tent pole crest */}
+        <line x1="32" y1="20" x2="32" y2="14" strokeWidth="2" className="stroke-amber-600" />
+        {/* Flap entrance */}
+        <polygon points="26,52 32,34 38,52" className="fill-stone-950 stroke-stone-600" strokeWidth="1.5" />
+        {/* Grazing Yak silhouette */}
+        <ellipse cx="14" cy="46" rx="4" ry="3" className="fill-stone-800" />
+        <circle cx="11" cy="44" r="1.8" className="fill-stone-800" />
+        <line x1="11" y1="43" x2="9" y2="41" strokeWidth="1.2" className="stroke-stone-300" />
+      </svg>
     ),
   },
   {
-    id: "knot",
-    tibetan: "དཔལ་བེའུ།",
-    sanskrit: "Shrivatsa",
-    nameEn: "The Endless Knot",
-    nameBo: "དཔལ་བེའུ།",
-    meaningEn: "The interweaving of wisdom and compassion; the endless cycle of cause and effect, harmony, and mutual interdependence.",
-    meaningBo: "ཐབས་དང་ཤེས་རབ་ཟུང་འཇུག་དང་རྟེན་ཅིང་འབྲེལ་བར་འབྱུང་བའི་མཐའ་མེད་རྒྱུན་གཟུགས།",
-    blessingEn: "Creates harmonious relationships, longevity, and auspicious causes for spiritual realization.",
-    blessingBo: "མཐུན་ལམ་དང་ཚེ་བསོད། བྱང་ཆུབ་ཀྱི་ལམ་དུ་རྟེན་འབྲེལ་བཟང་པོ་འགྲིལ་བའི་དཔལ།",
-    element: "earth",
-    elementBo: "ས།",
-    elementEn: "Earth",
-    colorClass: "text-amber-300",
-    borderClass: "border-amber-300/50",
-    bgGlowClass: "from-amber-400/25 to-amber-600/5",
+    id: "barley-fields",
+    nameBo: "ནས་ཞིང་། · གསེར་མདོག་རྩམ་པའི་ཞིང་ས།",
+    nameEn: "Highland Barley Terraces & Watermill",
+    categoryBo: "ཞིང་ལས་དང་ལོ་ཏོག་དུས་ཆེན།",
+    categoryEn: "Terraced Agriculture & Harvest Traditions",
+    locationBo: "ཆུ་བོའི་འགྲམ་གྱི་ཞིང་ས།",
+    locationEn: "Glacial River Basin",
+    descriptionBo:
+      "བོད་ཀྱི་ས་མཐོར་ལོ་ངོ་སྟོང་ཕྲག་རིང་སྐྱེས་པའི་ནས་ནི་བོད་མིའི་སྲོག་རྟེན་ཡིན། ཆུ་འཁོར་གྱིས་ནས་བརྔོས་མ་རྩམ་པར་འཐག་ཅིང་། སྟོན་བསྡུའི་དུས་སུ་འོང་སྐོར་གྱི་དགའ་སྟོན་རོལ་བའི་སྲོལ་རྒྱུན་ལྡན།",
+    descriptionEn:
+      "Cultivated for millennia above 3,500 meters, resilient Tibetan highland barley (nas) is the staple crop of Himalayan civilization. Rushing mountain aqueducts power wooden watermills (chudkor) to grind roasted grains into fine tsampa, celebrated during the autumn harvest procession (Ongkor).",
+    practicesBo: [
+      "དཔྱིད་ཀར་གླང་ཆེན་གཉིས་ལ་གཉའ་ཤིང་བཀལ་ཏེ་ཞིང་ཁ་རྨོ་བ།",
+      "སྟོན་དུས་འོང་སྐོར་དུས་ཆེན་ལ་ལོ་ཏོག་གི་མཐའ་བསྐོར་ཞིང་གཞས་ལེན་པ།",
+      "རང་བྱུང་ཆུ་འཁོར་གྱིས་ནས་རྩམ་པར་འཐག་པའི་ལག་རྩལ།",
+    ],
+    practicesEn: [
+      "Yoking decorated dzo (ox-yak hybrids) with painted wooden plows to bless spring planting.",
+      "Circumambulating golden terraces during Ongkor while singing lyrical harvest ballads.",
+      "Channeling glacial mountain torrents to turn horizontal wooden watermill grinding stones.",
+    ],
+    soundType: "stream",
     freq: 396,
-    svgPath: (
-      <path
-        d="M8 8l8 8M16 8l-8 8M12 4l8 8-4 4-8-8 4-4zM4 12l8-8 4 4-8 8-4-4z"
-        strokeWidth="1.8"
-        strokeLinejoin="round"
-      />
-    ),
-  },
-  {
-    id: "conch",
-    tibetan: "དུང་དཀར་གཡས་འཁྱིལ།",
-    sanskrit: "Shankha",
-    nameEn: "The Right-Turning Conch",
-    nameBo: "དུང་དཀར་གཡས་འཁྱིལ།",
-    meaningEn: "The far-reaching and melodious sound of the Buddha's teachings, awakening beings from the deep sleep of ignorance.",
-    meaningBo: "དམ་ཆོས་ཀྱི་སྒྲ་དབྱངས་ཕྱོགས་བཅུར་ཁྱབ་ཅིང་ཉོན་མོངས་གཉིད་ལས་སློང་བའི་མཚོན་རྟགས།",
-    blessingEn: "Brings fame, clear communication, and the blessing of hearing profound teachings.",
-    blessingBo: "གྲགས་པ་དང་ཚིག་བཟང་། ཆོས་ཀྱི་སྒྲ་དབྱངས་ཐོས་པའི་སྐལ་བཟང་འཕེལ་བའི་རྟེན།",
-    element: "air",
-    elementBo: "རླུང་།",
-    elementEn: "Air",
-    colorClass: "text-cyan-300",
-    borderClass: "border-cyan-300/50",
-    bgGlowClass: "from-cyan-400/25 to-cyan-600/5",
-    freq: 639,
-    svgPath: (
-      <>
-        <path d="M12 4c5 0 9 4 9 9s-3 8-7 8c-3 0-5-2-6-5l8-4c1-2 0-4-2-5l-2-3z" strokeWidth="1.8" />
-        <path d="M12 4c-3 0-6 3-6 7 0 5 4 10 8 10" strokeWidth="1.8" />
-        <circle cx="12" cy="13" r="2" strokeWidth="1.8" />
-      </>
-    ),
-  },
-  {
-    id: "vase",
-    tibetan: "གཏེར་གྱི་བུམ་པ།",
-    sanskrit: "Kalasha",
-    nameEn: "The Treasure Vase",
-    nameBo: "གཏེར་གྱི་བུམ་པ།",
-    meaningEn: "An inexhaustible celestial vessel holding jewels of longevity, spiritual wealth, and the boundless nectar of liberation.",
-    meaningBo: "ཟད་མི་ཤེས་པའི་དགོས་འདོད་ཀུན་འབྱུང་གི་རིན་པོ་ཆེའི་གཏེར་དང་བདུད་རྩིའི་བུམ་པ།",
-    blessingEn: "Attracts inner contentment, boundless prosperity, and spiritual vitality.",
-    blessingBo: "ནང་གི་ཚིམ་པ་དང་དཔལ་འབྱོར། ཚེ་དང་བསོད་ནམས་ཡར་ངོའི་ཟླ་ལྟར་འཕེལ་བའི་རྟེན།",
-    element: "earth",
-    elementBo: "ས།",
-    elementEn: "Earth",
     colorClass: "text-yellow-400",
     borderClass: "border-yellow-400/50",
     bgGlowClass: "from-yellow-500/25 to-yellow-700/5",
-    freq: 741,
-    svgPath: (
-      <>
-        <path d="M8 8h8M9 4h6M9 4v4M15 4v4" strokeWidth="1.8" />
-        <path d="M7 8c-3 3-3 7 0 10 2 2 8 2 10 0 3-3 3-7 0-10" strokeWidth="1.8" />
-        <path d="M9 19h6" strokeWidth="1.8" />
-        <circle cx="12" cy="13" r="2.5" strokeWidth="1.8" />
-      </>
+    coords: { x: 20, y: 30, z: 15 },
+    svgModel: (
+      /* Terraced Mountain Barley Fields with Aqueduct & Watermill */
+      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" className="w-full h-full">
+        {/* Tiered Terrace Steps */}
+        <path d="M4,48 Q20,44 40,48 Q54,50 60,46" strokeWidth="2.5" className="stroke-yellow-600 fill-amber-900/30" />
+        <path d="M8,38 Q26,34 46,38 Q56,40 62,36" strokeWidth="2.5" className="stroke-yellow-500 fill-amber-800/30" />
+        <path d="M14,28 Q32,24 50,28" strokeWidth="2.5" className="stroke-yellow-400 fill-amber-700/30" />
+        {/* Barley Stalks */}
+        <line x1="20" y1="34" x2="20" y2="28" strokeWidth="1.5" className="stroke-yellow-300" />
+        <circle cx="20" cy="27" r="1.5" className="fill-yellow-400" />
+        <line x1="28" y1="33" x2="28" y2="27" strokeWidth="1.5" className="stroke-yellow-300" />
+        <circle cx="28" cy="26" r="1.5" className="fill-yellow-400" />
+        <line x1="38" y1="36" x2="38" y2="30" strokeWidth="1.5" className="stroke-yellow-300" />
+        <circle cx="38" cy="29" r="1.5" className="fill-yellow-400" />
+        {/* Wooden Waterwheel Mill */}
+        <rect x="44" y="44" width="14" height="12" className="fill-stone-800 stroke-amber-500" strokeWidth="1.5" />
+        <circle cx="51" cy="50" r="4.5" className="stroke-yellow-400" strokeWidth="1.5" />
+        <line x1="51" y1="45.5" x2="51" y2="54.5" strokeWidth="1" className="stroke-yellow-300" />
+        <line x1="46.5" y1="50" x2="55.5" y2="50" strokeWidth="1" className="stroke-yellow-300" />
+        {/* Flowing Water Stream */}
+        <path d="M51,55 Q53,60 56,64" strokeWidth="2" className="stroke-cyan-400" />
+      </svg>
     ),
   },
   {
-    id: "parasol",
-    tibetan: "རིན་ཆེན་གདུགས།",
-    sanskrit: "Chhatra",
-    nameEn: "The Precious Parasol",
-    nameBo: "རིན་ཆེན་གདུགས།",
-    meaningEn: "The protective canopy shielding sentient beings from the scorching heat of afflictions, harms, and lower rebirths.",
-    meaningBo: "ཉོན་མོངས་པའི་ཚ་གདུང་དང་གནོད་པ་ཀུན་ལས་སྐྱོབ་པའི་བསིལ་ཡབ་རིན་པོ་ཆེའི་གདུགས།",
-    blessingEn: "Shields against obstacles, illness, and unfavorable planetary or environmental conditions.",
-    blessingBo: "བར་ཆད་དང་ནད་གདོན། མི་མཐུན་ཕྱོགས་ཀུན་ལས་རྣམ་པར་རྒྱལ་བའི་སྲུང་སྐྱོབ།",
-    element: "space",
-    elementBo: "ནམ་མཁའ།",
-    elementEn: "Space",
+    id: "folk-square",
+    nameBo: "གཞས་རའི་སྒོར་གཞས། · དམངས་ཁྲོད་རིག་གནས།",
+    nameEn: "The Village Square & Dramyin Lute",
+    categoryBo: "དམངས་གཞས་དང་སྒོར་གཞས་སྒྱུ་རྩལ།",
+    categoryEn: "Folk Music, Dance & Epic Storytelling",
+    locationBo: "གྲོང་གསེབ་ཀྱི་མདུན་ཐང་།",
+    locationEn: "Central Cobblestone Plaza",
+    descriptionBo:
+      "གྲོང་ཚོའི་མདུན་ཐང་ནི་དུས་ཆེན་དང་དགའ་སྟོན་སྐབས་སྒོར་གཞས་འཁྲབ་པ་དང་སྒྲ་སྙན་དཀྲོལ་བའི་ས་གནས་ཡིན། གླིང་གེ་སར་རྒྱལ་པོའི་སྒྲུང་དང་དམངས་ཁྲོད་གཏམ་རྒྱུད་ཀྱི་འབྱུང་ཁུངས་གཙོ་བོ་ཡིན།",
+    descriptionEn:
+      "The communal heart of the settlement where villagers gather during Losar and summer festivals for Gorshey (circular communal dances), rhythmic stepping, and six-stringed Dramyin lute performances, carrying forward the living oral epics of King Gesar.",
+    practicesBo: [
+      "ཕོ་མོ་རྒན་གཞོན་ཚང་མས་ལག་སྦྲེལ་ཏེ་སྒོར་གཞས་འཁྲབ་པ།",
+      "སྒྲ་སྙན་སྦྲེལ་བའི་དབྱངས་རྟ་དང་མཉམ་དུ་ཞབས་བྲོ་རྒྱག་པ།",
+      "གླིང་གེ་སར་རྒྱལ་པོའི་དཔའ་བོའི་སྒྲུང་གཏམ་ཉན་པའི་སྲོལ་རྒྱུན།",
+    ],
+    practicesEn: [
+      "Forming joyous interlocking concentric circles for rhythmic foot-stomping Gorshey dances.",
+      "Strumming the horse-headed Dramyin lute with bone picks to accompany traditional folk couplets.",
+      "Reciting poetic verses from the million-line Epic of King Gesar by the fireside.",
+    ],
+    soundType: "lute",
+    freq: 528,
+    colorClass: "text-rose-400",
+    borderClass: "border-rose-400/50",
+    bgGlowClass: "from-rose-500/25 to-rose-700/5",
+    coords: { x: 50, y: 50, z: 22 },
+    svgModel: (
+      /* Village Square with Dramyin Lute, Bonfire & Cobblestone Rings */
+      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" className="w-full h-full">
+        {/* Concentric cobblestone dancing circles */}
+        <circle cx="32" cy="40" r="20" strokeWidth="1" strokeDasharray="3 3" className="stroke-amber-400/40" />
+        <circle cx="32" cy="40" r="12" strokeWidth="1.2" className="stroke-amber-400/60" />
+        {/* Central Communal Fire / Hearth */}
+        <ellipse cx="32" cy="42" rx="4" ry="2" className="fill-amber-900" />
+        <path d="M30,42 Q32,32 34,42 Q33,36 32,30 Q31,36 30,42" className="fill-orange-500 stroke-yellow-300" strokeWidth="1" />
+        {/* The Sacred 6-Stringed Dramyin Lute */}
+        {/* Lute Body */}
+        <ellipse cx="32" cy="22" rx="6" ry="8" className="fill-amber-800 stroke-amber-400" strokeWidth="1.5" />
+        <ellipse cx="32" cy="22" rx="2.5" ry="3.5" className="fill-stone-950" />
+        {/* Lute Neck */}
+        <rect x="30.5" y="6" width="3" height="12" className="fill-amber-700 stroke-amber-400" strokeWidth="1" />
+        {/* Horse-head finial (Rakta) */}
+        <path d="M30.5,6 Q28,3 32,1 Q35,3 33.5,6" strokeWidth="1.2" className="fill-amber-400 stroke-amber-200" />
+        {/* Pegs */}
+        <line x1="28" y1="8" x2="36" y2="8" strokeWidth="1" className="stroke-amber-200" />
+        <line x1="28" y1="11" x2="36" y2="11" strokeWidth="1" className="stroke-amber-200" />
+        <line x1="28" y1="14" x2="36" y2="14" strokeWidth="1" className="stroke-amber-200" />
+        {/* Sound waves radiating */}
+        <path d="M42,16 Q45,22 42,28" strokeWidth="1" strokeLinecap="round" className="stroke-rose-400" />
+        <path d="M22,16 Q19,22 22,28" strokeWidth="1" strokeLinecap="round" className="stroke-rose-400" />
+      </svg>
+    ),
+  },
+  {
+    id: "medicine-house",
+    nameBo: "གསོ་རིག་སྨན་ཁང་། · བོད་ཀྱི་སྨན་རྩིས་རིག་པ།",
+    nameEn: "Sowa Rigpa Apothecary & Teahouse",
+    categoryBo: "གསོ་བ་རིག་པ་དང་རྩི་སྨན་རིག་གཞུང་།",
+    categoryEn: "Traditional Tibetan Medicine (Sowa Rigpa) & Botany",
+    locationBo: "གྲོང་གསེབ་ཀྱི་ཤར་ཕྱོགས།",
+    locationEn: "Eastern Meadow Foothills",
+    descriptionBo:
+      "བོད་ཀྱི་གསོ་བ་རིག་པ་ནི་ལོ་ངོ་ཉིས་སྟོང་ལྷག་གི་ལོ་རྒྱུས་ལྡན་པའི་རང་བྱུང་སྨན་གཞུང་ཡིན། ས་མཐོའི་རྩི་སྨན་དང་རྩ་བརྟག་ཆུ་བརྟག རླུང་མཁྲིས་བད་ཀན་གྱི་དོ་མཉམ་སྲུང་བའི་གནས་མཆོག་ཡིན།",
+    descriptionEn:
+      "The village center for Sowa Rigpa (The Science of Healing), one of the world's oldest surviving medical systems. Rooted in the Four Tantras (Gyushi), amchis (physicians) balance the three humors (Lung, Tripa, Baekan) through high-altitude botanical remedies and pulse diagnosis.",
+    practicesBo: [
+      "གངས་རིའི་རྩི་སྨན་དང་དབྱར་རྩྭ་དགུན་འབུ་སོགས་བསྡུ་ལེན་གྱི་ཤེས་རབ།",
+      "འཕར་རྩ་བརྟག་པ་དང་གཟུགས་ཁམས་དོ་མཉམ་སྙོམས་པའི་སྨན་བཅོས།",
+      "རྩི་སྨན་ཇ་དང་གསོལ་ཇ་མངར་མོ་འཐུང་བའི་འཚོ་བའི་རོལ་སྟངས།",
+    ],
+    practicesEn: [
+      "Harvesting wild alpine medicinal botanicals (Rhodiola, Snow Lotus, saffron) according to lunar cycles.",
+      "Reading the 28 subtle pulse waveforms to discern internal organ equilibrium.",
+      "Blending therapeutic herbal infusions and spiced sweet tea (cha ngarmo) for physical vigor.",
+    ],
+    soundType: "herbal",
+    freq: 639,
+    colorClass: "text-emerald-400",
+    borderClass: "border-emerald-400/50",
+    bgGlowClass: "from-emerald-500/25 to-emerald-700/5",
+    coords: { x: 75, y: 55, z: 18 },
+    svgModel: (
+      /* Apothecary with Mortar, Pestle, Medicine Pouches & Brass Teapot */
+      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" className="w-full h-full">
+        {/* Traditional Mortar & Pestle */}
+        <path d="M16,36 Q16,52 32,52 Q48,52 48,36 Z" strokeWidth="2" className="fill-stone-800 stroke-emerald-400" />
+        <rect x="14" y="32" width="36" height="5" rx="1.5" className="fill-stone-700 stroke-emerald-300" strokeWidth="1.5" />
+        {/* Pestle diagonally */}
+        <line x1="42" y1="20" x2="28" y2="44" strokeWidth="3" strokeLinecap="round" className="stroke-amber-400" />
+        {/* Medicinal Himalayan Herb Leaves (Snow Lotus / Rhodiola) */}
+        <path d="M32,24 Q26,14 32,8 Q38,14 32,24" className="fill-emerald-600/70 stroke-emerald-300" strokeWidth="1.2" />
+        <path d="M26,20 Q18,16 22,10 Q28,14 26,20" className="fill-emerald-600/60 stroke-emerald-300" strokeWidth="1.2" />
+        <path d="M38,20 Q46,16 42,10 Q36,14 38,20" className="fill-emerald-600/60 stroke-emerald-300" strokeWidth="1.2" />
+        {/* Traditional Brass Teapot on stand */}
+        <ellipse cx="54" cy="46" rx="6" ry="4" className="fill-amber-700 stroke-yellow-400" strokeWidth="1.2" />
+        <path d="M54,42 Q52,36 54,34" strokeWidth="1" className="stroke-yellow-300" />
+        <path d="M58,44 Q62,42 61,48" strokeWidth="1.2" className="stroke-yellow-400" />
+      </svg>
+    ),
+  },
+  {
+    id: "crafts-loom",
+    nameBo: "ལག་ཤེས་བཟོ་གྲྭ། · ཐགས་དང་ཤིང་བཟོ།",
+    nameEn: "Artisans' Loom & Woodcraft Studio",
+    categoryBo: "ལག་ཤེས་བཟོ་རིག་དང་འཐག་ལས།",
+    categoryEn: "Handcrafts, Textile Weaving & Woodcarving",
+    locationBo: "གྲོང་གསེབ་ཀྱི་ནུབ་ཕྱོགས།",
+    locationEn: "Western Craft Quarter",
+    descriptionBo:
+      "བོད་ཀྱི་ཐགས་ལས་ནི་བུད་མེད་ཚོའི་སྤང་གདན་དང་ས་གདན་བཐག་པའི་ལག་རྩལ་མཆོག་གྱུར་ཡིན། ཤིང་བཟོ་བས་པར་ཤིང་བརྐོས་ཏེ་དྭངས་གསལ་ཅན་གྱི་ཤོག་གུ་བཟོ་བའི་ལོ་རྒྱུས་ལྡན།",
+    descriptionEn:
+      "The atelier of master weavers and woodcarvers. Women handloom the celebrated pangden (vibrant multi-striped aprons) and high-density highland wool carpets, while artisans carve intricate pear-wood blocks to print manuscripts on handmade Daphne bark paper (desho).",
+    practicesBo: [
+      "ལག་ཐགས་ཁྲོད་ཚོན་ཁྲ་ཅན་གྱི་སྤང་གདན་དང་ས་གདན་བཐག་པ།",
+      "ཤིང་བཟོ་མཁས་པས་ཤིང་པར་བརྐོས་ཏེ་དཔེ་ཆ་དཔར་བསྐྲུན་བྱེད་པ།",
+      "བོད་ཤོག་བཟོ་བའི་སྲོལ་རྒྱུན་ལག་རྩལ་རྒྱུན་འཛིན།",
+    ],
+    practicesEn: [
+      "Weaving rainbow-striped pangden woolen aprons on traditional horizontal floor looms.",
+      "Hand-chiseling reverse Tibetan calligraphy into cured birch blocks for xylographic printing.",
+      "Harvesting and beating Daphne shrub roots into archival, insect-repellent paper sheets.",
+    ],
+    soundType: "loom",
+    freq: 741,
     colorClass: "text-indigo-300",
     borderClass: "border-indigo-300/50",
     bgGlowClass: "from-indigo-400/25 to-indigo-600/5",
+    coords: { x: 25, y: 75, z: 15 },
+    svgModel: (
+      /* Upright Handloom with Pangden Striped Fabric & Shuttle */
+      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" className="w-full h-full">
+        {/* Loom Wooden Frame */}
+        <line x1="12" y1="8" x2="12" y2="56" strokeWidth="3" className="stroke-amber-800" />
+        <line x1="52" y1="8" x2="52" y2="56" strokeWidth="3" className="stroke-amber-800" />
+        <line x1="8" y1="12" x2="56" y2="12" strokeWidth="3" className="stroke-amber-700" />
+        <line x1="8" y1="52" x2="56" y2="52" strokeWidth="3" className="stroke-amber-700" />
+        {/* Taut Warp Threads */}
+        <line x1="20" y1="12" x2="20" y2="52" strokeWidth="0.8" className="stroke-stone-300" />
+        <line x1="26" y1="12" x2="26" y2="52" strokeWidth="0.8" className="stroke-stone-300" />
+        <line x1="32" y1="12" x2="32" y2="52" strokeWidth="0.8" className="stroke-stone-300" />
+        <line x1="38" y1="12" x2="38" y2="52" strokeWidth="0.8" className="stroke-stone-300" />
+        <line x1="44" y1="12" x2="44" y2="52" strokeWidth="0.8" className="stroke-stone-300" />
+        {/* Woven Pangden Textile with vibrant horizontal stripes */}
+        <rect x="18" y="24" width="28" height="6" className="fill-red-600 stroke-none" />
+        <rect x="18" y="30" width="28" height="6" className="fill-amber-400 stroke-none" />
+        <rect x="18" y="36" width="28" height="6" className="fill-teal-500 stroke-none" />
+        <rect x="18" y="42" width="28" height="6" className="fill-indigo-600 stroke-none" />
+        {/* Weaving Shuttle (Thung) */}
+        <polygon points="10,22 48,22 52,24 48,26 10,26" className="fill-amber-400 stroke-amber-600" strokeWidth="1" />
+      </svg>
+    ),
+  },
+  {
+    id: "lungta-ridge",
+    nameBo: "རླུང་རྟའི་ལ་རྩེ། · དར་ལྕོག་དང་ལ་བཙས།",
+    nameEn: "Wind Horse Ridge & Mountain Pass",
+    categoryBo: "རང་བྱུང་ཁམས་དང་རླུང་རྟའི་དད་མོས།",
+    categoryEn: "Ecological Reverence & Sacred Geography",
+    locationBo: "གྲོང་གསེབ་རྒྱབ་ཀྱི་ལ་ཁ།",
+    locationEn: "High Mountain Pass & Pass Cairn",
+    descriptionBo:
+      "ལ་རྩེ་དང་ལ་ཁ་རྣམས་སུ་རླུང་རྟའི་དར་ལྕོག་ཕྱོགས་བཅུར་བསྒྲེངས་ཏེ་རླུང་གིས་བདེ་ལེགས་ཀྱི་སྨོན་ལམ་འཁྱེར་བར་ཡིད་ཆེས་བྱེད། རང་བྱུང་རི་ཀླུང་དང་མཐུན་ལམ་གྱི་མཚོན་དོན་ཡིན།",
+    descriptionEn:
+      "Erected on high mountain ridges (la-tse), cascading webs of five-colored prayer flags (Lungta: Blue space, White air, Red fire, Green water, Yellow earth) flutter in the fierce Himalayan winds, carrying prayers of peace, fortune, and harmony across valleys.",
+    practicesBo: [
+      "ལ་ཁར་སླེབས་དུས་ཀི་ཀི་བསོ་བསོ་ལྷ་རྒྱལ་ལོ་ཞེས་སྐད་གསང་མཐོན་པོས་འབོད་པ།",
+      "རླུང་རྟ་དགུང་དུ་འཕུར་ཕྱིར་དར་ལྕོག་གསར་པ་འཛུགས་པའི་ལམ་སྲོལ།",
+      "རི་བདག་དང་ཡུལ་ལྷ་མཆོད་པའི་གནའ་བོའི་རིག་གཞུང་།",
+    ],
+    practicesEn: [
+      "Shouting the ancient mountain victor's cry 'Ki Ki So So Lha Gyal Lo!' upon summiting the high pass.",
+      "Renewing prayer flag clusters during Losar to revitalize personal life-force (lungta).",
+      "Building rock cairns (oboo) stone-by-stone as offerings of safety and gratitude to mountain spirits.",
+    ],
+    soundType: "wind",
     freq: 852,
-    svgPath: (
-      <>
-        <path d="M4 12c0-5 3.5-8 8-8s8 3 8 8H4z" strokeWidth="1.8" />
-        <path d="M12 4V2M12 12v9c0 1-1 2-2 2" strokeWidth="1.8" />
-        <path d="M7 12c0 2 2 3 5 3s5-1 5-3" strokeWidth="1.8" />
-      </>
+    colorClass: "text-sky-300",
+    borderClass: "border-sky-300/50",
+    bgGlowClass: "from-sky-400/25 to-sky-600/5",
+    coords: { x: 50, y: 12, z: 35 },
+    svgModel: (
+      /* Stone Cairn (La-tse) with Vibrant 5-Color Prayer Flag Webs Fluttering */
+      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" className="w-full h-full">
+        {/* Stone Cairn (La-tse) */}
+        <polygon points="24,56 40,56 36,40 28,40" className="fill-stone-700 stroke-stone-400" strokeWidth="1.5" />
+        <polygon points="26,40 38,40 35,30 29,30" className="fill-stone-600 stroke-stone-300" strokeWidth="1.5" />
+        <polygon points="28,30 36,30 34,22 30,22" className="fill-stone-500 stroke-stone-200" strokeWidth="1.5" />
+        {/* Main Central Juniper Branch / Pole */}
+        <line x1="32" y1="48" x2="32" y2="4" strokeWidth="2.5" className="stroke-amber-700" />
+        {/* Cascading diagonal prayer flag strings */}
+        <line x1="32" y1="12" x2="4" y2="36" strokeWidth="1.2" className="stroke-white/60" />
+        <line x1="32" y1="12" x2="60" y2="36" strokeWidth="1.2" className="stroke-white/60" />
+        <line x1="32" y1="18" x2="8" y2="48" strokeWidth="1.2" className="stroke-white/50" />
+        <line x1="32" y1="18" x2="56" y2="48" strokeWidth="1.2" className="stroke-white/50" />
+        {/* Fluttering Five-Color Flags (Blue, White, Red, Green, Yellow) */}
+        <polygon points="26,16 22,20 28,21" className="fill-blue-600" />
+        <polygon points="20,21 16,25 22,26" className="fill-white" />
+        <polygon points="14,27 10,31 16,32" className="fill-red-600" />
+        <polygon points="8,32 4,36 10,37" className="fill-green-600" />
+        {/* Right side flags */}
+        <polygon points="38,16 42,20 36,21" className="fill-blue-600" />
+        <polygon points="44,21 48,25 42,26" className="fill-white" />
+        <polygon points="50,27 54,31 48,32" className="fill-red-600" />
+        <polygon points="56,32 60,36 54,37" className="fill-yellow-400" />
+      </svg>
     ),
   },
   {
-    id: "fishes",
-    tibetan: "གསེར་གྱི་ཉ་མོ།",
-    sanskrit: "Matsyayugma",
-    nameEn: "The Pair of Golden Fishes",
-    nameBo: "གསེར་གྱི་ཉ་མོ།",
-    meaningEn: "Swimmers in the ocean of cyclic existence who fearlessly glide with total joy and freedom, drowning in no sorrow.",
-    meaningBo: "འཁོར་བའི་རྒྱ་མཚོར་འཇིགས་པ་མེད་པར་རྩེན་པའི་རང་དབང་དང་བདེ་སྐྱིད་ཀྱི་མཚོན་དོན།",
-    blessingEn: "Grants fearlessness, fertility, and joyous adaptability in any life circumstance.",
-    blessingBo: "འཇིགས་མེད་དང་བདེ་ལེགས། གནས་སྟངས་གང་ལའང་རང་དབང་དུ་འགྱུར་བའི་རྟེན་འབྲེལ།",
-    element: "water",
-    elementBo: "ཆུ།",
-    elementEn: "Water",
-    colorClass: "text-emerald-300",
-    borderClass: "border-emerald-300/50",
-    bgGlowClass: "from-emerald-400/25 to-emerald-600/5",
-    freq: 584,
-    svgPath: (
-      <>
-        <path d="M6 8c4-3 8-1 10 3-3 2-7 2-10-3z" strokeWidth="1.8" />
-        <path d="M18 16c-4 3-8 1-10-3 3-2 7-2 10 3z" strokeWidth="1.8" />
-        <circle cx="8" cy="7" r="1" fill="currentColor" />
-        <circle cx="16" cy="17" r="1" fill="currentColor" />
-      </>
-    ),
-  },
-  {
-    id: "banner",
-    tibetan: "རྒྱལ་མཚན།",
-    sanskrit: "Dhvaja",
-    nameEn: "The Victory Banner",
-    nameBo: "རྒྱལ་མཚན།",
-    meaningEn: "Erected atop Mount Meru, signifying the triumph of Buddhist wisdom over the four Maras (inner delusions and mortality).",
-    meaningBo: "བདུད་བཞིའི་གཡུལ་ལས་རྣམ་པར་རྒྱལ་ཏེ་དམ་པའི་ཆོས་ཀྱི་རྒྱལ་མཚན་མཐོན་པོར་བསྒྲེངས་པ།",
-    blessingEn: "Inspires moral courage, spiritual victory over obstacles, and triumphant success in virtuous deeds.",
-    blessingBo: "བདུད་ལས་རྣམ་པར་རྒྱལ་ཞིང་དགེ་བའི་ལས་དོན་མཐའ་དག་ལྷུན་གྱིས་འགྲུབ་པའི་དཔལ།",
-    element: "fire",
-    elementBo: "མེ།",
-    elementEn: "Fire",
-    colorClass: "text-red-400",
-    borderClass: "border-red-400/50",
-    bgGlowClass: "from-red-500/25 to-red-700/5",
+    id: "chorten-wall",
+    nameBo: "མཆོད་རྟེན་དང་མ་ཎི་རྡོ་ཕུང་། · རྡོ་བརྐོས་རིག་གནས།",
+    nameEn: "Village Gateway Chorten & Mani Stones",
+    categoryBo: "རྡོ་བརྐོས་སྒྱུ་རྩལ་དང་མཆོད་རྟེན་རིག་གཞུང་།",
+    categoryEn: "Sacred Architecture & Stone Calligraphy",
+    locationBo: "གྲོང་གསེབ་ཀྱི་འཇུག་སྒོ།",
+    locationEn: "Village Gateway Entrance",
+    descriptionBo:
+      "གྲོང་གསེབ་ཀྱི་སྒོ་འགྲམ་དུ་མཆོད་རྟེན་དཀར་པོ་དང་མ་ཎི་ཡིག་དྲུག་བརྐོས་པའི་རྡོ་ཕུང་རིང་པོ་ཡོད། གྲོང་མི་ཚོས་དུས་རྒྱུན་སྐོར་བ་བྱེད་ཅིང་བདེ་སྐྱིད་དང་ཞི་བདེའི་སྨོན་ལམ་འདེབས་སྲོལ་ཡོད།",
+    descriptionEn:
+      "Standing proudly at the village perimeter, the gateway chorten (stupa) and adjacent wall of slate stones painstakingly carved with Tibetan mantras (Mani stones) provide architectural protection. Villagers circumambulate (kora) in clockwise devotion on their morning walks.",
+    practicesBo: [
+      "མ་ཎི་ཡིག་དྲུག་རྡོ་ལེབ་སྟེང་དབུ་ཅན་གཟུགས་སུ་བརྐོ་བའི་ལག་རྩལ།",
+      "ཞོགས་པར་ཕྱོགས་གཡས་སྐོར་གྱིས་མཆོད་རྟེན་ལ་སྐོར་བ་བྱེད་པའི་གོམས་གཤིས།",
+      "འགྲོ་འོང་བྱེད་མཁན་ཚང་མར་བདེ་ལེགས་ཀྱི་མཚོན་དོན་དུ་བཞེངས་པ།",
+    ],
+    practicesEn: [
+      "Carving the six-syllable mantra 'Om Mani Padme Hum' into layered mountain slate slabs.",
+      "Walking daily clockwise circumambulation (kora) while softly turning handheld prayer wheels.",
+      "Offering white silk scarves (katas) at the gateway to welcome arriving travelers.",
+    ],
+    soundType: "bell",
     freq: 963,
-    svgPath: (
-      <>
-        <path d="M6 3v19M6 5h12l-3 4 3 4H6" strokeWidth="1.8" />
-        <circle cx="6" cy="3" r="1.5" strokeWidth="1.8" />
-        <path d="M10 13v5M14 13v3" strokeWidth="1.8" />
-      </>
+    colorClass: "text-amber-300",
+    borderClass: "border-amber-300/50",
+    bgGlowClass: "from-amber-400/25 to-amber-600/5",
+    coords: { x: 50, y: 88, z: 28 },
+    svgModel: (
+      /* White Tibetan Chorten (Stupa) with Stepped Base & Mani Wall */
+      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" className="w-full h-full">
+        {/* Stepped Base (Throne / Seng-tri) */}
+        <rect x="20" y="52" width="24" height="4" className="fill-stone-100 stroke-amber-500" strokeWidth="1.5" />
+        <rect x="22" y="48" width="20" height="4" className="fill-stone-100 stroke-amber-500" strokeWidth="1.5" />
+        <rect x="24" y="44" width="16" height="4" className="fill-stone-100 stroke-amber-500" strokeWidth="1.5" />
+        {/* Stupa Dome (Bumba) */}
+        <path d="M26,44 C24,34 40,34 38,44 Z" className="fill-stone-50 stroke-amber-500" strokeWidth="1.5" />
+        <rect x="30" y="38" width="4" height="4" className="fill-red-800" />
+        {/* Harmika & 13 Wheels Spire (Chorten Rings) */}
+        <polygon points="28,34 36,34 34,20 30,20" className="fill-amber-600 stroke-amber-300" strokeWidth="1.2" />
+        <line x1="29" y1="31" x2="35" y2="31" strokeWidth="1" className="stroke-yellow-300" />
+        <line x1="30" y1="27" x2="34" y2="27" strokeWidth="1" className="stroke-yellow-300" />
+        <line x1="31" y1="23" x2="33" y2="23" strokeWidth="1" className="stroke-yellow-300" />
+        {/* Crescent Moon & Sun Finial (Nyi-Da) */}
+        <circle cx="32" cy="16" r="3" className="fill-yellow-400 stroke-yellow-200" strokeWidth="1" />
+        <path d="M29,18 Q32,21 35,18 Q32,19 29,18" className="fill-yellow-200" />
+        {/* Flanking Mani Stone Wall */}
+        <polygon points="4,56 18,56 16,50 6,50" className="fill-stone-600 stroke-stone-400" strokeWidth="1.2" />
+        <polygon points="46,56 60,56 58,50 48,50" className="fill-stone-600 stroke-stone-400" strokeWidth="1.2" />
+        <text x="7" y="55" fontSize="4" fill="#fbbf24" fontFamily="serif">ཨོཾ</text>
+        <text x="49" y="55" fontSize="4" fill="#fbbf24" fontFamily="serif">ཧཱུྃ</text>
+      </svg>
     ),
   },
 ];
 
 export function TibetanInteractiveOdyssey({ lang }: { lang: Language }) {
-  const [viewMode, setViewMode] = useState<ViewMode>("mandala");
-  const [activeSign, setActiveSign] = useState<AuspiciousSign | null>(null);
-  const [hoveredSign, setHoveredSign] = useState<AuspiciousSign | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>("village");
+  const [activeLandmark, setActiveLandmark] = useState<CulturalLandmark | null>(null);
+  const [hoveredLandmark, setHoveredLandmark] = useState<CulturalLandmark | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [isAudioActive, setIsAudioActive] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const [targetRotate, setTargetRotate] = useState({ rx: 0, ry: 0 });
+  const [targetRotate, setTargetRotate] = useState({ rx: 18, ry: -12 });
 
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -253,16 +460,15 @@ export function TibetanInteractiveOdyssey({ lang }: { lang: Language }) {
   const audioTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   /* ══════════════════════════════════════════════════════════════════
-     Authentic Himalayan Singing Bowl Acoustic Synthesizer (Web Audio API)
-     Multi-harmonic physical modal synthesis:
-     - Fundamental tone (f0)
-     - Inharmonic modal strike overtone (2.76 * f0)
-     - High silvery chime partial (5.40 * f0)
-     - 4.2 Hz beating tremolo LFO (Himalayan hand-hammered wobble)
-     - Resonant low-pass filter decay over 4.2s
+     Authentic Himalayan Acoustic Synthesizer (Web Audio API)
+     Generates authentic folk instruments:
+     - Dramyin lute string pluck
+     - Singing bowl resonance
+     - High mountain wind flute
+     - Resonant horn
      ══════════════════════════════════════════════════════════════════ */
-  const playChime = useCallback(
-    (freq: number) => {
+  const playSound = useCallback(
+    (landmark: CulturalLandmark) => {
       if (!soundEnabled) return;
       try {
         const AudioContextClass =
@@ -277,74 +483,101 @@ export function TibetanInteractiveOdyssey({ lang }: { lang: Language }) {
         }
 
         const now = ctx.currentTime;
+        const freq = landmark.freq;
 
-        // Master gain
-        const masterGain = ctx.createGain();
-        masterGain.gain.setValueAtTime(0, now);
-        masterGain.gain.linearRampToValueAtTime(0.12, now + 0.04);
-        masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 4.2);
+        if (landmark.soundType === "lute") {
+          // Dramyin Pluck: Fast attack, harmonic overtones, quick decay
+          const osc1 = ctx.createOscillator();
+          const osc2 = ctx.createOscillator();
+          const gain = ctx.createGain();
 
-        // Low-pass filter for warm bronze temple resonance
-        const filter = ctx.createBiquadFilter();
-        filter.type = "lowpass";
-        filter.frequency.setValueAtTime(2400, now);
-        filter.frequency.exponentialRampToValueAtTime(650, now + 3.5);
-        filter.Q.value = 2.5;
+          osc1.type = "sawtooth";
+          osc1.frequency.setValueAtTime(freq, now);
+          osc2.type = "sine";
+          osc2.frequency.setValueAtTime(freq * 2, now);
 
-        // Fundamental partial
-        const oscFundamental = ctx.createOscillator();
-        oscFundamental.type = "sine";
-        oscFundamental.frequency.setValueAtTime(freq, now);
+          gain.gain.setValueAtTime(0, now);
+          gain.gain.linearRampToValueAtTime(0.18, now + 0.008);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.6);
 
-        // Strike modal partial (2.76x)
-        const oscStrike = ctx.createOscillator();
-        const strikeGain = ctx.createGain();
-        strikeGain.gain.value = 0.38;
-        oscStrike.type = "sine";
-        oscStrike.frequency.setValueAtTime(freq * 2.76, now);
+          const filter = ctx.createBiquadFilter();
+          filter.type = "lowpass";
+          filter.frequency.setValueAtTime(2800, now);
+          filter.frequency.exponentialRampToValueAtTime(450, now + 1.2);
 
-        // Shimmer overtone (5.4x)
-        const oscShimmer = ctx.createOscillator();
-        const shimmerGain = ctx.createGain();
-        shimmerGain.gain.value = 0.15;
-        oscShimmer.type = "sine";
-        oscShimmer.frequency.setValueAtTime(freq * 5.4, now);
+          osc1.connect(gain);
+          osc2.connect(gain);
+          gain.connect(filter);
+          filter.connect(ctx.destination);
 
-        // Beating LFO (4.2 Hz tremolo)
-        const lfo = ctx.createOscillator();
-        const lfoGain = ctx.createGain();
-        lfo.type = "sine";
-        lfo.frequency.setValueAtTime(4.2, now);
-        lfoGain.gain.setValueAtTime(0.025, now);
-        lfo.connect(lfoGain.gain);
+          osc1.start(now);
+          osc2.start(now);
+          osc1.stop(now + 1.7);
+          osc2.stop(now + 1.7);
+        } else if (landmark.soundType === "wind") {
+          // Ethereal Mountain Wind & Flute
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(freq, now);
+          osc.frequency.linearRampToValueAtTime(freq * 1.08, now + 0.8);
+          osc.frequency.linearRampToValueAtTime(freq, now + 2.2);
 
-        // Wiring
-        oscFundamental.connect(masterGain);
-        oscStrike.connect(strikeGain);
-        strikeGain.connect(masterGain);
-        oscShimmer.connect(shimmerGain);
-        shimmerGain.connect(masterGain);
+          gain.gain.setValueAtTime(0, now);
+          gain.gain.linearRampToValueAtTime(0.09, now + 0.3);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + 3.2);
 
-        masterGain.connect(filter);
-        filter.connect(ctx.destination);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 3.3);
+        } else {
+          // Singing Bowl / Bell Modal Synthesis
+          const masterGain = ctx.createGain();
+          masterGain.gain.setValueAtTime(0, now);
+          masterGain.gain.linearRampToValueAtTime(0.14, now + 0.03);
+          masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 3.8);
 
-        oscFundamental.start(now);
-        oscStrike.start(now);
-        oscShimmer.start(now);
-        lfo.start(now);
+          const filter = ctx.createBiquadFilter();
+          filter.type = "lowpass";
+          filter.frequency.setValueAtTime(2200, now);
+          filter.frequency.exponentialRampToValueAtTime(600, now + 3.0);
 
-        oscFundamental.stop(now + 4.3);
-        oscStrike.stop(now + 4.3);
-        oscShimmer.stop(now + 4.3);
-        lfo.stop(now + 4.3);
+          const oscFund = ctx.createOscillator();
+          oscFund.type = "sine";
+          oscFund.frequency.setValueAtTime(freq, now);
+
+          const oscOvertone = ctx.createOscillator();
+          oscOvertone.type = "sine";
+          oscOvertone.frequency.setValueAtTime(freq * 2.76, now);
+
+          const lfo = ctx.createOscillator();
+          const lfoGain = ctx.createGain();
+          lfo.frequency.setValueAtTime(4.2, now);
+          lfoGain.gain.setValueAtTime(0.02, now);
+          lfo.connect(lfoGain.gain);
+
+          oscFund.connect(masterGain);
+          oscOvertone.connect(masterGain);
+          masterGain.connect(filter);
+          filter.connect(ctx.destination);
+
+          oscFund.start(now);
+          oscOvertone.start(now);
+          lfo.start(now);
+
+          oscFund.stop(now + 3.9);
+          oscOvertone.stop(now + 3.9);
+          lfo.stop(now + 3.9);
+        }
 
         setIsAudioActive(true);
         if (audioTimerRef.current) clearTimeout(audioTimerRef.current);
         audioTimerRef.current = setTimeout(() => {
           setIsAudioActive(false);
-        }, 3200);
+        }, 2800);
       } catch {
-        // AudioContext disabled or unpermitted
+        // AudioContext disabled
       }
     },
     [soundEnabled]
@@ -357,16 +590,17 @@ export function TibetanInteractiveOdyssey({ lang }: { lang: Language }) {
     const x = (e.clientX - rect.left) / rect.width - 0.5;
     const y = (e.clientY - rect.top) / rect.height - 0.5;
     setMousePos({ x, y });
-    setTargetRotate({ rx: -y * 18, ry: x * 22 });
+    // Isometric tilt limits
+    setTargetRotate({ rx: 22 - y * 16, ry: -12 + x * 24 });
   }, []);
 
   const handleMouseLeave = useCallback(() => {
     setMousePos({ x: 0, y: 0 });
-    setTargetRotate({ rx: 0, ry: 0 });
-    setHoveredSign(null);
+    setTargetRotate({ rx: 18, ry: -12 });
+    setHoveredLandmark(null);
   }, []);
 
-  /* Ambient Himalayan Stardust & Proximity Constellation Particle Engine */
+  /* Himalayan Morning Mist & Golden Stardust Particle Engine */
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -375,7 +609,7 @@ export function TibetanInteractiveOdyssey({ lang }: { lang: Language }) {
 
     let animId: number;
     let width = (canvas.width = canvas.parentElement?.clientWidth || 900);
-    let height = (canvas.height = canvas.parentElement?.clientHeight || 580);
+    let height = (canvas.height = canvas.parentElement?.clientHeight || 640);
 
     const onResize = () => {
       if (!canvas.parentElement) return;
@@ -395,20 +629,20 @@ export function TibetanInteractiveOdyssey({ lang }: { lang: Language }) {
     }[] = [];
 
     const colors = [
-      "rgba(217, 163, 39, ",  // Tibetan Gold
-      "rgba(251, 191, 36, ",  // Luminous Amber
-      "rgba(56, 189, 248, ",  // Turquoise / Sky Blue
-      "rgba(244, 114, 182, ", // Lotus Rose
+      "rgba(217, 163, 39, ",  // Himalayan Gold
+      "rgba(244, 212, 122, ", // Morning Sunlight
+      "rgba(255, 255, 255, ", // Glacial Mist
+      "rgba(56, 189, 248, ",  // Turquoise Sky
     ];
 
-    for (let i = 0; i < 54; i++) {
+    for (let i = 0; i < 48; i++) {
       particles.push({
         x: Math.random() * width,
         y: Math.random() * height,
         size: Math.random() * 2.2 + 0.6,
-        vx: (Math.random() - 0.5) * 0.35,
-        vy: -Math.random() * 0.45 - 0.15,
-        alpha: Math.random() * 0.65 + 0.25,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: -Math.random() * 0.4 - 0.1, // Drifts gently upward like morning valley hearth smoke
+        alpha: Math.random() * 0.5 + 0.2,
         color: colors[Math.floor(Math.random() * colors.length)],
       });
     }
@@ -416,7 +650,6 @@ export function TibetanInteractiveOdyssey({ lang }: { lang: Language }) {
     const render = () => {
       ctx.clearRect(0, 0, width, height);
 
-      // Render particles
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
         p.x += p.vx;
@@ -429,28 +662,10 @@ export function TibetanInteractiveOdyssey({ lang }: { lang: Language }) {
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
         ctx.fillStyle = `${p.color}${p.alpha})`;
-        ctx.shadowBlur = p.size * 2.5;
-        ctx.shadowColor = "rgba(217, 163, 39, 0.7)";
+        ctx.shadowBlur = p.size * 2;
+        ctx.shadowColor = "rgba(217, 163, 39, 0.6)";
         ctx.fill();
         ctx.shadowBlur = 0;
-
-        // Draw delicate celestial constellation links between close particles
-        for (let j = i + 1; j < particles.length; j++) {
-          const p2 = particles[j];
-          const dx = p.x - p2.x;
-          const dy = p.y - p2.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-
-          if (dist < 65) {
-            ctx.beginPath();
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(p2.x, p2.y);
-            const lineAlpha = (1 - dist / 65) * 0.16;
-            ctx.strokeStyle = `rgba(217, 163, 39, ${lineAlpha})`;
-            ctx.lineWidth = 0.75;
-            ctx.stroke();
-          }
-        }
       }
 
       animId = requestAnimationFrame(render);
@@ -464,15 +679,15 @@ export function TibetanInteractiveOdyssey({ lang }: { lang: Language }) {
     };
   }, []);
 
-  const currentInspector = hoveredSign || activeSign || AUSPICIOUS_SIGNS[0];
+  const currentInspector = hoveredLandmark || activeLandmark || VILLAGE_LANDMARKS[0];
 
   return (
     <section
       aria-labelledby="odyssey-heading"
-      className="space-y-6 pt-6 border-t border-sakya-gold/30"
+      className="space-y-6 pt-4 border-t border-sakya-gold/30"
     >
       {/* ══════════════════════════════════════════════════════════════════
-          Header & Controls Bar (Swiss Architectural / L2 Style)
+          Header & Controls Bar (Swiss Architectural / Web3 Style)
           ══════════════════════════════════════════════════════════════════ */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div className="space-y-1.5">
@@ -480,11 +695,11 @@ export function TibetanInteractiveOdyssey({ lang }: { lang: Language }) {
             <span className="w-2.5 h-2.5 rounded-full bg-tibet-gold animate-ping" />
             <span className="text-[10px] sm:text-[11px] uppercase tracking-widest font-mono font-semibold px-2.5 py-0.5 rounded-full bg-tibet-gold-light border border-tibet-gold/30 text-tibet-gold-rich">
               {lang === "bo"
-                ? "༢༠༠༠ ལོ་འཁོར་གྱི་ཉམས་མྱོང་ཁྱད་པར་ཅན།"
-                : "Interactive Spatial Realm · 2,000 Years"}
+                ? "བོད་ཀྱི་ཡུལ་ལྗོངས་གྲོང་གསེབ་༣D"
+                : "Interactive 3D Tibetan Village"}
             </span>
             <span className="text-[10px] font-mono text-muted uppercase tracking-wider hidden sm:inline">
-              ETH / L2 CRAFT · BOD-YIG UCHEN
+              LIVING CULTURE · FOLK HERITAGE · NOMADIC TRADITIONS
             </span>
           </div>
 
@@ -493,43 +708,43 @@ export function TibetanInteractiveOdyssey({ lang }: { lang: Language }) {
             className="font-serif text-2xl sm:text-3xl lg:text-4xl font-medium text-foreground tracking-tight"
           >
             {lang === "bo"
-              ? "༄༅། །བཀྲ་ཤིས་རྟགས་བརྒྱད་དང་འབྱུང་ལྔའི་ཞིང་ཁམས།"
-              : "The Eight Auspicious Symbols & Sacred Elements"}
+              ? "༄༅། །བོད་ཀྱི་སྲོལ་རྒྱུན་གྲོང་གསེབ་དང་འཚོ་བའི་རིག་གཞུང་།"
+              : "The Living Tibetan Village: 2,000 Years of Culture"}
           </h2>
 
           <p className="text-xs sm:text-sm text-muted max-w-2xl leading-relaxed">
             {lang === "bo"
-              ? "རྟགས་རེ་རེར་མནན་ཏེ་ལོ་ཉིས་སྟོང་ལྷག་གི་བོད་ཀྱི་རིག་གཞུང་དང་ནང་དོན་རིག་པའི་ཟབ་དོན་དང་བྱིན་རླབས་ལ་གཟིགས།"
-              : "An interactive spatial voyage through 2,000+ years of living wisdom. Hover or tap each sacred talisman to illuminate its philosophical meaning and meditative tone."}
+              ? "གྲོང་གསེབ་ཀྱི་ཁང་པ་དང་སྦྲ་ནག ནས་ཞིང་། གཞས་ར། ལག་ཤེས་བཟོ་གྲྭ་སོགས་ལ་མནན་ཏེ་བོད་ཀྱི་འཚོ་བའི་གོམས་གཤིས་དང་རིག་གཞུང་ལ་གཟིགས།"
+              : "Explore the miniature 3D Himalayan settlement: stone homesteads, nomad yak-hair tents, barley terraces, folk dance squares, weaving studios, and herbal tea sanctuaries. Tilt the landscape and tap landmarks to enter living traditions."}
           </p>
         </div>
 
         {/* View Mode & Audio Controls */}
         <div className="flex flex-wrap items-center gap-2 self-start lg:self-auto shrink-0">
-          {/* Sound Resonance Switch */}
+          {/* Folk Sound Resonance Switch */}
           <button
             type="button"
             onClick={() => {
               const next = !soundEnabled;
               setSoundEnabled(next);
-              if (next) playChime(432);
+              if (next) playSound(VILLAGE_LANDMARKS[3]); // Pluck lute
             }}
             className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer flex items-center gap-2 border ${
               soundEnabled
                 ? "bg-tibet-gold text-white border-tibet-gold shadow-xs"
                 : "bg-card-bg/90 border-border-subtle text-muted hover:text-foreground"
             }`}
-            title="Toggle singing bowl meditative tones"
+            title="Toggle village acoustic instruments (Dramyin lute, flute, singing bowls)"
           >
-            <span>{soundEnabled ? "🔔" : "🔕"}</span>
+            <span>{soundEnabled ? "🎵" : "🔇"}</span>
             <span className="font-mono text-[11px]">
               {soundEnabled
                 ? lang === "bo"
                   ? "སྒྲ་དབྱངས་འབྱེད"
-                  : "Chimes: Active"
+                  : "Acoustics: Active"
                 : lang === "bo"
                 ? "སྒྲ་མེད"
-                : "Chimes: Off"}
+                : "Acoustics: Off"}
             </span>
             {soundEnabled && isAudioActive && (
               <span className="flex items-center gap-0.5 text-xs animate-pulse">
@@ -540,7 +755,7 @@ export function TibetanInteractiveOdyssey({ lang }: { lang: Language }) {
             )}
           </button>
 
-          {/* Mode Switcher: 3D Mandala vs 3D Matrix vs Archive */}
+          {/* Perspective Switcher */}
           <div
             role="radiogroup"
             aria-label="View mode toggle"
@@ -549,80 +764,100 @@ export function TibetanInteractiveOdyssey({ lang }: { lang: Language }) {
             <button
               type="button"
               role="radio"
-              aria-checked={viewMode === "mandala"}
-              onClick={() => setViewMode("mandala")}
+              aria-checked={viewMode === "village"}
+              onClick={() => setViewMode("village")}
               className={`px-3 py-1.5 rounded-full transition-all cursor-pointer font-medium flex items-center gap-1 ${
-                viewMode === "mandala"
+                viewMode === "village"
                   ? "bg-sakya-crimson text-white shadow-xs"
                   : "text-muted hover:text-foreground"
               }`}
             >
-              <span>🪐</span>
-              <span>{lang === "bo" ? "དཀྱིལ་འཁོར" : "Mandala 3D"}</span>
+              <span>🏔️</span>
+              <span>{lang === "bo" ? "གྲོང་གསེབ་༣D" : "3D Village"}</span>
             </button>
             <button
               type="button"
               role="radio"
-              aria-checked={viewMode === "matrix"}
-              onClick={() => setViewMode("matrix")}
+              aria-checked={viewMode === "bento"}
+              onClick={() => setViewMode("bento")}
               className={`px-3 py-1.5 rounded-full transition-all cursor-pointer font-medium flex items-center gap-1 ${
-                viewMode === "matrix"
+                viewMode === "bento"
                   ? "bg-sakya-crimson text-white shadow-xs"
                   : "text-muted hover:text-foreground"
               }`}
             >
-              <span>🌌</span>
-              <span>{lang === "bo" ? "༣D དྲྭ་མིག" : "Spatial Matrix"}</span>
+              <span>🏛️</span>
+              <span>{lang === "bo" ? "སྤྱི་མཐོང་" : "Panorama"}</span>
             </button>
             <button
               type="button"
               role="radio"
-              aria-checked={viewMode === "archive"}
-              onClick={() => setViewMode("archive")}
+              aria-checked={viewMode === "chronicle"}
+              onClick={() => setViewMode("chronicle")}
               className={`px-3 py-1.5 rounded-full transition-all cursor-pointer font-medium flex items-center gap-1 ${
-                viewMode === "archive"
+                viewMode === "chronicle"
                   ? "bg-sakya-crimson text-white shadow-xs"
                   : "text-muted hover:text-foreground"
               }`}
             >
               <span>📜</span>
-              <span>{lang === "bo" ? "དཀར་ཆག" : "Archive"}</span>
+              <span>{lang === "bo" ? "དཀར་ཆག" : "Chronicle"}</span>
             </button>
           </div>
         </div>
       </div>
 
       {/* ══════════════════════════════════════════════════════════════════
-          SPATIAL REALM: MANDALA 3D ORBIT MODE (Jasmin Karatas Inspiration)
+          SPATIAL REALM: 3D MINI TIBETAN VILLAGE (Jasmin Karatas Inspiration)
           ══════════════════════════════════════════════════════════════════ */}
-      {viewMode === "mandala" && (
+      {viewMode === "village" && (
         <div
           ref={containerRef}
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
-          className="relative w-full min-h-[580px] sm:min-h-[640px] rounded-sm border border-sakya-gold/40 bg-gradient-to-b from-[#0e0c0b] via-[#140f0d] to-[#080706] overflow-hidden shadow-2xl p-4 sm:p-8 flex flex-col justify-between select-none"
-          style={{ perspective: "1400px" }}
+          className="relative w-full min-h-[620px] sm:min-h-[700px] rounded-sm border border-sakya-gold/40 bg-gradient-to-b from-[#0a0807] via-[#140f0c] to-[#080706] overflow-hidden shadow-2xl p-4 sm:p-8 flex flex-col justify-between select-none"
+          style={{ perspective: "1300px" }}
         >
-          {/* Background Canvas: Stardust & Constellations */}
+          {/* Background Canvas: Floating Golden Stardust & Morning Mountain Mist */}
           <canvas
             ref={canvasRef}
             className="absolute inset-0 w-full h-full pointer-events-none opacity-85"
           />
 
-          {/* Central Radial Spotlight following cursor */}
+          {/* Distant Snowy Himalayan Mountain Ridge Silhouette */}
+          <div
+            aria-hidden="true"
+            className="absolute top-0 inset-x-0 h-44 sm:h-56 pointer-events-none opacity-40 transition-transform duration-700 ease-out"
+            style={{
+              transform: `translateY(${mousePos.y * 12}px) scale(1.02)`,
+            }}
+          >
+            <svg viewBox="0 0 1000 240" preserveAspectRatio="none" className="w-full h-full text-stone-700/60 fill-current">
+              {/* Back Mountains */}
+              <polygon points="0,240 80,120 180,180 320,80 440,160 580,60 720,150 860,70 1000,160 1000,240" opacity="0.3" />
+              {/* Mid Snowcaps */}
+              <polygon points="0,240 140,100 260,170 390,70 510,140 660,50 800,130 920,85 1000,140 1000,240" opacity="0.5" />
+              {/* Glowing Glacier Peaks */}
+              <polygon points="370,70 390,70 410,100 375,100" fill="#fef08a" opacity="0.7" />
+              <polygon points="640,50 660,50 680,85 645,85" fill="#fef08a" opacity="0.8" />
+            </svg>
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#140f0c]/60 to-[#140f0c]" />
+          </div>
+
+          {/* Central Radial Golden Sun Spotlight following cursor */}
           <div
             className="absolute inset-0 pointer-events-none transition-transform duration-700 ease-out"
             style={{
-              background: `radial-gradient(circle 380px at ${50 + mousePos.x * 35}% ${
-                50 + mousePos.y * 35
-              }%, rgba(217, 163, 39, 0.22), transparent 75%)`,
+              background: `radial-gradient(circle 420px at ${50 + mousePos.x * 40}% ${
+                50 + mousePos.y * 40
+              }%, rgba(217, 163, 39, 0.20), transparent 75%)`,
             }}
           />
 
-          {/* Top Telemetry Overlay (Swiss Architectural Style) */}
+          {/* Top Telemetry Bar (Swiss Architectural Style) */}
           <div className="relative z-10 flex flex-wrap items-center justify-between gap-3 text-[10px] sm:text-[11px] text-white/50 font-mono tracking-wider border-b border-white/10 pb-3">
             <div className="flex items-center gap-2">
-              <span className="text-tibet-gold font-bold">✦ MANDALA ORBIT</span>
+              <span className="text-tibet-gold font-bold">✦ VILLAGE SPATIAL STAGE</span>
               <span className="text-white/30">|</span>
               <span className="text-white/70">
                 PITCH: {targetRotate.rx.toFixed(1)}° · YAW: {targetRotate.ry.toFixed(1)}°
@@ -630,128 +865,106 @@ export function TibetanInteractiveOdyssey({ lang }: { lang: Language }) {
             </div>
             <div className="flex items-center gap-3">
               <span className="hidden md:inline text-white/40">
-                POKHARA PEMA TS&apos;AL · LAT 28°13&apos;N · LON 83°59&apos;E
+                ELEVATION 3,650M · HIMALAYAN HIGHLAND ARCHITECTURE
               </span>
               <span className="text-tibet-gold-light px-2 py-0.5 rounded-xs bg-white/5 border border-white/10">
-                {currentInspector.freq} HZ RESONANCE
+                {currentInspector.soundType.toUpperCase()} ACOUSTIC ({currentInspector.freq} HZ)
               </span>
             </div>
           </div>
 
-          {/* 3D Celestial Mandala Stage */}
+          {/* 3D Village Isometric Landscape Plateau */}
           <div
-            className="relative z-10 my-auto py-8 sm:py-12 transition-transform duration-300 ease-out will-change-transform flex items-center justify-center min-h-[360px] sm:min-h-[420px]"
+            className="relative z-10 my-auto py-8 transition-transform duration-300 ease-out will-change-transform flex items-center justify-center min-h-[440px] sm:min-h-[500px]"
             style={{
               transform: `rotateX(${targetRotate.rx}deg) rotateY(${targetRotate.ry}deg)`,
               transformStyle: "preserve-3d",
             }}
           >
-            {/* Luminous Central Axis Core (Dharmachakra & Sacred Seed OM) */}
+            {/* The Stylized Ground Base of the Tibetan Settlement */}
             <div
-              className="absolute w-28 h-28 sm:w-36 sm:h-36 rounded-full border border-tibet-gold/40 bg-gradient-to-br from-tibet-gold/20 via-black/80 to-black/90 backdrop-blur-md flex flex-col items-center justify-center text-center shadow-2xl pointer-events-none"
+              className="absolute w-[360px] h-[360px] sm:w-[580px] sm:h-[580px] rounded-2xl border border-sakya-gold/30 bg-gradient-to-br from-[#1a1411]/90 via-[#221b16]/80 to-[#120e0c]/95 shadow-[0_20px_50px_rgba(0,0,0,0.8)] pointer-events-none"
               style={{
-                transform: "translateZ(10px)",
-                animation: "spin 48s linear infinite",
+                transform: "translateZ(0px) rotateX(45deg)",
               }}
             >
-              <span
-                lang="bo"
-                className="font-serif text-3xl sm:text-4xl font-bold text-tibet-gold drop-shadow-[0_0_12px_rgba(217,163,39,0.8)]"
-              >
-                ཨོཾ
-              </span>
-              <span className="text-[9px] uppercase tracking-widest text-tibet-gold-light font-mono mt-0.5">
-                BINDU · ཐིག་ལེ
-              </span>
+              {/* Stepped mountain terrace curves etched into ground */}
+              <div className="absolute inset-4 rounded-xl border border-amber-600/20" />
+              <div className="absolute inset-16 rounded-xl border border-dashed border-amber-500/15" />
+              {/* Flowing mountain stream path */}
+              <div className="absolute top-0 bottom-0 left-1/3 w-3 bg-gradient-to-b from-cyan-600/30 via-cyan-400/20 to-cyan-500/30 blur-[1px] transform -rotate-12" />
             </div>
 
-            {/* Glowing Celestial Ring Tracks */}
-            <div
-              aria-hidden="true"
-              className="absolute w-[300px] h-[300px] sm:w-[420px] sm:h-[420px] rounded-full border border-tibet-gold/20 pointer-events-none animate-pulse"
-              style={{ transform: "translateZ(0px)" }}
-            />
-            <div
-              aria-hidden="true"
-              className="absolute w-[340px] h-[340px] sm:w-[480px] sm:h-[480px] rounded-full border border-dashed border-white/10 pointer-events-none"
-              style={{ transform: "translateZ(-20px)" }}
-            />
-
-            {/* 8 Auspicious Signs Placed in Orbital 3D Trigonometric Positions */}
-            <div className="relative w-[320px] h-[320px] sm:w-[440px] sm:h-[440px] flex items-center justify-center">
-              {AUSPICIOUS_SIGNS.map((sign, idx) => {
-                const total = AUSPICIOUS_SIGNS.length;
-                const angle = (idx / total) * Math.PI * 2 - Math.PI / 2;
-                // Responsive radius based on screen size
-                const radiusMobile = 135;
-                const radiusDesktop = 195;
-                const cos = Math.cos(angle);
-                const sin = Math.sin(angle);
+            {/* 8 Interactive Cultural Landmarks Positioned on the Village Stage */}
+            <div className="relative w-full max-w-4xl grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 px-2">
+              {VILLAGE_LANDMARKS.map((landmark, idx) => {
+                const isHovered = hoveredLandmark?.id === landmark.id;
+                const floatDelay = `${idx * 0.35}s`;
 
                 return (
                   <div
-                    key={sign.id}
+                    key={landmark.id}
                     onClick={() => {
-                      setActiveSign(sign);
-                      playChime(sign.freq);
+                      setActiveLandmark(landmark);
+                      playSound(landmark);
                     }}
                     onMouseEnter={() => {
-                      setHoveredSign(sign);
-                      playChime(sign.freq);
+                      setHoveredLandmark(landmark);
+                      playSound(landmark);
                     }}
-                    onMouseLeave={() => setHoveredSign(null)}
-                    className="group absolute cursor-pointer select-none"
+                    onMouseLeave={() => setHoveredLandmark(null)}
+                    className="group relative rounded-sm p-4 bg-black/75 hover:bg-black/95 backdrop-blur-xl border border-white/15 hover:border-tibet-gold transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-tibet-gold/30 cursor-pointer flex flex-col items-center text-center transform hover:-translate-y-3 hover:scale-105"
                     style={{
-                      transform: `translate(${cos * radiusDesktop}px, ${sin * radiusDesktop}px) translateZ(${
-                        25 + Math.sin(idx * 1.5) * 15
-                      }px)`,
                       transformStyle: "preserve-3d",
                       animation: "floating-gentle 5s ease-in-out infinite",
-                      animationDelay: `${idx * 0.45}s`,
+                      animationDelay: floatDelay,
                     }}
                   >
-                    {/* Floating Orb Card */}
+                    {/* Glowing Aura Halo */}
                     <div
-                      className={`relative w-20 h-20 sm:w-24 sm:h-24 rounded-full border ${sign.borderClass} bg-black/80 hover:bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center text-center p-2 transition-all duration-300 shadow-xl group-hover:scale-125 group-hover:shadow-[0_0_30px_rgba(217,163,39,0.5)]`}
+                      className={`absolute inset-0 rounded-sm bg-gradient-to-br ${landmark.bgGlowClass} opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none`}
+                    />
+
+                    {/* Miniature Building Model SVG */}
+                    <div
+                      className={`w-16 h-16 sm:w-20 sm:h-20 rounded-md border ${landmark.borderClass} bg-stone-950/70 p-2 flex items-center justify-center ${landmark.colorClass} shadow-md group-hover:scale-115 transition-transform duration-300 mb-2.5`}
                     >
-                      {/* Aura Halo */}
-                      <div
-                        className={`absolute inset-0 rounded-full bg-gradient-to-br ${sign.bgGlowClass} opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none`}
-                      />
-
-                      {/* Icon */}
-                      <div className={`w-8 h-8 sm:w-9 sm:h-9 ${sign.colorClass} transition-transform group-hover:scale-110 mb-0.5`}>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full">
-                          {sign.svgPath}
-                        </svg>
-                      </div>
-
-                      {/* Short Tibetan Inscription */}
-                      <span
-                        lang="bo"
-                        className="font-serif text-[10px] sm:text-xs font-semibold text-tibet-gold-light group-hover:text-tibet-gold truncate max-w-[70px] transition-colors leading-tight"
-                      >
-                        {sign.nameBo}
-                      </span>
-
-                      {/* Element Dot */}
-                      <span className="text-[8px] font-mono text-white/50 group-hover:text-white uppercase tracking-widest">
-                        {sign.element}
-                      </span>
+                      {landmark.svgModel}
                     </div>
+
+                    {/* Tibetan Uchen Name */}
+                    <span
+                      lang="bo"
+                      className="font-serif text-xs sm:text-sm font-semibold text-tibet-gold-light group-hover:text-tibet-gold transition-colors tracking-wide line-clamp-1"
+                    >
+                      {landmark.nameBo}
+                    </span>
+
+                    {/* English Name */}
+                    <span className="text-[10px] sm:text-xs text-white/90 font-medium mt-0.5 line-clamp-1">
+                      {landmark.nameEn}
+                    </span>
+
+                    {/* Cultural Domain Tag */}
+                    <span className="text-[9px] font-mono text-white/50 uppercase tracking-wider mt-1 truncate max-w-[130px]">
+                      {lang === "bo" ? landmark.categoryBo : landmark.categoryEn}
+                    </span>
+
+                    {/* Explore Badge */}
+                    <span className="mt-2.5 text-[9px] uppercase tracking-widest text-tibet-gold border border-tibet-gold/30 px-2 py-0.5 rounded-full opacity-60 group-hover:opacity-100 group-hover:bg-tibet-gold/20 transition-all">
+                      {lang === "bo" ? "ཉམས་མྱོང ↗" : "Explore ↗"}
+                    </span>
                   </div>
                 );
               })}
             </div>
           </div>
 
-          {/* Bottom Telemetry & Live Inspector Drawer */}
-          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-white/70 pt-3 border-t border-white/10 bg-black/40 backdrop-blur-md px-4 py-3 rounded-sm">
+          {/* Bottom Live Telemetry & Inspector Drawer */}
+          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-white/70 pt-3 border-t border-white/10 bg-black/60 backdrop-blur-md px-4 py-3 rounded-sm">
             <div className="flex items-center gap-3">
-              <div className={`w-7 h-7 rounded-full border ${currentInspector.borderClass} bg-black/80 flex items-center justify-center ${currentInspector.colorClass} shrink-0`}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4">
-                  {currentInspector.svgPath}
-                </svg>
+              <div className={`w-8 h-8 rounded-md border ${currentInspector.borderClass} bg-black/80 p-1 flex items-center justify-center ${currentInspector.colorClass} shrink-0`}>
+                {currentInspector.svgModel}
               </div>
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
@@ -761,12 +974,12 @@ export function TibetanInteractiveOdyssey({ lang }: { lang: Language }) {
                   <span className="text-[11px] text-white font-medium">
                     · {currentInspector.nameEn}
                   </span>
-                  <span className="text-[10px] font-mono text-white/40 italic">
-                    ({currentInspector.sanskrit})
+                  <span className="text-[10px] font-mono text-white/40">
+                    ({lang === "bo" ? currentInspector.locationBo : currentInspector.locationEn})
                   </span>
                 </div>
                 <p className="text-[11px] text-white/60 line-clamp-1 max-w-xl font-serif">
-                  {lang === "bo" ? currentInspector.blessingBo : currentInspector.blessingEn}
+                  {lang === "bo" ? currentInspector.descriptionBo : currentInspector.descriptionEn}
                 </p>
               </div>
             </div>
@@ -774,184 +987,117 @@ export function TibetanInteractiveOdyssey({ lang }: { lang: Language }) {
             <button
               type="button"
               onClick={() => {
-                setActiveSign(currentInspector);
-                playChime(currentInspector.freq);
+                setActiveLandmark(currentInspector);
+                playSound(currentInspector);
               }}
               className="px-3.5 py-1.5 rounded-sm bg-tibet-gold/20 hover:bg-tibet-gold hover:text-black border border-tibet-gold/50 text-tibet-gold text-[11px] font-medium transition-all cursor-pointer flex items-center justify-center gap-1.5 self-start sm:self-auto shrink-0 shadow-xs"
             >
-              <span>{lang === "bo" ? "གནས་ལུགས་རྒྱས་པ ↗" : "Inspect Wisdom ↗"}</span>
+              <span>{lang === "bo" ? "གནས་ལུགས་རྒྱས་པ ↗" : "Read Full Story ↗"}</span>
             </button>
           </div>
         </div>
       )}
 
       {/* ══════════════════════════════════════════════════════════════════
-          SPATIAL REALM: 3D MATRIX GRID MODE
+          SPATIAL REALM: CULTURAL PANORAMA BENTO VIEW
           ══════════════════════════════════════════════════════════════════ */}
-      {viewMode === "matrix" && (
-        <div
-          ref={containerRef}
-          onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseLeave}
-          className="relative w-full min-h-[520px] rounded-sm border border-sakya-gold/40 bg-gradient-to-b from-neutral-950 via-[#140f0c] to-[#0c0908] overflow-hidden shadow-xl p-4 sm:p-8 flex flex-col justify-between select-none"
-          style={{ perspective: "1200px" }}
-        >
-          <canvas
-            ref={canvasRef}
-            className="absolute inset-0 w-full h-full pointer-events-none opacity-80"
-          />
-
-          <div
-            className="absolute inset-0 pointer-events-none transition-transform duration-700 ease-out"
-            style={{
-              background: `radial-gradient(circle 350px at ${50 + mousePos.x * 30}% ${
-                50 + mousePos.y * 30
-              }%, rgba(217, 163, 39, 0.18), transparent 75%)`,
-            }}
-          />
-
-          <div className="relative z-10 flex items-center justify-between text-[11px] text-white/50 font-mono tracking-wider border-b border-white/10 pb-3">
-            <span className="flex items-center gap-1.5 text-tibet-gold">
-              <span>✦</span>
-              <span>ASHTAMANGALA · བཀྲ་ཤིས་རྟགས་བརྒྱད</span>
-            </span>
-            <span className="text-white/40">
-              PITCH: {targetRotate.rx.toFixed(1)}° · YAW: {targetRotate.ry.toFixed(1)}°
-            </span>
-          </div>
-
-          <div
-            className="relative z-10 my-auto py-6 sm:py-8 transition-transform duration-300 ease-out will-change-transform"
-            style={{
-              transform: `rotateX(${targetRotate.rx}deg) rotateY(${targetRotate.ry}deg)`,
-              transformStyle: "preserve-3d",
-            }}
-          >
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
-              {AUSPICIOUS_SIGNS.map((sign, idx) => {
-                const floatDelay = `${idx * 0.4}s`;
-
-                return (
-                  <div
-                    key={sign.id}
-                    onClick={() => {
-                      setActiveSign(sign);
-                      playChime(sign.freq);
-                    }}
-                    onMouseEnter={() => {
-                      setHoveredSign(sign);
-                      playChime(sign.freq);
-                    }}
-                    className="group relative rounded-sm p-4 sm:p-5 bg-black/60 hover:bg-black/90 backdrop-blur-md border border-white/15 hover:border-tibet-gold transition-all duration-300 shadow-lg hover:shadow-2xl hover:shadow-tibet-gold/25 cursor-pointer flex flex-col items-center text-center transform hover:-translate-y-2 hover:scale-105"
-                    style={{
-                      transformStyle: "preserve-3d",
-                      animation: "floating-gentle 4.5s ease-in-out infinite",
-                      animationDelay: floatDelay,
-                    }}
-                  >
-                    <div
-                      className={`absolute inset-0 rounded-sm bg-gradient-to-br ${sign.bgGlowClass} opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none`}
-                    />
-
-                    <div
-                      className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full border ${sign.borderClass} bg-black/50 flex items-center justify-center ${sign.colorClass} shadow-md group-hover:scale-110 transition-transform duration-300 mb-3`}
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-7 h-7 sm:w-8 sm:h-8">
-                        {sign.svgPath}
-                      </svg>
-                    </div>
-
-                    <span
-                      lang="bo"
-                      className="font-serif text-sm sm:text-base font-semibold text-tibet-gold-light group-hover:text-tibet-gold transition-colors tracking-wide"
-                    >
-                      {sign.nameBo}
-                    </span>
-
-                    <span className="text-[11px] sm:text-xs text-white/90 font-medium mt-1">
-                      {sign.nameEn}
-                    </span>
-
-                    <span className="text-[10px] text-white/40 italic font-mono mt-0.5">
-                      {sign.sanskrit} · {sign.freq} Hz
-                    </span>
-
-                    <span className="mt-3 text-[9px] uppercase tracking-widest text-tibet-gold border border-tibet-gold/30 px-2 py-0.5 rounded-full opacity-70 group-hover:opacity-100 group-hover:bg-tibet-gold/20 transition-all">
-                      {lang === "bo" ? "ཞིབ་ཕྲ་གཟིགས ↗" : "Explore Wisdom ↗"}
-                    </span>
+      {viewMode === "bento" && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {VILLAGE_LANDMARKS.map((landmark) => (
+            <div
+              key={landmark.id}
+              onClick={() => {
+                setActiveLandmark(landmark);
+                playSound(landmark);
+              }}
+              className="group relative rounded-sm border border-border-subtle bg-card-bg/85 hover:bg-card-bg backdrop-blur-md p-5 transition-all duration-300 shadow-2xs hover:shadow-md hover:border-sakya-gold cursor-pointer flex flex-col justify-between space-y-4"
+            >
+              <div className="space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className={`w-12 h-12 rounded-md border ${landmark.borderClass} bg-stone-900 p-2 ${landmark.colorClass}`}>
+                    {landmark.svgModel}
                   </div>
-                );
-              })}
-            </div>
-          </div>
+                  <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full bg-border-subtle/50 text-muted">
+                    {lang === "bo" ? landmark.categoryBo : landmark.categoryEn}
+                  </span>
+                </div>
 
-          <div className="relative z-10 flex flex-wrap items-center justify-between gap-2 text-[10px] sm:text-[11px] text-white/40 pt-2 border-t border-white/10">
-            <span>
-              {lang === "bo"
-                ? "💡 ཙིག་རྟགས་གཡོ་འགུལ་ལྟར་ ༣D ཞིང་ཁམས་འཁོར་བ། རྟགས་རེ་རེར་མནན་ཏེ་གཟིགས།"
-                : "Hover to tilt the 3D realm with gyroscopic perspective. Click any emblem for deep philosophical meaning."}
-            </span>
-            <span className="font-mono text-tibet-gold/70">
-              CHIME: {soundEnabled ? "ONLINE" : "MUTED"}
-            </span>
-          </div>
+                <div className="space-y-1">
+                  <h3 lang="bo" className="font-serif text-base font-bold text-foreground">
+                    {landmark.nameBo}
+                  </h3>
+                  <h4 className="text-xs font-medium text-foreground">
+                    {landmark.nameEn}
+                  </h4>
+                  <p className="text-[11px] text-muted line-clamp-3 leading-relaxed font-serif pt-1">
+                    {lang === "bo" ? landmark.descriptionBo : landmark.descriptionEn}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t border-border-subtle/60 text-xs">
+                <span className="text-[10px] font-mono text-muted">
+                  {lang === "bo" ? landmark.locationBo : landmark.locationEn}
+                </span>
+                <span className="text-sakya-crimson font-medium flex items-center gap-1">
+                  <span>{lang === "bo" ? "གཟིགས" : "Discover"}</span>
+                  <span>↗</span>
+                </span>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
       {/* ══════════════════════════════════════════════════════════════════
-          SPATIAL REALM: ARCHIVE CATALOGUE TABLE MODE
+          SPATIAL REALM: CHRONICLE ARCHIVE CATALOGUE MODE
           ══════════════════════════════════════════════════════════════════ */}
-      {viewMode === "archive" && (
+      {viewMode === "chronicle" && (
         <div className="rounded-sm border border-border-subtle bg-card-bg/80 backdrop-blur-md overflow-hidden shadow-xs divide-y divide-border-subtle">
           <div className="p-4 sm:p-5 bg-card-bg flex items-center justify-between border-b border-border-subtle">
             <div>
               <h3 className="font-serif text-lg font-medium text-foreground">
-                {lang === "bo" ? "བཀྲ་ཤིས་རྟགས་བརྒྱད་ཀྱི་དཀར་ཆག" : "Ashtamangala Sacred Catalogue"}
+                {lang === "bo" ? "བོད་ཀྱི་འཚོ་བའི་རིག་གཞུང་དཀར་ཆག" : "Chronicle of Tibetan Living Heritage"}
               </h3>
               <p className="text-xs text-muted">
                 {lang === "bo"
-                  ? "རྟགས་བརྒྱད་ཀྱི་བྱིན་རླབས་དང་གནས་ལུགས་ཆ་ཚང་།"
-                  : "Complete spiritual inscriptions, elemental affiliations, and liturgical blessings."}
+                  ? "ལོ་ངོ་ཉིས་སྟོང་རིང་གི་དམངས་ཁྲོད་འཚོ་བ། ལག་ཤེས། ཞིང་འབྲོག སྨན་རྩིས་བཅས་ཀྱི་ལོ་རྒྱུས།"
+                  : "Everyday life, nomadic pastoralism, agricultural rites, medicine, and applied crafts over 2,000 years."}
               </p>
             </div>
             <span className="text-xs font-mono text-sakya-gold">
-              8 SYMBOLS · 5 ELEMENTS
+              8 CULTURAL SPHERES
             </span>
           </div>
 
           <div className="divide-y divide-border-subtle/70">
-            {AUSPICIOUS_SIGNS.map((sign) => (
+            {VILLAGE_LANDMARKS.map((landmark) => (
               <div
-                key={sign.id}
+                key={landmark.id}
                 onClick={() => {
-                  setActiveSign(sign);
-                  playChime(sign.freq);
+                  setActiveLandmark(landmark);
+                  playSound(landmark);
                 }}
                 className="p-4 sm:p-5 hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-4"
               >
                 <div className="flex items-start sm:items-center gap-4">
-                  <div className={`w-12 h-12 rounded-full border ${sign.borderClass} bg-black/80 flex items-center justify-center ${sign.colorClass} shrink-0 shadow-xs`}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-6 h-6">
-                      {sign.svgPath}
-                    </svg>
+                  <div className={`w-12 h-12 rounded-md border ${landmark.borderClass} bg-stone-900 p-2 ${landmark.colorClass} shrink-0 shadow-xs`}>
+                    {landmark.svgModel}
                   </div>
                   <div className="space-y-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <span lang="bo" className="font-serif text-base font-bold text-foreground">
-                        {sign.nameBo}
+                        {landmark.nameBo}
                       </span>
                       <span className="text-xs font-medium text-foreground">
-                        {sign.nameEn}
-                      </span>
-                      <span className="text-[11px] font-mono text-muted">
-                        ({sign.sanskrit})
+                        {landmark.nameEn}
                       </span>
                       <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-border-subtle/50 text-muted">
-                        {lang === "bo" ? sign.elementBo : sign.elementEn}
+                        {lang === "bo" ? landmark.categoryBo : landmark.categoryEn}
                       </span>
                     </div>
                     <p className="text-xs text-foreground/80 leading-relaxed font-serif max-w-3xl">
-                      {lang === "bo" ? sign.meaningBo : sign.meaningEn}
+                      {lang === "bo" ? landmark.descriptionBo : landmark.descriptionEn}
                     </p>
                   </div>
                 </div>
@@ -961,12 +1107,12 @@ export function TibetanInteractiveOdyssey({ lang }: { lang: Language }) {
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      playChime(sign.freq);
+                      playSound(landmark);
                     }}
                     className="p-2 rounded-full border border-border-subtle hover:border-tibet-gold text-muted hover:text-foreground text-xs cursor-pointer"
-                    title="Play chime"
+                    title="Play acoustic sound"
                   >
-                    🔔 {sign.freq} Hz
+                    🎵 {landmark.freq} Hz
                   </button>
                   <span className="text-xs text-sakya-crimson font-medium">
                     {lang === "bo" ? "གཟིགས ↗" : "View ↗"}
@@ -979,68 +1125,61 @@ export function TibetanInteractiveOdyssey({ lang }: { lang: Language }) {
       )}
 
       {/* ══════════════════════════════════════════════════════════════════
-          WISDOM SANCTUARY MODAL DRAWER (Deep Philosophical Immersion)
+          CULTURAL SANCTUARY MODAL DRAWER (Deep Immersion)
           ══════════════════════════════════════════════════════════════════ */}
-      {activeSign && (
+      {activeLandmark && (
         <div
           role="dialog"
           aria-modal="true"
-          aria-labelledby="active-sign-heading"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-xl animate-in fade-in duration-200"
-          onClick={() => setActiveSign(null)}
+          aria-labelledby="active-landmark-heading"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/85 backdrop-blur-xl animate-in fade-in duration-200"
+          onClick={() => setActiveLandmark(null)}
         >
           <div
-            className="relative w-full max-w-xl rounded-sm border border-sakya-gold/60 bg-[#161210] p-6 sm:p-8 text-white shadow-2xl space-y-6"
+            className="relative w-full max-w-2xl rounded-sm border border-sakya-gold/60 bg-[#161210] p-6 sm:p-8 text-white shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Ambient Modal Glow */}
             <div
-              className={`absolute inset-0 rounded-sm bg-gradient-to-b ${activeSign.bgGlowClass} opacity-60 pointer-events-none`}
+              className={`absolute inset-0 rounded-sm bg-gradient-to-b ${activeLandmark.bgGlowClass} opacity-60 pointer-events-none`}
             />
 
             {/* Modal Header */}
             <div className="relative z-10 flex items-start justify-between gap-4 border-b border-white/15 pb-4">
               <div className="flex items-center gap-4">
                 <div
-                  className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full border ${activeSign.borderClass} bg-black/80 flex items-center justify-center ${activeSign.colorClass} shadow-lg shrink-0`}
+                  className={`w-16 h-16 sm:w-20 sm:h-20 rounded-md border ${activeLandmark.borderClass} bg-stone-950 p-2.5 ${activeLandmark.colorClass} shadow-lg shrink-0`}
                 >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    className="w-8 h-8 sm:w-9 sm:h-9"
-                  >
-                    {activeSign.svgPath}
-                  </svg>
+                  {activeLandmark.svgModel}
                 </div>
                 <div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <span className="text-[10px] uppercase tracking-widest font-mono text-tibet-gold font-semibold">
-                      {activeSign.sanskrit}
+                      {lang === "bo" ? activeLandmark.categoryBo : activeLandmark.categoryEn}
                     </span>
                     <span className="text-[10px] font-mono px-2 py-0.2 rounded-full bg-white/10 text-white/70 uppercase">
-                      {lang === "bo" ? activeSign.elementBo : activeSign.elementEn}
+                      {lang === "bo" ? activeLandmark.locationBo : activeLandmark.locationEn}
                     </span>
                     <span className="text-[10px] font-mono text-tibet-gold-light">
-                      {activeSign.freq} Hz
+                      {activeLandmark.freq} Hz
                     </span>
                   </div>
                   <h3
-                    id="active-sign-heading"
+                    id="active-landmark-heading"
                     lang="bo"
                     className="font-serif text-xl sm:text-2xl font-bold text-tibet-gold-light tracking-wide mt-0.5"
                   >
-                    {activeSign.nameBo}
+                    {activeLandmark.nameBo}
                   </h3>
                   <p className="text-xs sm:text-sm text-white/80 font-medium">
-                    {activeSign.nameEn}
+                    {activeLandmark.nameEn}
                   </p>
                 </div>
               </div>
 
               <button
                 type="button"
-                onClick={() => setActiveSign(null)}
+                onClick={() => setActiveLandmark(null)}
                 className="w-8 h-8 rounded-full border border-white/20 bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer shrink-0"
                 title="Close"
               >
@@ -1048,40 +1187,47 @@ export function TibetanInteractiveOdyssey({ lang }: { lang: Language }) {
               </button>
             </div>
 
-            {/* Deep Philosophical Commentary */}
+            {/* Deep Cultural Narrative */}
             <div className="relative z-10 space-y-4 text-sm leading-relaxed text-white/90">
               <div className="space-y-1.5">
                 <span className="text-[10px] uppercase tracking-widest text-tibet-gold font-semibold block font-mono">
-                  {lang === "bo" ? "གནས་ལུགས་དང་མཚོན་དོན།" : "Sacred Symbolism & Meaning"}
+                  {lang === "bo" ? "ལོ་རྒྱུས་དང་འཚོ་བའི་རིན་ཐང་།" : "Living Cultural Heritage & Meaning"}
                 </span>
-                <p className="text-xs sm:text-sm text-white/80 leading-relaxed font-serif">
-                  {lang === "bo" ? activeSign.meaningBo : activeSign.meaningEn}
+                <p className="text-xs sm:text-sm text-white/85 leading-relaxed font-serif">
+                  {lang === "bo" ? activeLandmark.descriptionBo : activeLandmark.descriptionEn}
                 </p>
               </div>
 
-              {/* Blessing Inscription */}
-              <div className="p-4 rounded-sm border border-sakya-gold/40 bg-sakya-gold/10 space-y-1.5">
+              {/* Traditional Living Practices */}
+              <div className="p-4 rounded-sm border border-sakya-gold/40 bg-sakya-gold/10 space-y-2">
                 <span className="text-[10px] uppercase tracking-widest text-tibet-gold-light font-semibold block font-mono">
-                  {lang === "bo" ? "བཀྲ་ཤིས་རྟེན་འབྲེལ་གྱི་བྱིན་རླབས།" : "Traditional Blessing"}
+                  {lang === "bo" ? "ཉིན་རེའི་གོམས་གཤིས་དང་ལག་ལེན།" : "Traditional Living Customs & Practices"}
                 </span>
-                <p className="font-serif text-sm text-tibet-gold-light leading-relaxed">
-                  {lang === "bo" ? activeSign.blessingBo : activeSign.blessingEn}
-                </p>
+                <ul className="space-y-1.5 text-xs sm:text-sm text-tibet-gold-light/90 font-serif">
+                  {(lang === "bo" ? activeLandmark.practicesBo : activeLandmark.practicesEn).map(
+                    (practice, pIdx) => (
+                      <li key={pIdx} className="flex items-start gap-2">
+                        <span className="text-tibet-gold text-xs mt-0.5">✦</span>
+                        <span>{practice}</span>
+                      </li>
+                    )
+                  )}
+                </ul>
               </div>
             </div>
 
             {/* Modal Footer */}
             <div className="relative z-10 flex items-center justify-between pt-3 border-t border-white/15 text-xs">
               <span className="text-[11px] text-white/50 font-mono">
-                {lang === "bo" ? "ལོ་ཉིས་སྟོང་དུས་སྟོན།" : "2,000 Years Tibetan Living Heritage"}
+                {lang === "bo" ? "བོད་ཀྱི་རིག་གཞུང་ལོ་ཉིས་སྟོང་།" : "2,000 Years Tibetan Living Civilization"}
               </span>
               <button
                 type="button"
-                onClick={() => playChime(activeSign.freq)}
+                onClick={() => playSound(activeLandmark)}
                 className="px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-tibet-gold hover:text-black border border-white/20 text-white transition-all text-xs font-medium cursor-pointer flex items-center gap-2"
               >
-                <span>🔔</span>
-                <span className="font-mono">{lang === "bo" ? "སྒྲ་དབྱངས་བསྐྱར་གཏོང་" : "Resonate Bell (Singing Bowl)"}</span>
+                <span>🎵</span>
+                <span className="font-mono">{lang === "bo" ? "སྒྲ་དབྱངས་བསྐྱར་གཏོང་" : "Play Instrument Timbre"}</span>
               </button>
             </div>
           </div>
