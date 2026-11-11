@@ -294,6 +294,41 @@ function createGildedTibetanRoof(w: number, d: number, h: number) {
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
+   Helper: Lhasa High-Altitude Blue Sky Gradient Texture (3,700m Azure Sky)
+   ══════════════════════════════════════════════════════════════════════════ */
+function createLhasaDaySkyTexture() {
+  const canvas = document.createElement("canvas");
+  canvas.width = 512;
+  canvas.height = 512;
+  const ctx = canvas.getContext("2d")!;
+
+  // Vertical gradient from deep Tibetan cobalt zenith to crisp azure horizon
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, 512);
+  skyGrad.addColorStop(0, "#1d4ed8");    // High-altitude Lhasa cobalt zenith
+  skyGrad.addColorStop(0.45, "#3b82f6"); // Brilliant Himalayan azure mid-sky
+  skyGrad.addColorStop(0.82, "#7dd3fc"); // Soft sky blue
+  skyGrad.addColorStop(1, "#bae6fd");    // Luminous horizon mist
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(0, 0, 512, 512);
+
+  // Subtle high-altitude wispy Himalayan clouds
+  ctx.fillStyle = "rgba(255, 255, 255, 0.14)";
+  for (let i = 0; i < 12; i++) {
+    const cx = (i * 97) % 512;
+    const cy = 90 + ((i * 53) % 220);
+    const rx = 55 + (i % 4) * 28;
+    const ry = 8 + (i % 3) * 5;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
    Helper: Radial Glow Texture for 3D Sun & Moon Halos
    ══════════════════════════════════════════════════════════════════════════ */
 function createCelestialGlowTexture(
@@ -364,16 +399,15 @@ function createSunCelestialBody() {
   }
   sunGroup.add(raysGroup);
 
-  // 4. Volumetric Solar Halo Sprite
+  // 4. Volumetric Solar Halo Sprite (vivid against daytime blue sky)
   const glowTex = createCelestialGlowTexture(
-    "rgba(254, 240, 138, 0.95)",
-    "rgba(251, 191, 36, 0.55)",
-    "rgba(234, 88, 12, 0.15)"
+    "rgba(254, 249, 195, 0.95)",
+    "rgba(251, 191, 36, 0.65)",
+    "rgba(245, 158, 11, 0.18)"
   );
   const spriteMat = new THREE.SpriteMaterial({
     map: glowTex,
     transparent: true,
-    blending: THREE.AdditiveBlending,
     depthWrite: false,
   });
   const glowSprite = new THREE.Sprite(spriteMat);
@@ -630,10 +664,10 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     const width = container.clientWidth || 960;
     const height = container.clientHeight || 620;
 
-    // 1. Scene
+    // 1. Scene (Default Lhasa Blue Sky)
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color("#0c0a09");
-    scene.fog = new THREE.FogExp2("#0c0a09", 0.014);
+    scene.background = createLhasaDaySkyTexture();
+    scene.fog = new THREE.FogExp2("#60a5fa", 0.0055);
     sceneRef.current = scene;
 
     // 2. Camera
@@ -1378,15 +1412,15 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     let wallEmissive = 0.05;
 
     if (atmosphere === "sunlight") {
-      scene.background = new THREE.Color("#0f141c");
-      scene.fog = new THREE.FogExp2("#0f141c", 0.012);
-      ambient.color.set("#fff7ed");
-      ambient.intensity = 1.25;
-      sun.color.set("#fffbeb");
-      sun.intensity = 2.5;
+      scene.background = createLhasaDaySkyTexture();
+      scene.fog = new THREE.FogExp2("#60a5fa", 0.0055);
+      ambient.color.set("#fffbeb");
+      ambient.intensity = 1.35;
+      sun.color.set("#ffffff");
+      sun.intensity = 2.6;
       sun.position.set(14, 22, 16);
       spot.intensity = 0;
-      wallEmissive = 0.04;
+      wallEmissive = 0.02;
       if (sunBodyRef.current) {
         sunBodyRef.current.visible = true;
         sunBodyRef.current.scale.setScalar(1.15);
@@ -1395,9 +1429,9 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
         moonBodyRef.current.visible = false;
       }
     } else {
-      // Sacred Night Mode: illuminated windows, upward floodlights & 3D Moon
-      scene.background = new THREE.Color("#05050a");
-      scene.fog = new THREE.FogExp2("#05050a", 0.015);
+      // Sacred Night Mode: deep midnight sky, illuminated windows & 3D Moon
+      scene.background = new THREE.Color("#050814");
+      scene.fog = new THREE.FogExp2("#050814", 0.014);
       ambient.color.set("#93c5fd");
       ambient.intensity = 0.35;
       sun.color.set("#60a5fa");
