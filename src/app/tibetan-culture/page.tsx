@@ -446,8 +446,8 @@ export default function TibetanCulturePilotPage() {
               </span>
               <span>
                 {isPlayerOpen
-                  ? "Cerrar reproductor de video"
-                  : "Desplegar video: Pema Ts'al Institute (Pokhara, Nepal)"}
+                  ? "Close Video Player · བརྙན་འཕྲིན་སྒོ་རྒྱག"
+                  : "View Video Stream: Pema Ts'al Institute (Pokhara, Nepal) · བརྙན་འཕྲིན།"}
               </span>
               <span className="px-2 py-0.5 rounded-full bg-white/20 text-[10px] uppercase font-bold tracking-wider">
                 L2 Stream
@@ -455,7 +455,7 @@ export default function TibetanCulturePilotPage() {
             </button>
 
             <span className="text-xs text-muted">
-              (El video continúa en el fondo full-width de la página)
+              (Ambient video stream continues in the full-width background)
             </span>
           </div>
 
@@ -488,7 +488,7 @@ export default function TibetanCulturePilotPage() {
 
                 {/* Video Speed Toggle */}
                 <div className="absolute top-3 right-3 sm:top-4 sm:right-4 flex items-center gap-1 bg-black/70 backdrop-blur-md rounded-full p-1 border border-white/20 text-white text-[10px] sm:text-[11px]">
-                  <span className="px-2 text-white/70">Velocidad:</span>
+                  <span className="px-2 text-white/70">Speed:</span>
                   {(["1x", "1.5x", "2x"] as const).map((spd) => (
                     <button
                       key={spd}

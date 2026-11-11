@@ -7,3 +7,8 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+## Project Language Policy (MANDATORY)
+
+- **Allowed Languages**: English and Tibetan (Bod-yig / Uchen script) ONLY for all user-facing UI, buttons, titles, subtitles, placeholders, and labels.
+- **Prohibited**: Never use Spanish or any other language in public-facing site elements.
