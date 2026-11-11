@@ -10,10 +10,10 @@ const ODYSSEY_UI = {
   en: {
     backCulture: "← Back to Tibetan Culture",
     backHome: "Home",
-    badge: "Interactive 3D Miniature Village · 2,000 Years",
-    title: "3D Living Tibetan Village & Cultural Heritage",
+    badge: "3D Potala Palace & Living Tibetan Village · 2,000 Years",
+    title: "3D Potala Palace Diorama & Living Tibetan Heritage",
     subtitle:
-      "A spatial celebration of authentic Tibetan culture and daily life: stone homesteads, nomad yak-hair tents, barley terraces, folk dance squares, herbal tea houses, and ancient handicrafts across 2,000 years of civilization.",
+      "Explore our interactive 360° WebGL 3D architectural model of the Potala Palace (Potrang Marpo, Potrang Karpo, Golden Roofs, and Shol Village on Marpo Ri Hill) alongside the walkable Game Boy Tibetan village.",
     sacredCenter: "Palden Sakya Center · New York",
     footerText:
       "Palden Sakya Center · Dedicated to the preservation of Tibetan living culture and Buddha Dharma.",
@@ -21,10 +21,10 @@ const ODYSSEY_UI = {
   bo: {
     backCulture: "← བོད་ཀྱི་རིག་གཞུང་ལ་ཕྱིར་ལོག",
     backHome: "གཙོ་ངོས།",
-    badge: "བོད་ཀྱི་ཡུལ་ལྗོངས་གྲོང་གསེབ་༣D",
-    title: "༄༅། །བོད་ཀྱི་སྲོལ་རྒྱུན་གྲོང་གསེབ་དང་འཚོ་བའི་རིག་གཞུང་༣D།",
+    badge: "ཕོ་བྲང་པོ་ཏ་ལ་དང་བོད་ཀྱི་གྲོང་གསེབ་༣D",
+    title: "༄༅། །ཕོ་བྲང་པོ་ཏ་ལ་དང་བོད་ཀྱི་འཚོ་བའི་རིག་གཞུང་༣D།",
     subtitle:
-      "བོད་ཀྱི་ཐུན་མོང་མ་ཡིན་པའི་རྡོ་ཁང་དང་སྦྲ་ནག ནས་ཞིང་། གཞས་ར། ལག་ཤེས་བཟོ་གྲྭ་སོགས་ལོ་ངོ་ཉིས་སྟོང་རིང་གི་འཚོ་བའི་གོམས་གཤིས་དང་དམངས་ཁྲོད་རིག་གནས་ལ་གཟིགས་པའི་༣D ཞིང་ཁམས།",
+      "ལྷ་སའི་དམར་པོ་རིའི་སྟེང་གི་ཕོ་བྲང་པོ་ཏ་ལའི་(ཕོ་བྲང་དམར་པོ་དང་། ཕོ་བྲང་དཀར་པོ། གསེར་ཐོག ཞོལ་གྲོང་)༣D དཔེ་གཟུགས་དང་། བོད་ཀྱི་སྲོལ་རྒྱུན་གྲོང་གསེབ་ཀྱི་རིག་གཞུང་ཞིང་ཁམས།",
     sacredCenter: "ནིའུ་ཡོག་དཔལ་ལྡན་ས་སྐྱའི་ཆོས་ཚོགས།",
     footerText:
       "ནིའུ་ཡོག་དཔལ་ལྡན་ས་སྐྱའི་ཆོས་ཚོགས། བོད་ཀྱི་སྐད་ཡིག་རིག་གཞུང་དང་དམ་ཆོས་ཉར་ཚགས་ཆེད།",

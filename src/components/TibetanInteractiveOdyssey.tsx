@@ -7,11 +7,12 @@ import {
   VILLAGE_LANDMARKS,
 } from "@/data/tibetanVillageData";
 import TibetanGameboyVillage from "@/components/TibetanGameboyVillage";
+import PotalaPalace3DViewer from "@/components/PotalaPalace3DViewer";
 
-type ViewMode = "gameboy" | "village" | "bento" | "chronicle";
+type ViewMode = "potala" | "gameboy" | "village" | "bento" | "chronicle";
 
 export function TibetanInteractiveOdyssey({ lang }: { lang: Language }) {
-  const [viewMode, setViewMode] = useState<ViewMode>("gameboy");
+  const [viewMode, setViewMode] = useState<ViewMode>("potala");
   const [timeOfDay, setTimeOfDay] = useState<"golden" | "night">("golden");
   const [cameraPreset, setCameraPreset] = useState<"isometric" | "aerial" | "promenade">("isometric");
   const [activeLandmark, setActiveLandmark] = useState<CulturalLandmark | null>(null);
@@ -413,8 +414,24 @@ export function TibetanInteractiveOdyssey({ lang }: { lang: Language }) {
           <div
             role="radiogroup"
             aria-label="View mode toggle"
-            className="flex items-center rounded-full border border-border-subtle bg-card-bg/90 p-0.5 text-xs shadow-2xs"
+            className="flex flex-wrap items-center rounded-full border border-border-subtle bg-card-bg/90 p-0.5 text-xs shadow-2xs"
           >
+            {/* 0. Flagship 3D Potala Palace Diorama (WebGL + Tripo3D) */}
+            <button
+              type="button"
+              role="radio"
+              aria-checked={viewMode === "potala"}
+              onClick={() => setViewMode("potala")}
+              className={`px-3 py-1.5 rounded-full transition-all cursor-pointer font-medium flex items-center gap-1.5 ${
+                viewMode === "potala"
+                  ? "bg-tibet-gold text-black font-bold shadow-xs"
+                  : "text-muted hover:text-foreground"
+              }`}
+            >
+              <span>🏯</span>
+              <span>{lang === "bo" ? "ཕོ་བྲང་པོ་ཏ་ལ་ ༣D" : "3D Potala Palace"}</span>
+            </button>
+
             {/* 1. Walkable Game Boy / Pokémon Style Mode */}
             <button
               type="button"
@@ -481,6 +498,11 @@ export function TibetanInteractiveOdyssey({ lang }: { lang: Language }) {
           </div>
         </div>
       </div>
+
+      {/* ══════════════════════════════════════════════════════════════════
+          MODE 0: 3D POTALA PALACE DIORAMA (WebGL Three.js + Tripo3D Bridge)
+          ══════════════════════════════════════════════════════════════════ */}
+      {viewMode === "potala" && <PotalaPalace3DViewer lang={lang} />}
 
       {/* ══════════════════════════════════════════════════════════════════
           MODE 1: WALKABLE GAME BOY ISOMETRIC TIBETAN VILLAGE (Flagship RPG)
