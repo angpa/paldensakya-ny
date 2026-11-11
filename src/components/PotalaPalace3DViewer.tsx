@@ -1745,17 +1745,23 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
             {autoRotate ? "↻ 360° On" : "↻ 360° Paused"}
           </button>
 
-          {/* Hotspots Visibility Toggle */}
+          {/* Show / Hide All Labels Toggle (Clean 3D View) */}
           <button
             type="button"
             onClick={() => setShowHotspots((h) => !h)}
-            className={`px-2.5 py-1.5 rounded-sm border font-mono text-[11px] transition-colors cursor-pointer ${
+            className={`px-2.5 py-1.5 rounded-sm border font-mono text-[11px] font-bold transition-colors cursor-pointer ${
               showHotspots
-                ? "bg-tibet-gold/20 border-tibet-gold/50 text-tibet-gold"
-                : "bg-white/5 border-white/15 text-white/60"
+                ? "bg-tibet-gold/20 border-tibet-gold/60 text-tibet-gold hover:bg-tibet-gold/30"
+                : "bg-white/10 border-white/25 text-white hover:bg-white/20"
             }`}
           >
-            {lang === "bo" ? "📍 ས་ཚིགས (༧)" : "📍 Pins (7)"}
+            {showHotspots
+              ? lang === "bo"
+                ? "🙈 ཁ་བྱང་སྦེད་པ (3D གཙང་མ)"
+                : "🙈 Hide Labels (Clean 3D)"
+              : lang === "bo"
+              ? "🏷️ ཁ་བྱང་སྟོན་པ"
+              : "🏷️ Show Labels"}
           </button>
 
           {/* Tripo3D Studio & GLB Drawer Toggle */}
@@ -1793,8 +1799,26 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
           {/* Three.js WebGL Mount Container */}
           <div ref={mountRef} className="w-full h-full min-h-[500px] sm:min-h-[600px] cursor-grab active:cursor-grabbing" />
 
+          {/* Top-Right Quick Button inside Canvas: Toggle Clean 3D View (Hide/Show all text & labels) */}
+          <button
+            type="button"
+            onClick={() => setShowHotspots((h) => !h)}
+            className="absolute top-3 right-3 z-30 px-3 py-1.5 rounded-full bg-black/75 hover:bg-tibet-gold text-white hover:text-black border border-tibet-gold/60 backdrop-blur-md font-mono text-[11px] font-bold transition-all cursor-pointer shadow-lg flex items-center gap-1.5"
+          >
+            <span>{showHotspots ? "🙈" : "🏷️"}</span>
+            <span>
+              {showHotspots
+                ? lang === "bo"
+                  ? "3D གཙང་མ"
+                  : "Clean 3D"
+                : lang === "bo"
+                ? "ཁ་བྱང་སྟོན"
+                : "Show Labels"}
+            </span>
+          </button>
+
           {/* 3D Projected Sun (ཉི་མ།) & Moon (ཟླ་བ།) Sky Badges */}
-          {!customModelName && screenCelestials.sun.visible && (
+          {showHotspots && !customModelName && screenCelestials.sun.visible && (
             <button
               type="button"
               onClick={() => {
@@ -1820,7 +1844,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
             </button>
           )}
 
-          {!customModelName && screenCelestials.moon.visible && (
+          {showHotspots && !customModelName && screenCelestials.moon.visible && (
             <button
               type="button"
               onClick={() => {
@@ -1880,47 +1904,51 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
             })}
 
           {/* Top-Left HUD Overlay */}
-          <div className="absolute top-3 left-3 z-10 pointer-events-none flex flex-col gap-1 bg-black/65 backdrop-blur-md px-3 py-2 rounded-xs border border-white/10">
-            <div className="flex items-center gap-2 text-[10px] font-mono text-tibet-gold">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-              <span>
-                {customModelName
-                  ? `CUSTOM GLB: ${customModelName}`
-                  : lang === "bo"
-                  ? "ཕོ་བྲང་པོ་ཏ་ལའི་༣D དཔེ་གཟུགས།"
-                  : "POTALA PALACE · 3D ARCHITECTURAL MODEL"}
+          {showHotspots && (
+            <div className="absolute top-3 left-3 z-10 pointer-events-none flex flex-col gap-1 bg-black/65 backdrop-blur-md px-3 py-2 rounded-xs border border-white/10">
+              <div className="flex items-center gap-2 text-[10px] font-mono text-tibet-gold">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                <span>
+                  {customModelName
+                    ? `CUSTOM GLB: ${customModelName}`
+                    : lang === "bo"
+                    ? "ཕོ་བྲང་པོ་ཏ་ལའི་༣D དཔེ་གཟུགས།"
+                    : "POTALA PALACE · 3D ARCHITECTURAL MODEL"}
+                </span>
+              </div>
+              <span className="text-[10px] font-mono text-white/60">
+                {lang === "bo"
+                  ? "ཙིག་རྟགས་ཀྱིས་༣༦༠° བསྐོར་བ་དང་ཆེ་ཆུང་སྒྱུར་ཐུབ།"
+                  : "Drag to orbit 360° · Scroll to zoom · Click pins (01–07) to inspect"}
               </span>
             </div>
-            <span className="text-[10px] font-mono text-white/60">
-              {lang === "bo"
-                ? "ཙིག་རྟགས་ཀྱིས་༣༦༠° བསྐོར་བ་དང་ཆེ་ཆུང་སྒྱུར་ཐུབ།"
-                : "Drag to orbit 360° · Scroll to zoom · Click pins (01–07) to inspect"}
-            </span>
-          </div>
+          )}
 
           {/* Bottom Hotspot Quick-Select Ribbon inside Canvas */}
-          <div className="absolute bottom-3 inset-x-3 z-20 flex items-center gap-1.5 overflow-x-auto py-1.5 px-2.5 rounded-sm bg-black/80 backdrop-blur-md border border-white/15">
-            {POTALA_HOTSPOTS.map((hs) => {
-              const active = selectedHotspot.id === hs.id;
-              return (
-                <button
-                  key={hs.id}
-                  type="button"
-                  onClick={() => focusHotspot(hs)}
-                  className={`px-2.5 py-1 rounded-xs text-[11px] font-mono whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
-                    active
-                      ? "bg-tibet-gold text-black font-bold shadow-xs"
-                      : "bg-white/5 hover:bg-white/15 text-white/80"
-                  }`}
-                >
-                  <span className="opacity-70">{hs.number}</span>
-                  <span lang="bo" className="font-serif">
-                    {lang === "bo" ? hs.nameBo : hs.nameEn.split("(")[0].trim()}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+          {showHotspots && (
+            <div className="absolute bottom-3 inset-x-3 z-20 flex items-center gap-1.5 overflow-x-auto py-1.5 px-2.5 rounded-sm bg-black/80 backdrop-blur-md border border-white/15">
+              {POTALA_HOTSPOTS.map((hs) => {
+                const active = selectedHotspot.id === hs.id;
+                return (
+                  <button
+                    key={hs.id}
+                    type="button"
+                    onClick={() => focusHotspot(hs)}
+                    className={`px-2.5 py-1 rounded-xs text-[11px] font-mono whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
+                      active
+                        ? "bg-tibet-gold text-black font-bold shadow-xs"
+                        : "bg-white/5 hover:bg-white/15 text-white/80"
+                    }`}
+                  >
+                    <span className="opacity-70">{hs.number}</span>
+                    <span lang="bo" className="font-serif">
+                      {lang === "bo" ? hs.nameBo : hs.nameEn.split("(")[0].trim()}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* RIGHT 4 COLS: Sacred Architectural Inspector Panel */}
