@@ -986,31 +986,28 @@ export function TibetanInteractiveOdyssey({ lang }: { lang: Language }) {
               transformStyle: "preserve-3d",
             }}
           >
-            {/* The Stylized Volumetric Ground Diorama Slab */}
+            {/* The Stylized Ground Base of the Tibetan Settlement (Parallel to Stage, No Cross Slicing) */}
             <div
-              className={`absolute w-[360px] h-[360px] sm:w-[580px] sm:h-[580px] rounded-2xl border-4 ${
+              className={`absolute -inset-3 sm:-inset-6 rounded-2xl border-2 ${
                 timeOfDay === "night"
-                  ? "border-amber-500/25 bg-gradient-to-br from-[#0e0b18]/95 via-[#181326]/90 to-[#08060f]/95 shadow-[0_30px_70px_rgba(0,0,0,0.95)]"
-                  : "border-amber-600/40 bg-gradient-to-br from-[#1c1511]/95 via-[#271d18]/90 to-[#120e0c]/95 shadow-[0_30px_70px_rgba(0,0,0,0.9)]"
+                  ? "border-amber-500/30 bg-gradient-to-br from-[#0c0a14]/90 via-[#141022]/80 to-[#08060e]/95 shadow-[0_25px_60px_rgba(0,0,0,0.9)]"
+                  : "border-sakya-gold/40 bg-gradient-to-br from-[#1a1411]/90 via-[#221b16]/80 to-[#120e0c]/95 shadow-[0_25px_60px_rgba(0,0,0,0.7)]"
               } pointer-events-none transition-colors duration-700`}
               style={{
-                transform: "translateZ(-15px) rotateX(45deg)",
+                transform: "translateZ(-30px)",
               }}
             >
               {/* Stepped mountain terrace curves etched into ground */}
-              <div className="absolute inset-4 rounded-xl border border-amber-600/20" />
-              <div className="absolute inset-16 rounded-xl border border-dashed border-amber-500/15" />
+              <div className="absolute inset-2 sm:inset-4 rounded-xl border border-amber-600/20 pointer-events-none" />
+              <div className="absolute inset-6 sm:inset-10 rounded-lg border border-dashed border-amber-500/15 pointer-events-none" />
               {/* Flowing mountain stream path */}
-              <div className="absolute top-0 bottom-0 left-1/3 w-3 bg-gradient-to-b from-cyan-600/40 via-cyan-400/30 to-cyan-500/40 blur-[1px] transform -rotate-12" />
-              {/* Extruded Cliff Rock Strata Slab Edge */}
-              <div
-                aria-hidden="true"
-                className="absolute -bottom-5 inset-x-0 h-6 rounded-b-2xl bg-gradient-to-b from-black/80 to-black/95 border-x-4 border-b-4 border-amber-950/70"
-              />
+              <div className="absolute top-0 bottom-0 left-1/4 w-8 sm:w-12 bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent blur-[2px] transform -rotate-6 pointer-events-none" />
+              {/* Golden valley pathways */}
+              <div className="absolute top-1/2 left-0 right-0 h-6 bg-gradient-to-b from-transparent via-amber-400/10 to-transparent pointer-events-none" />
             </div>
 
             {/* 8 Interactive Cultural Landmarks Positioned on the Village Stage */}
-            <div className="relative w-full max-w-4xl grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 px-2">
+            <div className="relative w-full max-w-4xl grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-5 px-2">
               {VILLAGE_LANDMARKS.map((landmark, idx) => {
                 const isHovered = hoveredLandmark?.id === landmark.id;
                 const floatDelay = `${idx * 0.35}s`;
@@ -1027,7 +1024,7 @@ export function TibetanInteractiveOdyssey({ lang }: { lang: Language }) {
                       playSound(landmark);
                     }}
                     onMouseLeave={() => setHoveredLandmark(null)}
-                    className="group relative rounded-sm p-4 bg-black/75 hover:bg-black/95 backdrop-blur-xl border border-white/15 hover:border-tibet-gold transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-tibet-gold/30 cursor-pointer flex flex-col items-center text-center transform hover:-translate-y-3 hover:scale-105"
+                    className="group relative rounded-sm p-3.5 sm:p-4 bg-black/75 hover:bg-black/95 backdrop-blur-xl border border-white/15 hover:border-tibet-gold transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-tibet-gold/30 cursor-pointer flex flex-col items-center text-center transform hover:-translate-y-2 hover:scale-103"
                     style={{
                       transformStyle: "preserve-3d",
                       animation: "floating-gentle 5s ease-in-out infinite",
@@ -1052,7 +1049,7 @@ export function TibetanInteractiveOdyssey({ lang }: { lang: Language }) {
 
                     {/* Miniature Building Model SVG */}
                     <div
-                      className={`w-16 h-16 sm:w-20 sm:h-20 rounded-md border ${landmark.borderClass} bg-stone-950/70 p-2 flex items-center justify-center ${landmark.colorClass} shadow-md group-hover:scale-115 transition-transform duration-300 mb-2.5`}
+                      className={`w-14 h-14 sm:w-18 sm:h-18 rounded-md border ${landmark.borderClass} bg-stone-950/70 p-2 flex items-center justify-center ${landmark.colorClass} shadow-md group-hover:scale-110 transition-transform duration-300 mb-2`}
                     >
                       {landmark.svgModel}
                     </div>
@@ -1060,23 +1057,23 @@ export function TibetanInteractiveOdyssey({ lang }: { lang: Language }) {
                     {/* Tibetan Uchen Name */}
                     <span
                       lang="bo"
-                      className="font-serif text-xs sm:text-sm font-semibold text-tibet-gold-light group-hover:text-tibet-gold transition-colors tracking-wide line-clamp-1"
+                      className="font-serif text-xs sm:text-sm font-semibold text-tibet-gold-light group-hover:text-tibet-gold transition-colors tracking-wide"
                     >
                       {landmark.nameBo}
                     </span>
 
                     {/* English Name */}
-                    <span className="text-[10px] sm:text-xs text-white/90 font-medium mt-0.5 line-clamp-1">
+                    <span className="text-[10px] sm:text-xs text-white/90 font-medium mt-0.5 leading-snug">
                       {landmark.nameEn}
                     </span>
 
                     {/* Cultural Domain Tag */}
-                    <span className="text-[9px] font-mono text-white/50 uppercase tracking-wider mt-1 truncate max-w-[130px]">
+                    <span className="text-[9px] font-mono text-white/50 uppercase tracking-wider mt-1 leading-tight">
                       {lang === "bo" ? landmark.categoryBo : landmark.categoryEn}
                     </span>
 
                     {/* Explore Badge */}
-                    <span className="mt-2.5 text-[9px] uppercase tracking-widest text-tibet-gold border border-tibet-gold/30 px-2 py-0.5 rounded-full opacity-60 group-hover:opacity-100 group-hover:bg-tibet-gold/20 transition-all">
+                    <span className="mt-2 text-[9px] uppercase tracking-widest text-tibet-gold border border-tibet-gold/30 px-2 py-0.5 rounded-full opacity-60 group-hover:opacity-100 group-hover:bg-tibet-gold/20 transition-all">
                       {lang === "bo" ? "ཉམས་མྱོང ↗" : "Explore ↗"}
                     </span>
                   </div>
