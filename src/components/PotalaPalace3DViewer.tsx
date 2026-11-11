@@ -5,6 +5,11 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { GLTFExporter } from "three/examples/jsm/exporters/GLTFExporter.js";
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
+import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
+import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
 import {
   Language,
   PotalaHotspot,
@@ -24,9 +29,14 @@ interface ScreenHotspotPos {
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   Procedural High-DPI Tibetan Facade Texture Generator (Canvas 2D -> WebGL)
-   Generates authentic battered walls with black-framed trapezoidal windows,
-   multi-colored shing-tsak lintels, crimson penba friezes & emissive lamps.
+   Procedural High-DPI Tibetan PBR Facade Texture Generator (Canvas 2D -> WebGL)
+   Generates:
+   1. Diffuse Map: Kaolinite clay / milk-honey plaster with rain streaks,
+      stepped trapezoidal windows (larger on upper floors, smaller on lower
+      defensive floors), tricolor shing-tsak eaves & pleated sham-bu curtains.
+   2. Emissive Map: Warm butter-lamp interior glow for Night Mode + Bloom.
+   3. Packed ORM + Bump Map: Occlusion (R), Roughness 0.85-0.95 (G), Metalness (B)
+      and recessed window relief.
    ══════════════════════════════════════════════════════════════════════════ */
 function createPotalaFacadeTextures(options: {
   wallColor: string;
@@ -49,16 +59,35 @@ function createPotalaFacadeTextures(options: {
   emissiveCanvas.height = height;
   const eCtx = emissiveCanvas.getContext("2d")!;
 
-  // 1. Base stone/lime plaster background
+  const ormCanvas = document.createElement("canvas");
+  ormCanvas.width = width;
+  ormCanvas.height = height;
+  const oCtx = ormCanvas.getContext("2d")!;
+
+  // 1. Base Kaolinite clay / stone plaster background (R=240 AO, G=230 Roughness ~0.90, B=10 Metalness ~0.04)
   ctx.fillStyle = options.wallColor;
   ctx.fillRect(0, 0, width, height);
 
   eCtx.fillStyle = "#000000";
   eCtx.fillRect(0, 0, width, height);
 
-  // Subtle horizontal stone masonry courses
-  ctx.strokeStyle = "rgba(0,0,0,0.05)";
-  ctx.lineWidth = 2;
+  oCtx.fillStyle = "rgb(240, 232, 10)";
+  oCtx.fillRect(0, 0, width, height);
+
+  // Organic vertical rain-weathering streaks & kaolinite plaster variation
+  for (let x = 0; x < width; x += 6) {
+    const streakAlpha = ((x * 37) % 10) * 0.0035;
+    ctx.fillStyle = `rgba(20, 15, 10, ${streakAlpha})`;
+    ctx.fillRect(x, 0, 3, height);
+    // Slight roughness variation along vertical rain streaks (0.85 - 0.95)
+    const rVal = 218 + ((x * 19) % 24);
+    oCtx.fillStyle = `rgb(235, ${rVal}, 8)`;
+    oCtx.fillRect(x, 0, 3, height);
+  }
+
+  // Subtle horizontal granite masonry courses
+  ctx.strokeStyle = "rgba(0,0,0,0.055)";
+  ctx.lineWidth = 1.5;
   for (let y = 0; y < height; y += 16) {
     ctx.beginPath();
     ctx.moveTo(0, y);
@@ -66,77 +95,117 @@ function createPotalaFacadeTextures(options: {
     ctx.stroke();
   }
 
-  // 2. Top Penba Frieze (dark crimson tamarisk band under parapet)
-  const friezeH = Math.floor(height * 0.11);
+  // 2. Top Penba Frieze (compacted crimson tamarix branches under parapet)
+  const friezeH = Math.floor(height * 0.115);
   ctx.fillStyle = options.friezeColor || "#5c1319";
   ctx.fillRect(0, 0, width, friezeH);
+  // Rough fibrous tamarix bundle texture on ORM/Bump
+  oCtx.fillStyle = "rgb(195, 242, 12)";
+  oCtx.fillRect(0, 0, width, friezeH);
 
-  // Golden Melong (sacred brass mirror discs) along the frieze
+  // Golden Spen-bad / Melong (sacred gilded brass discs) along the frieze
   if (options.hasGoldBand !== false) {
-    ctx.fillStyle = "#f59e0b";
     const discCount = Math.max(4, options.cols * 2);
     for (let i = 0; i < discCount; i++) {
       const cx = ((i + 0.5) / discCount) * width;
       const cy = friezeH * 0.52;
+      ctx.fillStyle = "#fbbf24";
       ctx.beginPath();
-      ctx.arc(cx, cy, 4.5, 0, Math.PI * 2);
+      ctx.arc(cx, cy, 4.8, 0, Math.PI * 2);
       ctx.fill();
+
+      // Metallic low-roughness spot in ORM (R=255, G=45 roughness, B=230 metalness)
+      oCtx.fillStyle = "rgb(255, 45, 230)";
+      oCtx.beginPath();
+      oCtx.arc(cx, cy, 4.8, 0, Math.PI * 2);
+      oCtx.fill();
     }
-    // White/Gold lower trim line under frieze
+    // White & Gold lower trim line under frieze
     ctx.fillStyle = "#fde68a";
     ctx.fillRect(0, friezeH - 4, width, 3);
   }
 
-  // 3. Trapezoidal Tibetan Windows
+  // 3. Stepped Trapezoidal Tibetan Windows (larger on upper floors, smaller on lower defensive floors)
   const startRow = options.windowStartRow ?? 0;
   const usableTop = friezeH + 18;
-  const usableHeight = height - usableTop - 24;
+  const usableHeight = height - usableTop - 22;
   const rowStep = usableHeight / Math.max(1, options.rows);
   const colStep = (width - 40) / Math.max(1, options.cols);
 
   for (let r = startRow; r < options.rows; r++) {
-    const wy = usableTop + r * rowStep + rowStep * 0.15;
-    const winH = Math.min(48, rowStep * 0.62);
-    const winW = Math.min(34, colStep * 0.52);
+    // Upper rows (r=0) have larger ceremonial windows; lower rows have smaller fortress windows
+    const floorScale = 1.12 - (r / Math.max(1, options.rows)) * 0.34;
+    const wy = usableTop + r * rowStep + rowStep * 0.14;
+    const winH = Math.min(50, rowStep * 0.62 * floorScale);
+    const winW = Math.min(36, colStep * 0.52 * floorScale);
 
     for (let c = 0; c < options.cols; c++) {
       const wx = 20 + c * colStep + (colStep - winW) * 0.5;
 
-      // Black trapezoidal frame (wider at bottom, narrower at top)
-      ctx.fillStyle = "#171416";
+      // Black heat-absorbing trapezoidal frame (sill wider at bottom, lintel narrower at top)
+      const topInset = 2.6;
+      const bottomOutset = 3.2;
+      ctx.fillStyle = "#141215";
       ctx.beginPath();
-      ctx.moveTo(wx + 2, wy);
-      ctx.lineTo(wx + winW - 2, wy);
-      ctx.lineTo(wx + winW + 2, wy + winH);
-      ctx.lineTo(wx - 2, wy + winH);
+      ctx.moveTo(wx + topInset, wy);
+      ctx.lineTo(wx + winW - topInset, wy);
+      ctx.lineTo(wx + winW + bottomOutset, wy + winH);
+      ctx.lineTo(wx - bottomOutset, wy + winH);
       ctx.closePath();
       ctx.fill();
 
-      // Multi-tiered colorful wooden lintel header (shing-tsak)
-      ctx.fillStyle = "#991b1b";
-      ctx.fillRect(wx - 1, wy - 5, winW + 2, 4);
-      ctx.fillStyle = "#fbbf24";
-      ctx.fillRect(wx, wy - 2, winW, 2.5);
+      // Tricolor Tibetan wooden lintel eaves (shing-tsak: red, blue, yellow)
+      ctx.fillStyle = "#b91c1c"; // Red upper eave
+      ctx.fillRect(wx - 2, wy - 6.5, winW + 4, 2.5);
+      ctx.fillStyle = "#1d4ed8"; // Blue middle bracket stripe
+      ctx.fillRect(wx - 1, wy - 4, winW + 2, 2);
+      ctx.fillStyle = "#eab308"; // Yellow lower lintel band
+      ctx.fillRect(wx, wy - 2, winW, 2);
 
-      // Inner recessed window glass/shutter
-      const pad = 4.5;
-      ctx.fillStyle = "#262124";
-      ctx.fillRect(wx + pad, wy + pad, winW - pad * 2, winH - pad * 1.8);
+      // Raised lintel in ORM/Bump
+      oCtx.fillStyle = "rgb(250, 180, 30)";
+      oCtx.fillRect(wx - 2, wy - 6.5, winW + 4, 6.5);
 
-      // Window wooden crossbars
+      // Inner recessed window cavity
+      const pad = 4.2;
+      const innerX = wx + pad;
+      const innerY = wy + pad;
+      const innerW = Math.max(6, winW - pad * 2);
+      const innerH = Math.max(8, winH - pad * 1.75);
+
+      ctx.fillStyle = "#231e21";
+      ctx.fillRect(innerX, innerY, innerW, innerH);
+
+      // Deep recessed cavity & smooth glass in ORM/Bump (R=80 AO, G=65 low roughness, B=40)
+      oCtx.fillStyle = "rgb(80, 65, 40)";
+      oCtx.fillRect(innerX, innerY, innerW, innerH);
+
+      // Pleated black cloth curtain with white border (sham-bu / ba-gam) at top of window
+      const curtainH = Math.max(3, innerH * 0.26);
+      ctx.fillStyle = "#18181b";
+      ctx.fillRect(innerX, innerY, innerW, curtainH);
+      ctx.fillStyle = "#f8fafc";
+      ctx.fillRect(innerX, innerY + curtainH - 1.2, innerW, 1.2);
+
+      // Window wooden lattice crossbars
       ctx.strokeStyle = "#78350f";
-      ctx.lineWidth = 1.5;
-      ctx.strokeRect(wx + pad, wy + pad, winW - pad * 2, winH - pad * 1.8);
+      ctx.lineWidth = 1.4;
+      ctx.strokeRect(innerX, innerY, innerW, innerH);
       ctx.beginPath();
-      ctx.moveTo(wx + winW / 2, wy + pad);
-      ctx.lineTo(wx + winW / 2, wy + winH - pad);
+      ctx.moveTo(wx + winW / 2, innerY + curtainH);
+      ctx.lineTo(wx + winW / 2, innerY + innerH);
       ctx.stroke();
 
-      // Emissive warm butter-lamp glow for Night Mode (75% of windows lit)
+      // Emissive warm butter-lamp glow for Night Mode + Selective UnrealBloomPass
       const isLit = (r * 7 + c * 13) % 4 !== 0;
       if (isLit) {
-        eCtx.fillStyle = (r + c) % 3 === 0 ? "#fde047" : "#f59e0b";
-        eCtx.fillRect(wx + pad + 1, wy + pad + 1, winW - pad * 2 - 2, winH - pad * 1.8 - 2);
+        eCtx.fillStyle = (r + c) % 3 === 0 ? "#fef08a" : "#fbbf24";
+        eCtx.fillRect(
+          innerX + 1,
+          innerY + curtainH + 0.5,
+          Math.max(2, innerW - 2),
+          Math.max(2, innerH - curtainH - 1.5)
+        );
       }
     }
   }
@@ -148,11 +217,46 @@ function createPotalaFacadeTextures(options: {
   const emissiveTex = new THREE.CanvasTexture(emissiveCanvas);
   emissiveTex.colorSpace = THREE.SRGBColorSpace;
 
-  return { diffuseTex, emissiveTex };
+  const ormTex = new THREE.CanvasTexture(ormCanvas);
+  ormTex.anisotropy = 4;
+
+  return { diffuseTex, emissiveTex, ormTex };
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Helper: Hammered Gilded Bronze PBR Roughness/Bump Map for the 7 Golden Roofs
+   Varies roughness between 0.15 and 0.35 so sunlight glints organically.
+   ══════════════════════════════════════════════════════════════════════════ */
+let cachedGoldRoofRoughnessTex: THREE.CanvasTexture | null = null;
+function getGoldRoofRoughnessTexture() {
+  if (cachedGoldRoofRoughnessTex) return cachedGoldRoofRoughnessTex;
+  const canvas = document.createElement("canvas");
+  canvas.width = 256;
+  canvas.height = 256;
+  const ctx = canvas.getContext("2d")!;
+
+  // Base roughness ~0.24 (grayscale ~61)
+  ctx.fillStyle = "rgb(61, 61, 61)";
+  ctx.fillRect(0, 0, 256, 256);
+
+  // Subtle hammered bronze ribs & shingle variation (roughness 0.15 -> 38 to 0.35 -> 90)
+  for (let x = 0; x < 256; x += 8) {
+    const g = 42 + ((x * 29) % 46);
+    ctx.fillStyle = `rgb(${g}, ${g}, ${g})`;
+    ctx.fillRect(x, 0, 4, 256);
+  }
+  for (let y = 0; y < 256; y += 16) {
+    ctx.fillStyle = "rgb(85, 85, 85)";
+    ctx.fillRect(0, y, 256, 2);
+  }
+
+  cachedGoldRoofRoughnessTex = new THREE.CanvasTexture(canvas);
+  return cachedGoldRoofRoughnessTex;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
    Helper: Create Battered (Inward-Sloping) Tibetan Fortress Wing Mesh
+   Includes 3D protruding Crimson Penba Frieze & gilded Spen-bad discs.
    ══════════════════════════════════════════════════════════════════════════ */
 function createBatteredPalaceBlock(params: {
   w: number;
@@ -167,9 +271,9 @@ function createBatteredPalaceBlock(params: {
   roofTrimColor?: string;
 }) {
   const group = new THREE.Group();
-  const taper = params.taper ?? 0.88;
+  const taper = params.taper ?? 0.87;
 
-  // Tapered box geometry so walls slope inward as they rise
+  // Tapered box geometry so granite walls batter inward (3-5m thick base narrowing upward)
   const geo = new THREE.BoxGeometry(params.w, params.h, params.d, 1, 1, 1);
   const pos = geo.attributes.position;
   for (let i = 0; i < pos.count; i++) {
@@ -181,7 +285,7 @@ function createBatteredPalaceBlock(params: {
   }
   geo.computeVertexNormals();
 
-  const { diffuseTex, emissiveTex } = createPotalaFacadeTextures({
+  const { diffuseTex, emissiveTex, ormTex } = createPotalaFacadeTextures({
     wallColor: params.wallColor,
     friezeColor: params.friezeColor,
     cols: params.cols,
@@ -193,99 +297,208 @@ function createBatteredPalaceBlock(params: {
     map: diffuseTex,
     emissiveMap: emissiveTex,
     emissive: new THREE.Color("#ff9900"),
-    emissiveIntensity: 0.08,
-    roughness: 0.72,
-    metalness: 0.06,
+    emissiveIntensity: 0.04,
+    roughnessMap: ormTex,
+    metalnessMap: ormTex,
+    bumpMap: ormTex,
+    bumpScale: 0.035,
+    roughness: 0.9,
+    metalness: 0.08,
   });
   wallMat.userData = { isPalaceWall: true };
 
   const roofTopMat = new THREE.MeshStandardMaterial({
     color: params.roofTrimColor || "#451a1c",
-    roughness: 0.6,
+    roughness: 0.65,
     metalness: 0.15,
   });
 
-  // Apply facade texture to front/back/left/right, solid roof material on top/bottom
+  // Apply PBR facade texture to front/back/left/right, solid terrace roof on top/bottom
   const materials = [wallMat, wallMat, roofTopMat, roofTopMat, wallMat, wallMat];
   const mesh = new THREE.Mesh(geo, materials);
   mesh.castShadow = true;
   mesh.receiveShadow = true;
   group.add(mesh);
 
-  // Overhanging flat Tibetan roof parapet cornice
-  const corniceW = params.w * taper + 0.14;
-  const corniceD = params.d * taper + 0.14;
-  const corniceGeo = new THREE.BoxGeometry(corniceW, 0.12, corniceD);
+  // 3D Protruding Crimson Penba Frieze Molding (compacted tamarix band at top of wall)
+  const topW = params.w * taper;
+  const topD = params.d * taper;
+  const penbaH = Math.min(0.28, params.h * 0.12);
+  const penbaGeo = new THREE.BoxGeometry(topW + 0.08, penbaH, topD + 0.08);
+  const penbaMat = new THREE.MeshStandardMaterial({
+    color: params.friezeColor || "#5c1319",
+    roughness: 0.92,
+    metalness: 0.04,
+  });
+  const penbaMesh = new THREE.Mesh(penbaGeo, penbaMat);
+  penbaMesh.position.y = params.h / 2 - penbaH * 0.55;
+  penbaMesh.castShadow = true;
+  group.add(penbaMesh);
+
+  // 3D Gilded Spen-bad Brass Mirror Discs along the front Penba Frieze
+  const spenBadMat = new THREE.MeshStandardMaterial({
+    color: "#fbbf24",
+    emissive: "#78350f",
+    emissiveIntensity: 0.15,
+    roughness: 0.2,
+    metalness: 0.9,
+  });
+  const discCount = Math.min(9, Math.max(3, params.cols));
+  const discGeo = new THREE.CylinderGeometry(0.055, 0.055, 0.03, 10);
+  discGeo.rotateX(Math.PI / 2);
+  for (let i = 0; i < discCount; i++) {
+    const dx = ((i + 0.5) / discCount - 0.5) * (topW * 0.88);
+    const disc = new THREE.Mesh(discGeo, spenBadMat);
+    disc.position.set(dx, params.h / 2 - penbaH * 0.55, (topD + 0.09) / 2);
+    group.add(disc);
+  }
+
+  // Overhanging flat Tibetan roof parapet cornice + Corner Victory Banners (Gyaltsen)
+  const corniceW = topW + 0.16;
+  const corniceD = topD + 0.16;
+  const corniceGeo = new THREE.BoxGeometry(corniceW, 0.11, corniceD);
   const corniceMat = new THREE.MeshStandardMaterial({
     color: "#d97706",
-    roughness: 0.35,
-    metalness: 0.65,
+    roughness: 0.3,
+    metalness: 0.72,
   });
   const cornice = new THREE.Mesh(corniceGeo, corniceMat);
   cornice.position.y = params.h / 2 + 0.04;
   cornice.castShadow = true;
   group.add(cornice);
 
+  // Cylindrical Tibetan Victory Banners (Gyaltsen) on major block front corners
+  if (params.w >= 2.8) {
+    const bannerBlackMat = new THREE.MeshStandardMaterial({
+      color: "#1c1917",
+      roughness: 0.8,
+    });
+    [-topW * 0.46, topW * 0.46].forEach((bx) => {
+      const gyaltsen = new THREE.Group();
+      const body = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.055, 0.055, 0.34, 10),
+        bannerBlackMat
+      );
+      body.position.y = 0.17;
+      const goldBand = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.062, 0.062, 0.07, 10),
+        spenBadMat
+      );
+      goldBand.position.y = 0.28;
+      const topFinial = new THREE.Mesh(
+        new THREE.ConeGeometry(0.065, 0.12, 10),
+        spenBadMat
+      );
+      topFinial.position.y = 0.38;
+      gyaltsen.add(body, goldBand, topFinial);
+      gyaltsen.position.set(bx, params.h / 2 + 0.08, topD * 0.46);
+      group.add(gyaltsen);
+    });
+  }
+
   return group;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   Helper: Create Gilded Tibetan Roof (Gyaphib / Serdong) with Finials
+   Helper: Create Gilded Sino-Tibetan Roof (Gyaphib / Serdong)
+   Features hammered gilded bronze PBR roughnessMap (0.15-0.35), metalness 0.9,
+   dougong timber brackets, upturned curved corner eaves, Makara ridge ends,
+   treasure vases (Bumpa), and central Dharma Wheel + Nyi-Da finial.
    ══════════════════════════════════════════════════════════════════════════ */
 function createGildedTibetanRoof(w: number, d: number, h: number) {
   const roofGroup = new THREE.Group();
+  const goldRoughTex = getGoldRoofRoughnessTexture();
 
   const goldMat = new THREE.MeshStandardMaterial({
     color: "#fbbf24",
-    emissive: "#78350f",
-    emissiveIntensity: 0.18,
-    roughness: 0.22,
-    metalness: 0.88,
+    emissive: "#92400e",
+    emissiveIntensity: 0.22,
+    roughnessMap: goldRoughTex,
+    bumpMap: goldRoughTex,
+    bumpScale: 0.015,
+    roughness: 0.24,
+    metalness: 0.9,
   });
 
-  // Lower flared eave tier
-  const baseGeo = new THREE.BoxGeometry(w * 1.15, h * 0.25, d * 1.15);
+  const dougongMat = new THREE.MeshStandardMaterial({
+    color: "#7f1d1d",
+    roughness: 0.65,
+    metalness: 0.2,
+  });
+
+  // 1. Dougong wooden bracket cornice tier beneath the golden eaves
+  const dougongGeo = new THREE.BoxGeometry(w * 1.04, h * 0.18, d * 1.04);
+  const dougongMesh = new THREE.Mesh(dougongGeo, dougongMat);
+  dougongMesh.position.y = -h * 0.06;
+  roofGroup.add(dougongMesh);
+
+  // 2. Lower flared gilded eave tier
+  const baseGeo = new THREE.BoxGeometry(w * 1.18, h * 0.22, d * 1.18);
   const baseMesh = new THREE.Mesh(baseGeo, goldMat);
+  baseMesh.position.y = h * 0.1;
   baseMesh.castShadow = true;
   roofGroup.add(baseMesh);
 
-  // Sloped hip roof body (4-sided pyramid frustum)
-  const hipGeo = new THREE.CylinderGeometry(w * 0.35, w * 0.78, h * 0.75, 4);
+  // 3. Upturned Curved Eave Corners (4 flying Sino-Tibetan Makara corner spurs)
+  [
+    [-1, -1],
+    [1, -1],
+    [-1, 1],
+    [1, 1],
+  ].forEach(([sx, sz]) => {
+    const spurGeo = new THREE.ConeGeometry(0.075, 0.28, 6);
+    const spur = new THREE.Mesh(spurGeo, goldMat);
+    spur.position.set(sx * w * 0.6, h * 0.24, sz * d * 0.6);
+    spur.rotation.z = -sx * 0.55;
+    spur.rotation.x = sz * 0.55;
+    roofGroup.add(spur);
+  });
+
+  // 4. Sloped hip-and-gable roof body (4-sided pyramid frustum)
+  const hipGeo = new THREE.CylinderGeometry(w * 0.34, w * 0.8, h * 0.72, 4);
   hipGeo.rotateY(Math.PI / 4);
   hipGeo.scale(1, 1, d / w);
   const hipMesh = new THREE.Mesh(hipGeo, goldMat);
-  hipMesh.position.y = h * 0.45;
+  hipMesh.position.y = h * 0.46;
   hipMesh.castShadow = true;
   roofGroup.add(hipMesh);
 
-  // Golden Ridge Beam
-  const ridgeGeo = new THREE.BoxGeometry(w * 0.55, h * 0.22, d * 0.18);
+  // 5. Golden Ridge Beam + Makara Dragon-Fish Upturned Ends
+  const ridgeGeo = new THREE.BoxGeometry(w * 0.58, h * 0.2, d * 0.16);
   const ridgeMesh = new THREE.Mesh(ridgeGeo, goldMat);
   ridgeMesh.position.y = h * 0.82;
   roofGroup.add(ridgeMesh);
 
-  // Twin Golden Stupa Finials (Ganjira) on ridge ends
-  [-w * 0.22, w * 0.22].forEach((fx) => {
-    const finialGeo = new THREE.ConeGeometry(0.09, 0.32, 8);
+  [-w * 0.31, w * 0.31].forEach((mx, idx) => {
+    const makara = new THREE.Mesh(
+      new THREE.ConeGeometry(0.07, 0.22, 8),
+      goldMat
+    );
+    makara.position.set(mx, h * 0.92, 0);
+    makara.rotation.z = idx === 0 ? 0.4 : -0.4;
+    roofGroup.add(makara);
+  });
+
+  // 6. Twin Golden Bumpa Treasure Vase Finials (Ganjira) on ridge
+  [-w * 0.18, w * 0.18].forEach((fx) => {
+    const finialGeo = new THREE.ConeGeometry(0.085, 0.3, 10);
     const finial = new THREE.Mesh(finialGeo, goldMat);
     finial.position.set(fx, h * 1.02, 0);
     roofGroup.add(finial);
   });
 
-  // Central Dharma Wheel (Chokhor) & Sacred Nyi-Da (Crescent Moon + Sun + Flaming Jewel) Finial
+  // 7. Central Dharma Wheel (Chokhor) & Sacred Nyi-Da (Crescent Moon + Sun + Jyoti) Finial
   const wheelGeo = new THREE.TorusGeometry(0.12, 0.03, 8, 16);
   const wheel = new THREE.Mesh(wheelGeo, goldMat);
   wheel.position.set(0, h * 1.06, 0);
   roofGroup.add(wheel);
 
-  // Crescent Moon Cradle (Zla-ba)
   const crescentGeo = new THREE.TorusGeometry(0.08, 0.02, 8, 16, Math.PI);
   crescentGeo.rotateZ(Math.PI);
   const crescent = new THREE.Mesh(crescentGeo, goldMat);
   crescent.position.set(0, h * 1.24, 0);
   roofGroup.add(crescent);
 
-  // Sun Disc (Nyi-ma) & Top Jyoti Jewel
   const sunDisc = new THREE.Mesh(new THREE.SphereGeometry(0.055, 12, 12), goldMat);
   sunDisc.position.set(0, h * 1.28, 0);
   roofGroup.add(sunDisc);
@@ -607,10 +820,11 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     active: false,
   });
 
-  // Lights Refs
+  // Lights & Post-Processing Refs
   const ambientLightRef = useRef<THREE.AmbientLight | null>(null);
   const sunLightRef = useRef<THREE.DirectionalLight | null>(null);
   const palaceSpotLightRef = useRef<THREE.SpotLight | null>(null);
+  const bloomPassRef = useRef<UnrealBloomPass | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
 
   /* ══════════════════════════════════════════════════════════════════════
@@ -675,7 +889,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     camera.position.set(0, 9.2, 21.5);
     cameraRef.current = camera;
 
-    // 3. Renderer
+    // 3. Renderer + IBL Environment (PMREMGenerator) + Selective UnrealBloomPass
     const renderer = new THREE.WebGLRenderer({
       antialias: true,
       powerPreference: "high-performance",
@@ -687,6 +901,25 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.15;
+
+    // Image-Based Lighting (IBL) for realistic metallic reflections on the 7 Golden Roofs & Spen-bad discs
+    const pmremGenerator = new THREE.PMREMGenerator(renderer);
+    pmremGenerator.compileEquirectangularShader();
+    const envTexture = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
+    scene.environment = envTexture;
+
+    // Post-Processing: EffectComposer + Selective High-Threshold UnrealBloomPass
+    const composer = new EffectComposer(renderer);
+    composer.addPass(new RenderPass(scene, camera));
+    const bloomPass = new UnrealBloomPass(
+      new THREE.Vector2(width, height),
+      0.22, // strength (boosted in Night Mode)
+      0.45, // radius
+      0.85  // high threshold so only emissive windows, golden roofs & Sun/Moon glow
+    );
+    composer.addPass(bloomPass);
+    composer.addPass(new OutputPass());
+    bloomPassRef.current = bloomPass;
 
     container.innerHTML = "";
     container.appendChild(renderer.domElement);
@@ -927,20 +1160,40 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     proceduralGroup.add(eastOchreWing);
 
     /* ──────────────────────────────────────────────────────────────────
-       C. THE GILDED GOLDEN ROOFS (གསེར་ཐོག · Serdong & Gyaphib)
+       C. THE SEVEN GOLDEN ROOFS (གསེར་ཐོག་བདུན། · 7 Gilded Bronze Gyaphib Roofs)
+       Crowning the funerary stupas (Serdong) of the Dalai Lamas on the Red Palace
        ────────────────────────────────────────────────────────────────── */
+    // 1. Central Great Fifth Dalai Lama Stupa Roof
     const centerGoldRoof = createGildedTibetanRoof(1.75, 1.15, 0.85);
     centerGoldRoof.position.set(-0.2, 9.0, -0.25);
     proceduralGroup.add(centerGoldRoof);
 
+    // 2. West Thirteenth Dalai Lama Stupa Roof
     const westGoldRoof = createGildedTibetanRoof(1.25, 0.95, 0.68);
     westGoldRoof.position.set(-1.55, 8.92, -0.25);
     proceduralGroup.add(westGoldRoof);
 
+    // 3. East Seventh Dalai Lama Stupa Roof
     const eastGoldRoof = createGildedTibetanRoof(1.25, 0.95, 0.68);
     eastGoldRoof.position.set(1.15, 8.92, -0.25);
     proceduralGroup.add(eastGoldRoof);
 
+    // 4. North-West Eighth Dalai Lama Stupa Roof
+    const northWestGoldRoof = createGildedTibetanRoof(1.05, 0.82, 0.58);
+    northWestGoldRoof.position.set(-0.95, 8.85, -1.05);
+    proceduralGroup.add(northWestGoldRoof);
+
+    // 5. North-East Ninth Dalai Lama Stupa Roof
+    const northEastGoldRoof = createGildedTibetanRoof(1.05, 0.82, 0.58);
+    northEastGoldRoof.position.set(0.55, 8.85, -1.05);
+    proceduralGroup.add(northEastGoldRoof);
+
+    // 6. Far-West Chapel Golden Roof
+    const farWestGoldRoof = createGildedTibetanRoof(1.15, 0.85, 0.6);
+    farWestGoldRoof.position.set(-2.65, 7.25, -0.1);
+    proceduralGroup.add(farWestGoldRoof);
+
+    // 7. Far-East White/Red Junction Golden Roof
     const farEastGoldRoof = createGildedTibetanRoof(1.3, 0.9, 0.65);
     farEastGoldRoof.position.set(3.45, 7.75, -0.2);
     proceduralGroup.add(farEastGoldRoof);
@@ -1198,74 +1451,65 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     sholGroup.add(doringGroup);
 
     /* ──────────────────────────────────────────────────────────────────
-       G. LUSH HIMALAYAN PINE & CYPRESS GROVES ON MARPO RI SLOPES
+       G. INSTANCED HIMALAYAN PINE & CYPRESS GROVES (THREE.InstancedMesh)
+       Renders all 75 alpine trees in just 2 GPU draw calls (trunks + crowns)
        ────────────────────────────────────────────────────────────────── */
     const foliageGroup = new THREE.Group();
     proceduralGroup.add(foliageGroup);
     islandFoliageGroupRef.current = foliageGroup;
 
-    const treeColors = ["#2d5a27", "#3a6b33", "#4d7c3f", "#1e4620"];
-    const treeMaterials = treeColors.map(
-      (c) =>
-        new THREE.MeshStandardMaterial({
-          color: c,
-          roughness: 0.82,
-          metalness: 0.02,
-        })
-    );
+    const treeCount = 75;
+    const trunkGeo = new THREE.CylinderGeometry(0.05, 0.08, 0.35, 6);
     const trunkMat = new THREE.MeshStandardMaterial({
       color: "#5c4033",
       roughness: 0.9,
     });
+    const instancedTrunks = new THREE.InstancedMesh(trunkGeo, trunkMat, treeCount);
+    instancedTrunks.castShadow = true;
+    instancedTrunks.receiveShadow = true;
 
-    // Scatter 75 stylized diorama trees across the hillside and courtyards
-    for (let i = 0; i < 75; i++) {
+    const crownGeo = new THREE.ConeGeometry(0.28, 0.72, 8);
+    const crownMat = new THREE.MeshStandardMaterial({
+      color: "#ffffff",
+      roughness: 0.82,
+      metalness: 0.02,
+    });
+    const instancedCrowns = new THREE.InstancedMesh(crownGeo, crownMat, treeCount);
+    instancedCrowns.castShadow = true;
+    instancedCrowns.receiveShadow = true;
+
+    const treePalette = [
+      new THREE.Color("#2d5a27"),
+      new THREE.Color("#3a6b33"),
+      new THREE.Color("#4d7c3f"),
+      new THREE.Color("#1e4620"),
+    ];
+    const dummy = new THREE.Object3D();
+
+    for (let i = 0; i < treeCount; i++) {
       const tx = (Math.random() - 0.5) * 14.5;
       const tz = 1.6 + Math.random() * 3.9;
-      // Compute height along hillside slope
       const distCenter = Math.hypot(tx * 0.65, tz - 1.2);
       const ty = Math.max(0.65, 2.75 - distCenter * 0.34);
-
-      const tree = new THREE.Group();
       const scale = 0.65 + Math.random() * 0.55;
 
-      const trunk = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.05 * scale, 0.08 * scale, 0.35 * scale, 6),
-        trunkMat
-      );
-      trunk.position.y = 0.15 * scale;
-      tree.add(trunk);
+      dummy.position.set(tx, ty + 0.15 * scale, tz);
+      dummy.scale.set(scale, scale, scale);
+      dummy.rotation.set(0, Math.random() * Math.PI, 0);
+      dummy.updateMatrix();
+      instancedTrunks.setMatrixAt(i, dummy.matrix);
 
-      const mat = treeMaterials[i % treeMaterials.length];
-      // Conical pine or rounded diorama cypress (matching potala-diorama-model.png)
-      if (i % 3 === 0) {
-        const crown = new THREE.Mesh(
-          new THREE.SphereGeometry(0.28 * scale, 10, 10),
-          mat
-        );
-        crown.scale.set(1, 1.25, 1);
-        crown.position.y = 0.42 * scale;
-        crown.castShadow = true;
-        tree.add(crown);
-      } else {
-        const cone1 = new THREE.Mesh(
-          new THREE.ConeGeometry(0.28 * scale, 0.55 * scale, 8),
-          mat
-        );
-        cone1.position.y = 0.4 * scale;
-        cone1.castShadow = true;
-        const cone2 = new THREE.Mesh(
-          new THREE.ConeGeometry(0.21 * scale, 0.45 * scale, 8),
-          mat
-        );
-        cone2.position.y = 0.65 * scale;
-        cone2.castShadow = true;
-        tree.add(cone1, cone2);
-      }
-
-      tree.position.set(tx, ty, tz);
-      foliageGroup.add(tree);
+      dummy.position.set(tx, ty + 0.48 * scale, tz);
+      dummy.scale.set(scale, scale * (0.95 + (i % 3) * 0.15), scale);
+      dummy.updateMatrix();
+      instancedCrowns.setMatrixAt(i, dummy.matrix);
+      instancedCrowns.setColorAt(i, treePalette[i % treePalette.length]);
     }
+    instancedTrunks.instanceMatrix.needsUpdate = true;
+    instancedCrowns.instanceMatrix.needsUpdate = true;
+    if (instancedCrowns.instanceColor) instancedCrowns.instanceColor.needsUpdate = true;
+
+    foliageGroup.add(instancedTrunks, instancedCrowns);
 
     /* ──────────────────────────────────────────────────────────────────
        H. FLOATING GOLDEN HIMALAYAN ATMOSPHERE PARTICLES
@@ -1330,7 +1574,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
       const lunarStars = moonBody.getObjectByName("lunarStars");
       if (lunarStars) lunarStars.rotation.z -= 0.003;
 
-      renderer.render(scene, camera);
+      composer.render();
 
       // Project 3D Hotspot positions to 2D Screen Coordinates
       const currentW = container.clientWidth || width;
@@ -1387,6 +1631,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
       camera.aspect = newW / newH;
       camera.updateProjectionMatrix();
       renderer.setSize(newW, newH);
+      composer.setSize(newW, newH);
     };
     window.addEventListener("resize", handleResize);
 
@@ -1394,6 +1639,8 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
       cancelAnimationFrame(animFrameId);
       window.removeEventListener("resize", handleResize);
       controls.removeEventListener("start", onControlStart);
+      pmremGenerator.dispose();
+      composer.dispose();
       renderer.dispose();
     };
   }, []);
@@ -1421,6 +1668,10 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
       sun.position.set(14, 22, 16);
       spot.intensity = 0;
       wallEmissive = 0.02;
+      if (bloomPassRef.current) {
+        bloomPassRef.current.threshold = 0.88;
+        bloomPassRef.current.strength = 0.22;
+      }
       if (sunBodyRef.current) {
         sunBodyRef.current.visible = true;
         sunBodyRef.current.scale.setScalar(1.15);
@@ -1429,7 +1680,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
         moonBodyRef.current.visible = false;
       }
     } else {
-      // Sacred Night Mode: deep midnight sky, illuminated windows & 3D Moon
+      // Sacred Night Mode: deep midnight sky, selective UnrealBloomPass on windows, 7 Golden Roofs & 3D Moon
       scene.background = new THREE.Color("#050814");
       scene.fog = new THREE.FogExp2("#050814", 0.014);
       ambient.color.set("#93c5fd");
@@ -1438,7 +1689,11 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
       sun.intensity = 0.45;
       sun.position.set(-10, 18, -10);
       spot.intensity = 3.6;
-      wallEmissive = 1.35;
+      wallEmissive = 1.45;
+      if (bloomPassRef.current) {
+        bloomPassRef.current.threshold = 0.82;
+        bloomPassRef.current.strength = 0.78;
+      }
       if (sunBodyRef.current) {
         sunBodyRef.current.visible = false;
       }
@@ -1579,8 +1834,17 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
 
         model.traverse((child) => {
           if ((child as THREE.Mesh).isMesh) {
-            child.castShadow = true;
-            child.receiveShadow = true;
+            const mesh = child as THREE.Mesh;
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+            mats.forEach((m) => {
+              const std = m as THREE.MeshStandardMaterial;
+              if (std && "envMapIntensity" in std) {
+                std.envMapIntensity = 1.35;
+                std.needsUpdate = true;
+              }
+            });
           }
         });
 
@@ -1651,7 +1915,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
             {lang === "bo" ? "ཕོ་བྲང་པོ་ཏ་ལ་ ༣D" : "3D POTALA PALACE DIORAMA"}
           </span>
           <span className="text-white/60 font-mono text-[11px] hidden sm:inline">
-            LHASA · MARPO RI HILL (3,700M) · WEBGL PBR ENGINE
+            LHASA · 400M × 350M · 117M (13 STORIES) · PBR + IBL + BLOOM
           </span>
         </div>
 
