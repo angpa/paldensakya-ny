@@ -1235,6 +1235,7 @@ function createGoldenSerdongStupa(totalH = 2.45, widthScale = 1.0) {
 
 export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
   const mountRef = useRef<HTMLDivElement>(null);
+  const viewportContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Interactive State
@@ -1244,6 +1245,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
   const [cameraPreset, setCameraPreset] = useState<CameraViewPreset>("diorama");
   const [autoRotate, setAutoRotate] = useState<boolean>(true);
   const [crossSection, setCrossSection] = useState<boolean>(false);
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [showTripoStudio, setShowTripoStudio] = useState<boolean>(false);
   const [customModelName, setCustomModelName] = useState<string | null>(null);
   const [copiedPromptId, setCopiedPromptId] = useState<string | null>(null);
@@ -2449,20 +2451,24 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
 
     animate();
 
-    // Responsive Resize Handler
+    // Responsive Resize Handler (Window + ResizeObserver for Fullscreen transitions)
     const handleResize = () => {
       if (!container) return;
       const newW = container.clientWidth;
       const newH = container.clientHeight;
+      if (newW === 0 || newH === 0) return;
       camera.aspect = newW / newH;
       camera.updateProjectionMatrix();
       renderer.setSize(newW, newH);
     };
     window.addEventListener("resize", handleResize);
+    const resizeObserver = new ResizeObserver(() => handleResize());
+    resizeObserver.observe(container);
 
     return () => {
       cancelAnimationFrame(animFrameId);
       window.removeEventListener("resize", handleResize);
+      resizeObserver.disconnect();
       controls.removeEventListener("start", onControlStart);
       renderer.dispose();
     };
@@ -2609,6 +2615,52 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
       };
     }
   }, [crossSection]);
+
+  /* ══════════════════════════════════════════════════════════════════════
+     Fullscreen Mode (Native Browser Fullscreen API + CSS Fixed Fallback)
+     ══════════════════════════════════════════════════════════════════════ */
+  const toggleFullscreen = useCallback(async () => {
+    const el = viewportContainerRef.current;
+    if (!el) return;
+
+    try {
+      if (!document.fullscreenElement) {
+        if (el.requestFullscreen) {
+          await el.requestFullscreen();
+          setIsFullscreen(true);
+        } else {
+          setIsFullscreen((prev) => !prev);
+        }
+      } else {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+          setIsFullscreen(false);
+        } else {
+          setIsFullscreen(false);
+        }
+      }
+    } catch {
+      // Fallback to CSS fixed fullscreen if Fullscreen API is blocked
+      setIsFullscreen((prev) => !prev);
+    }
+  }, []);
+
+  useEffect(() => {
+    const onFullscreenChange = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement));
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !document.fullscreenElement) {
+        setIsFullscreen(false);
+      }
+    };
+    document.addEventListener("fullscreenchange", onFullscreenChange);
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("fullscreenchange", onFullscreenChange);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, []);
 
   /* ══════════════════════════════════════════════════════════════════════
      Camera Preset Transitions
@@ -2898,6 +2950,29 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
             </span>
           </button>
 
+          {/* Fullscreen Toggle Button */}
+          <button
+            type="button"
+            onClick={toggleFullscreen}
+            className={`px-2.5 py-1.5 rounded-sm border font-mono text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
+              isFullscreen
+                ? "bg-tibet-gold text-black border-tibet-gold shadow-sm"
+                : "bg-white/10 hover:bg-white/20 border-white/20 text-white"
+            }`}
+            title="Toggle Fullscreen 3D View (Esc to exit)"
+          >
+            <span>{isFullscreen ? "🗗" : "⛶"}</span>
+            <span>
+              {isFullscreen
+                ? lang === "bo"
+                  ? "ཆུང་ངུར་བསྒྱུར།"
+                  : "Exit Fullscreen"
+                : lang === "bo"
+                ? "ཡོལ་ངོས་ཆ་ཚང་།"
+                : "Fullscreen"}
+            </span>
+          </button>
+
           {/* Tripo3D Studio & GLB Drawer Toggle */}
           <button
             type="button"
@@ -2920,7 +2995,12 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
         {/* LEFT 8 COLS: Interactive WebGL 3D Potala Canvas (Clean Unobstructed 3D View) */}
         <div
-          className="lg:col-span-8 relative w-full min-h-[500px] sm:min-h-[600px] rounded-sm border border-sakya-gold/40 bg-[#0c0a09] overflow-hidden shadow-2xl"
+          ref={viewportContainerRef}
+          className={
+            isFullscreen
+              ? "fixed inset-0 z-50 w-screen h-screen bg-[#0c0a09] overflow-hidden"
+              : "lg:col-span-8 relative w-full min-h-[500px] sm:min-h-[600px] rounded-sm border border-sakya-gold/40 bg-[#0c0a09] overflow-hidden shadow-2xl"
+          }
           onDragOver={(e) => e.preventDefault()}
           onDrop={(e) => {
             e.preventDefault();
@@ -2931,7 +3011,68 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
           }}
         >
           {/* Three.js WebGL Mount Container */}
-          <div ref={mountRef} className="w-full h-full min-h-[500px] sm:min-h-[600px] cursor-grab active:cursor-grabbing" />
+          <div
+            ref={mountRef}
+            className={`w-full h-full cursor-grab active:cursor-grabbing ${
+              isFullscreen ? "min-h-screen" : "min-h-[500px] sm:min-h-[600px]"
+            }`}
+          />
+
+          {/* Top-Right Fullscreen Quick Controls Overlay */}
+          <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5 bg-black/75 backdrop-blur-md p-1.5 rounded-xs border border-white/15">
+            {isFullscreen && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setAtmosphere((a) => (a === "sunlight" ? "night" : "sunlight"))}
+                  className="px-2 py-1 rounded-xs bg-white/10 hover:bg-white/20 text-white font-mono text-[11px] cursor-pointer"
+                  title="Switch Day / Night Atmosphere"
+                >
+                  {atmosphere === "sunlight" ? "☀️ Sun" : "🌙 Night"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCrossSection((c) => !c)}
+                  className={`px-2 py-1 rounded-xs font-mono text-[11px] cursor-pointer ${
+                    crossSection
+                      ? "bg-amber-400 text-black font-bold"
+                      : "bg-white/10 hover:bg-white/20 text-tibet-gold-light"
+                  }`}
+                  title="Toggle Red Palace Cross-Section"
+                >
+                  🏛️ {lang === "bo" ? "གསེར་གདུང་།" : "Cutaway"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAutoRotate((r) => !r)}
+                  className="px-2 py-1 rounded-xs bg-white/10 hover:bg-white/20 text-white/80 font-mono text-[11px] cursor-pointer"
+                >
+                  {autoRotate ? "↻ 360°" : "⏸ 360°"}
+                </button>
+              </>
+            )}
+            <button
+              type="button"
+              onClick={toggleFullscreen}
+              className={`px-2.5 py-1 rounded-xs font-mono text-[11px] font-bold transition-colors cursor-pointer flex items-center gap-1 ${
+                isFullscreen
+                  ? "bg-tibet-gold text-black hover:bg-amber-400"
+                  : "bg-white/10 hover:bg-tibet-gold hover:text-black text-white"
+              }`}
+              title={isFullscreen ? "Exit Fullscreen (Esc)" : "Enter Fullscreen"}
+            >
+              <span>{isFullscreen ? "🗗" : "⛶"}</span>
+              <span>
+                {isFullscreen
+                  ? lang === "bo"
+                    ? "ཕྱིར་འཐོན། (Esc)"
+                    : "Exit (Esc)"
+                  : lang === "bo"
+                  ? "ཡོལ་ངོས་ཆ་ཚང་།"
+                  : "Fullscreen"}
+              </span>
+            </button>
+          </div>
 
           {/* Top-Left Minimal HUD Overlay */}
           <div className="absolute top-3 left-3 z-10 pointer-events-none flex flex-col gap-1 bg-black/70 backdrop-blur-md px-3 py-2 rounded-xs border border-white/10">
