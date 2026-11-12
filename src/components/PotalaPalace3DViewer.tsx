@@ -84,9 +84,9 @@ function createPotalaFacadeTextures(options: {
     ctx.stroke();
   }
 
-  // 2. Top Penba Frieze (spen-ma: compacted crimson tamarix branches under parapet)
+  // 2. Top Penba Frieze (spen-ma: compacted Bordó Lama tamarix branches under parapet)
   const friezeH = Math.floor(height * 0.115);
-  ctx.fillStyle = options.friezeColor || "#5c1319";
+  ctx.fillStyle = options.friezeColor || "#380714";
   ctx.fillRect(0, 0, width, friezeH);
   // Rough fibrous tamarix bundle texture on ORM/Bump
   oCtx.fillStyle = "rgb(195, 242, 12)";
@@ -161,8 +161,8 @@ function createPotalaFacadeTextures(options: {
       ctx.closePath();
       ctx.fill();
 
-      // Tricolor Tibetan wooden lintel eaves (shing-tsak: red, blue, yellow)
-      ctx.fillStyle = "#b91c1c"; // Red upper eave
+      // Tricolor Tibetan wooden lintel eaves (shing-tsak: Bordó Lama, blue, gold)
+      ctx.fillStyle = "#560d1e"; // Bordó Lama upper eave
       ctx.fillRect(wx - 2, wy - 6.5, winW + 4, 2.5);
       ctx.fillStyle = "#1d4ed8"; // Blue middle bracket stripe
       ctx.fillRect(wx - 1, wy - 4, winW + 2, 2);
@@ -315,9 +315,9 @@ function createBatteredPalaceBlock(params: {
   wallMat.userData = { isPalaceWall: true };
 
   const roofTopMat = new THREE.MeshStandardMaterial({
-    color: params.roofTrimColor || "#3b1216",
-    roughness: 0.75,
-    metalness: 0.08,
+    color: params.roofTrimColor || "#2a050e",
+    roughness: 0.78,
+    metalness: 0.06,
   });
 
   // Apply PBR facade texture to front/back/left/right, solid terrace roof on top/bottom
@@ -327,13 +327,13 @@ function createBatteredPalaceBlock(params: {
   mesh.receiveShadow = true;
   group.add(mesh);
 
-  // 3D Protruding Crimson Penba Frieze Molding (compacted tamarix band at top of wall)
+  // 3D Protruding Bordó Lama Penba Frieze Molding (compacted tamarix band at top of wall)
   const topW = params.w * taper;
   const topD = params.d * taper;
   const penbaH = Math.min(0.28, params.h * 0.12);
   const penbaGeo = new THREE.BoxGeometry(topW + 0.08, penbaH, topD + 0.08);
   const penbaMat = new THREE.MeshStandardMaterial({
-    color: params.friezeColor || "#5c1319",
+    color: params.friezeColor || "#380714",
     roughness: 0.92,
     metalness: 0.04,
   });
@@ -344,11 +344,11 @@ function createBatteredPalaceBlock(params: {
 
   // 3D Gilded Spen-bad Brass Mirror Discs along the front Penba Frieze
   const spenBadMat = new THREE.MeshStandardMaterial({
-    color: "#fbbf24",
-    emissive: "#78350f",
-    emissiveIntensity: 0.15,
-    roughness: 0.2,
-    metalness: 0.9,
+    color: "#facc15",
+    emissive: "#422006",
+    emissiveIntensity: 0.1,
+    roughness: 0.22,
+    metalness: 0.88,
   });
   const discCount = Math.min(9, Math.max(3, params.cols));
   const discGeo = new THREE.CylinderGeometry(0.055, 0.055, 0.03, 10);
@@ -417,9 +417,9 @@ function createGildedTibetanRoof(w: number, d: number, h: number) {
   const goldRoughTex = getGoldRoofRoughnessTexture();
 
   const goldMat = new THREE.MeshStandardMaterial({
-    color: "#fbbf24",
-    emissive: "#92400e",
-    emissiveIntensity: 0.22,
+    color: "#facc15",
+    emissive: "#422006",
+    emissiveIntensity: 0.12,
     roughnessMap: goldRoughTex,
     bumpMap: goldRoughTex,
     bumpScale: 0.015,
@@ -428,9 +428,9 @@ function createGildedTibetanRoof(w: number, d: number, h: number) {
   });
 
   const dougongMat = new THREE.MeshStandardMaterial({
-    color: "#7f1d1d",
-    roughness: 0.65,
-    metalness: 0.2,
+    color: "#420816",
+    roughness: 0.72,
+    metalness: 0.15,
   });
 
   // 1. Dougong wooden bracket cornice tier beneath the golden eaves
@@ -824,8 +824,8 @@ function createStaircaseSegment(
     roughness: 0.75,
   });
   const redCapMat = new THREE.MeshStandardMaterial({
-    color: "#7f1d1d",
-    roughness: 0.6,
+    color: "#4a0a18",
+    roughness: 0.65,
   });
 
   // Main whitewashed stone ramp/wall body
@@ -865,13 +865,13 @@ function createChortenStupa(scale = 1) {
     metalness: 0.05,
   });
   const crimsonMat = new THREE.MeshStandardMaterial({
-    color: "#7f1d1d",
+    color: "#4a0a18",
     roughness: 0.68,
   });
   const goldMat = new THREE.MeshStandardMaterial({
-    color: "#fbbf24",
-    emissive: "#92400e",
-    emissiveIntensity: 0.2,
+    color: "#facc15",
+    emissive: "#422006",
+    emissiveIntensity: 0.12,
     roughness: 0.24,
     metalness: 0.9,
   });
@@ -1062,7 +1062,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     camera.position.set(0, 9.2, 21.5);
     cameraRef.current = camera;
 
-    // 3. Ultra-Fast 60 FPS WebGL Renderer + AgX Tone Mapping + IBL Metallic Environment
+    // 3. Ultra-Fast 60 FPS WebGL Renderer + Khronos Neutral Tone Mapping (0% red-to-orange hue skew)
     const renderer = new THREE.WebGLRenderer({
       antialias: true,
       powerPreference: "high-performance",
@@ -1072,8 +1072,8 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.toneMapping = THREE.AgXToneMapping;
-    renderer.toneMappingExposure = 1.08;
+    renderer.toneMapping = THREE.NeutralToneMapping;
+    renderer.toneMappingExposure = 1.0;
 
     // Image-Based Lighting (IBL) for metallic reflections on the 7 Golden Roofs & Spen-bad discs
     const pmremGenerator = new THREE.PMREMGenerator(renderer);
@@ -1105,11 +1105,11 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     controls.addEventListener("start", onControlStart);
 
     // 5. Lighting Setup (Crisp high-altitude 3,700m Lhasa daylight white, zero orange cast)
-    const ambientLight = new THREE.AmbientLight("#ffffff", 1.45);
+    const ambientLight = new THREE.AmbientLight("#ffffff", 1.0);
     scene.add(ambientLight);
     ambientLightRef.current = ambientLight;
 
-    const sunLight = new THREE.DirectionalLight("#ffffff", 2.6);
+    const sunLight = new THREE.DirectionalLight("#ffffff", 1.75);
     sunLight.position.set(14, 22, 16);
     sunLight.castShadow = true;
     sunLight.shadow.mapSize.width = 2048;
@@ -1272,29 +1272,28 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
 
     /* ──────────────────────────────────────────────────────────────────
        B. THE RED PALACE (ཕོ་བྲང་དམར་པོ། · pho-brang dmar-po - Center Summit)
-       3-Tier Stepped Puntsok Kodpa (ཕུན་ཚོགས་བཀོད་པ།) Sanctuary Core
+       3-Tier Stepped Puntsok Kodpa (ཕུན་ཚོགས་བཀོད་པ།) Sanctuary Core in Bordó Lama
        ────────────────────────────────────────────────────────────────── */
-    // 1. Tier 1: Main Central Crimson Mass (85m × 70m scaled at 1u = 20m)
+    // 1. Tier 1: Main Central Bordó Lama Mass (85m × 70m scaled at 1u = 20m)
     const redPalaceMain = createBatteredPalaceBlock({
       w: 4.35,
       h: 3.15,
       d: 2.8,
       taper: 0.89,
-      wallColor: "#7c1d21",
-      friezeColor: "#380a0d",
+      wallColor: "#560d1e",
+      friezeColor: "#2d050e",
       cols: 7,
       rows: 4,
-      roofTrimColor: "#380a0d",
+      roofTrimColor: "#2d050e",
     });
     redPalaceMain.position.set(-0.2, 6.1, -0.2);
     proceduralGroup.add(redPalaceMain);
 
-    // 2. Four Prominent Dark Timber/Crimson Vertical Bay Window Columns on Red Palace Front
-    // (Matching the dark recessed timber bays in the real Lhasa photograph)
+    // 2. Four Prominent Dark Timber/Bordó Vertical Bay Window Columns on Red Palace Front
     const darkTimberBayMat = new THREE.MeshStandardMaterial({
-      color: "#3b0a0e",
-      roughness: 0.75,
-      metalness: 0.1,
+      color: "#28050d",
+      roughness: 0.78,
+      metalness: 0.08,
     });
     [-1.15, -0.38, 0.38, 1.15].forEach((bx) => {
       const bayGeo = new THREE.BoxGeometry(0.34, 2.72, 0.22);
@@ -1333,11 +1332,11 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
       h: 0.95,
       d: 2.35,
       taper: 0.92,
-      wallColor: "#74191d",
-      friezeColor: "#380a0d",
+      wallColor: "#4c0a1a",
+      friezeColor: "#28040c",
       cols: 6,
       rows: 1,
-      roofTrimColor: "#380a0d",
+      roofTrimColor: "#28040c",
     });
     redPalaceMidTier.position.set(-0.2, 7.85, -0.22);
     proceduralGroup.add(redPalaceMidTier);
@@ -1348,23 +1347,23 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
       h: 1.15,
       d: 2.0,
       taper: 0.93,
-      wallColor: "#6b161a",
-      friezeColor: "#32080b",
+      wallColor: "#420816",
+      friezeColor: "#24030a",
       cols: 5,
       rows: 2,
-      roofTrimColor: "#380a0d",
+      roofTrimColor: "#24030a",
     });
     redPalaceUpper.position.set(-0.2, 8.55, -0.25);
     proceduralGroup.add(redPalaceUpper);
 
-    // 5. Flanking Crimson & Muted Ochre Sacred Chapels (West & East of Red Palace, matching photo)
+    // 5. Flanking Bordó Lama Sacred Chapels (West & East of Red Palace)
     const westOchreWing = createBatteredPalaceBlock({
       w: 1.35,
       h: 2.2,
       d: 2.1,
       taper: 0.9,
-      wallColor: "#781b1f",
-      friezeColor: "#380a0d",
+      wallColor: "#520c1c",
+      friezeColor: "#2d050e",
       cols: 3,
       rows: 3,
     });
@@ -1376,8 +1375,8 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
       h: 1.85,
       d: 1.95,
       taper: 0.9,
-      wallColor: "#ca8a04",
-      friezeColor: "#4c1116",
+      wallColor: "#4c0a1a",
+      friezeColor: "#2d050e",
       cols: 3,
       rows: 2,
     });
@@ -1434,7 +1433,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
       d: 2.9,
       taper: 0.85,
       wallColor: "#faf8f5",
-      friezeColor: "#6b181e",
+      friezeColor: "#4a0a18",
       cols: 9,
       rows: 5,
       windowStartRow: 0,
@@ -1450,7 +1449,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
       d: 1.6,
       taper: 0.84,
       wallColor: "#faf8f5",
-      friezeColor: "#7f1d1d",
+      friezeColor: "#4a0a18",
       cols: 8,
       rows: 4,
       windowStartRow: 4, // Smooth windowless Gos-sku thangka display wall
@@ -1460,7 +1459,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
 
     // Gilded Bronze Gos-sku Thangka Suspension Mooring Hooks along the top cornice of the Gos-sku Wall
     const hookMat = new THREE.MeshStandardMaterial({
-      color: "#fbbf24",
+      color: "#facc15",
       roughness: 0.25,
       metalness: 0.9,
     });
@@ -1481,7 +1480,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
       d: 2.5,
       taper: 0.87,
       wallColor: "#f8f6f0",
-      friezeColor: "#6b181e",
+      friezeColor: "#4a0a18",
       cols: 6,
       rows: 3,
     });
@@ -1494,7 +1493,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
       d: 2.6,
       taper: 0.85,
       wallColor: "#f3f0e8",
-      friezeColor: "#6b181e",
+      friezeColor: "#4a0a18",
       cols: 7,
       rows: 3,
     });
@@ -1514,7 +1513,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
 
     const drumCrimsonCapGeo = new THREE.CylinderGeometry(0.92, 0.9, 0.32, 24);
     const drumCrimsonMat = new THREE.MeshStandardMaterial({
-      color: "#6b181e",
+      color: "#4a0a18",
       roughness: 0.6,
     });
     const drumCap = new THREE.Mesh(drumCrimsonCapGeo, drumCrimsonMat);
@@ -1531,7 +1530,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
       d: 2.4,
       taper: 0.88,
       wallColor: "#faf8f5",
-      friezeColor: "#6b181e",
+      friezeColor: "#4a0a18",
       cols: 4,
       rows: 4,
     });
@@ -1544,7 +1543,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
       d: 2.6,
       taper: 0.86,
       wallColor: "#f7f4ed",
-      friezeColor: "#6b181e",
+      friezeColor: "#4a0a18",
       cols: 8,
       rows: 3,
     });
@@ -1553,7 +1552,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
 
     /* ──────────────────────────────────────────────────────────────────
        D2. DEYANGSHAR CEREMONIAL COURTYARD (བདེ་དབྱངས་ཤར། · bde-dbyangs shar)
-           Polished Ar-ga Stone Floor, Vermilion Gzhu-gdong Galleries,
+           Polished Ar-ga Stone Floor, Bordó Lama Gzhu-gdong Galleries,
            Dar-chen Prayer Flagpole, Bsang-khang Burner & Lung-ta Flags
        ────────────────────────────────────────────────────────────────── */
     const deyangsharGroup = new THREE.Group();
@@ -1572,9 +1571,9 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     argaFloor.receiveShadow = true;
     deyangsharGroup.add(argaFloor);
 
-    // 2. Vermilion Pillared Monastic Galleries (གཞུ་གདོང་། · gzhu-gdong) along North & East edges
+    // 2. Bordó Lama Pillared Monastic Galleries (གཞུ་གདོང་། · gzhu-gdong) along North & East edges
     const pillarMat = new THREE.MeshStandardMaterial({
-      color: "#991b1b",
+      color: "#560d1e",
       roughness: 0.55,
     });
     for (let pi = 0; pi < 5; pi++) {
@@ -1590,7 +1589,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     const darchenPole = new THREE.Mesh(
       new THREE.CylinderGeometry(0.028, 0.045, 1.85, 10),
       new THREE.MeshStandardMaterial({
-        color: "#d97706",
+        color: "#facc15",
         roughness: 0.35,
         metalness: 0.75,
       })
@@ -1614,7 +1613,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     bsangKhang.position.set(-0.55, 0.2, 0.35);
     const bsangEmber = new THREE.Mesh(
       new THREE.SphereGeometry(0.065, 8, 8),
-      new THREE.MeshBasicMaterial({ color: "#f97316" })
+      new THREE.MeshBasicMaterial({ color: "#fde68a" })
     );
     bsangEmber.position.set(-0.55, 0.36, 0.35);
     deyangsharGroup.add(bsangKhang, bsangEmber);
@@ -1636,7 +1635,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
       d: 1.85,
       taper: 0.84,
       wallColor: "#faf8f5",
-      friezeColor: "#7f1d1d",
+      friezeColor: "#4a0a18",
       cols: 3,
       rows: 3,
     });
@@ -1650,7 +1649,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
       d: 1.6,
       taper: 0.86,
       wallColor: "#f8f6f0",
-      friezeColor: "#7f1d1d",
+      friezeColor: "#4a0a18",
       cols: 3,
       rows: 3,
     });
@@ -1707,21 +1706,21 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
       d: 1.6,
       taper: 0.92,
       wallColor: "#faf8f5",
-      friezeColor: "#7f1d1d",
+      friezeColor: "#4a0a18",
       cols: 5,
       rows: 2,
     });
     sholWestBuilding.position.set(-5.2, 1.25, 4.9);
     sholGroup.add(sholWestBuilding);
 
-    // Central Ochre Shol Parkhang Printing House & White Lower Courtyard Building (matching photo)
+    // Central Shol Parkhang Printing House (Bordó Lama) & White Lower Courtyard Building
     const sholYellowMain = createBatteredPalaceBlock({
       w: 1.95,
       h: 1.2,
       d: 1.3,
       taper: 0.93,
-      wallColor: "#ca8a04",
-      friezeColor: "#4c1116",
+      wallColor: "#560d1e",
+      friezeColor: "#2d050e",
       cols: 4,
       rows: 2,
     });
@@ -1734,7 +1733,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
       d: 1.2,
       taper: 0.94,
       wallColor: "#faf8f5",
-      friezeColor: "#4c1116",
+      friezeColor: "#4a0a18",
       cols: 5,
       rows: 1,
     });
@@ -1748,7 +1747,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
       d: 1.5,
       taper: 0.92,
       wallColor: "#faf8f5",
-      friezeColor: "#7f1d1d",
+      friezeColor: "#4a0a18",
       cols: 6,
       rows: 2,
     });
@@ -1982,9 +1981,9 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
       scene.environment = envTextureRef.current;
       scene.fog = new THREE.FogExp2("#bae6fd", 0.0028);
       ambient.color.set("#ffffff");
-      ambient.intensity = 1.45;
+      ambient.intensity = 1.0;
       sun.color.set("#ffffff");
-      sun.intensity = 2.6;
+      sun.intensity = 1.75;
       sun.position.set(14, 22, 16);
       spot.intensity = 0;
       if (incenseLightRef.current) incenseLightRef.current.intensity = 0;
