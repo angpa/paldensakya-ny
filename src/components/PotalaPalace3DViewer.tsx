@@ -84,7 +84,7 @@ function createPotalaFacadeTextures(options: {
     ctx.stroke();
   }
 
-  // 2. Top Penba Frieze (compacted crimson tamarix branches under parapet)
+  // 2. Top Penba Frieze (spen-ma: compacted crimson tamarix branches under parapet)
   const friezeH = Math.floor(height * 0.115);
   ctx.fillStyle = options.friezeColor || "#5c1319";
   ctx.fillRect(0, 0, width, friezeH);
@@ -92,9 +92,23 @@ function createPotalaFacadeTextures(options: {
   oCtx.fillStyle = "rgb(195, 242, 12)";
   oCtx.fillRect(0, 0, width, friezeH);
 
-  // Golden Spen-bad / Melong (sacred gilded brass discs) along the frieze
+  // Historical soot & moisture occlusion band directly beneath the overhanging spen-ma frieze
+  const friezeShadowGrad = ctx.createLinearGradient(0, friezeH, 0, friezeH + 18);
+  friezeShadowGrad.addColorStop(0, "rgba(15, 10, 8, 0.24)");
+  friezeShadowGrad.addColorStop(1, "rgba(15, 10, 8, 0)");
+  ctx.fillStyle = friezeShadowGrad;
+  ctx.fillRect(0, friezeH, width, 18);
+
+  // Fresh annual lime-milk-honey whitewash sheen on the lower wall third
+  const baseWashGrad = ctx.createLinearGradient(0, height * 0.65, 0, height);
+  baseWashGrad.addColorStop(0, "rgba(255, 255, 255, 0)");
+  baseWashGrad.addColorStop(1, "rgba(255, 252, 245, 0.12)");
+  ctx.fillStyle = baseWashGrad;
+  ctx.fillRect(0, height * 0.65, width, height * 0.35);
+
+  // Golden Spen-bad / Me-long (sacred gilded brass discs) along the frieze
   if (options.hasGoldBand !== false) {
-    const discCount = Math.max(4, options.cols * 2);
+    const discCount = Math.max(4, Math.max(2, options.cols) * 2);
     for (let i = 0; i < discCount; i++) {
       const cx = ((i + 0.5) / discCount) * width;
       const cy = friezeH * 0.52;
@@ -130,6 +144,10 @@ function createPotalaFacadeTextures(options: {
 
     for (let c = 0; c < options.cols; c++) {
       const wx = 20 + c * colStep + (colStep - winW) * 0.5;
+
+      // Subtle rain & butter-lamp soot drip beneath each window sill
+      ctx.fillStyle = "rgba(20, 14, 10, 0.085)";
+      ctx.fillRect(wx, wy + winH, winW, 7);
 
       // Black heat-absorbing trapezoidal frame (sill wider at bottom, lintel narrower at top)
       const topInset = 2.6;
@@ -428,7 +446,7 @@ function createGildedTibetanRoof(w: number, d: number, h: number) {
   baseMesh.castShadow = true;
   roofGroup.add(baseMesh);
 
-  // 3. Upturned Curved Eave Corners (4 flying Sino-Tibetan Makara corner spurs)
+  // 3. Upturned Curved Eave Corners & Chu-srin (Makara) Bronze Gargoyle Rain Spouts
   [
     [-1, -1],
     [1, -1],
@@ -441,6 +459,14 @@ function createGildedTibetanRoof(w: number, d: number, h: number) {
     spur.rotation.z = -sx * 0.55;
     spur.rotation.x = sz * 0.55;
     roofGroup.add(spur);
+
+    // Chu-srin (Makara sea-dragon) horizontal corner rain spout protruding below eave
+    const spoutGeo = new THREE.CylinderGeometry(0.018, 0.032, 0.22, 6);
+    const spout = new THREE.Mesh(spoutGeo, goldMat);
+    spout.position.set(sx * w * 0.64, h * 0.06, sz * d * 0.64);
+    spout.rotation.z = sx * (Math.PI * 0.42);
+    spout.rotation.y = sz * 0.35;
+    roofGroup.add(spout);
   });
 
   // 4. Sloped hip-and-gable roof body (4-sided pyramid frustum)
@@ -496,9 +522,12 @@ function createGildedTibetanRoof(w: number, d: number, h: number) {
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   Helper: Lhasa High-Altitude Blue Sky Gradient Texture (3,700m Azure Sky)
+   Helper: Lhasa High-Altitude Day & Starry Night Sky Textures (3,700m)
+   Cached in memory for 0ms instantaneous atmosphere switching.
    ══════════════════════════════════════════════════════════════════════════ */
+let cachedDaySkyTex: THREE.CanvasTexture | null = null;
 function createLhasaDaySkyTexture() {
+  if (cachedDaySkyTex) return cachedDaySkyTex;
   const canvas = document.createElement("canvas");
   canvas.width = 512;
   canvas.height = 512;
@@ -527,6 +556,67 @@ function createLhasaDaySkyTexture() {
 
   const tex = new THREE.CanvasTexture(canvas);
   tex.colorSpace = THREE.SRGBColorSpace;
+  cachedDaySkyTex = tex;
+  return tex;
+}
+
+let cachedNightSkyTex: THREE.CanvasTexture | null = null;
+function createLhasaNightSkyTexture() {
+  if (cachedNightSkyTex) return cachedNightSkyTex;
+  const canvas = document.createElement("canvas");
+  canvas.width = 512;
+  canvas.height = 512;
+  const ctx = canvas.getContext("2d")!;
+
+  // Deep 3,700m Himalayan cosmic night gradient
+  const nightGrad = ctx.createLinearGradient(0, 0, 0, 512);
+  nightGrad.addColorStop(0, "#03050d");    // Deep cosmic zenith
+  nightGrad.addColorStop(0.52, "#060b19"); // High-altitude midnight indigo
+  nightGrad.addColorStop(0.85, "#0a1326"); // Lhasa valley nocturnal horizon
+  nightGrad.addColorStop(1, "#0f1c36");    // Subtle distant mountain glow
+  ctx.fillStyle = nightGrad;
+  ctx.fillRect(0, 0, 512, 512);
+
+  // Subtle diagonal Himalayan Milky Way stardust band
+  ctx.save();
+  ctx.translate(256, 210);
+  ctx.rotate(-0.42);
+  const milkyGrad = ctx.createLinearGradient(0, -90, 0, 90);
+  milkyGrad.addColorStop(0, "rgba(56, 189, 248, 0)");
+  milkyGrad.addColorStop(0.5, "rgba(125, 211, 252, 0.055)");
+  milkyGrad.addColorStop(1, "rgba(56, 189, 248, 0)");
+  ctx.fillStyle = milkyGrad;
+  ctx.fillRect(-320, -90, 640, 180);
+  ctx.restore();
+
+  // 350 crystalline Himalayan stars across 3 color temperatures
+  const starColors = ["#ffffff", "#bae6fd", "#fef08a", "#e0f2fe"];
+  for (let i = 0; i < 350; i++) {
+    // Deterministic pseudo-random distribution so sky never flickers
+    const sx = ((i * 173 + (i * i) * 31) % 508) + 2;
+    const sy = ((i * 137 + i * 29) % 440) + 2;
+    const radius = i % 19 === 0 ? 1.55 : i % 7 === 0 ? 1.1 : 0.65;
+    const alpha = 0.35 + ((i * 43) % 65) / 100;
+
+    ctx.fillStyle = starColors[i % starColors.length];
+    ctx.globalAlpha = alpha;
+    ctx.beginPath();
+    ctx.arc(sx, sy, radius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Soft halo around brightest zenith stars
+    if (i % 19 === 0) {
+      ctx.globalAlpha = alpha * 0.25;
+      ctx.beginPath();
+      ctx.arc(sx, sy, radius * 2.8, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  ctx.globalAlpha = 1.0;
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  cachedNightSkyTex = tex;
   return tex;
 }
 
@@ -695,11 +785,11 @@ function createMoonCelestialBody() {
   }
   moonGroup.add(starRingGroup);
 
-  // 4. Subtle Silvery-Blue Lunar Halo Sprite (soft starlight glow, no blinding blowout)
+  // 4. Balanced Silvery-Blue Lunar Halo Sprite (AgX starlight glow, zero whiteout)
   const moonGlowTex = createCelestialGlowTexture(
-    "rgba(224, 242, 254, 0.72)",
-    "rgba(147, 197, 253, 0.32)",
-    "rgba(56, 189, 248, 0.05)"
+    "rgba(224, 242, 254, 0.82)",
+    "rgba(147, 197, 253, 0.38)",
+    "rgba(56, 189, 248, 0.06)"
   );
   const moonSpriteMat = new THREE.SpriteMaterial({
     map: moonGlowTex,
@@ -707,7 +797,7 @@ function createMoonCelestialBody() {
     depthWrite: false,
   });
   const moonGlowSprite = new THREE.Sprite(moonSpriteMat);
-  moonGlowSprite.scale.set(3.2, 3.2, 1);
+  moonGlowSprite.scale.set(4.2, 4.2, 1);
   moonGroup.add(moonGlowSprite);
 
   return moonGroup;
@@ -763,6 +853,109 @@ function createStaircaseSegment(
   return group;
 }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   Helper: Create Traditional Tibetan White Chörten Stupa (མཆོད་རྟེན། · mchod-rten)
+   Features square throne base, stepped tiers, Bumpa dome, 13-wheel spire & Nyi-Zla
+   ══════════════════════════════════════════════════════════════════════════ */
+function createChortenStupa(scale = 1) {
+  const stupa = new THREE.Group();
+  const whiteMat = new THREE.MeshStandardMaterial({
+    color: "#faf8f5",
+    roughness: 0.72,
+    metalness: 0.05,
+  });
+  const crimsonMat = new THREE.MeshStandardMaterial({
+    color: "#7f1d1d",
+    roughness: 0.68,
+  });
+  const goldMat = new THREE.MeshStandardMaterial({
+    color: "#fbbf24",
+    emissive: "#92400e",
+    emissiveIntensity: 0.2,
+    roughness: 0.24,
+    metalness: 0.9,
+  });
+
+  // 1. Lion Throne Base (sen-khri)
+  const base = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.34, 0.56), whiteMat);
+  base.position.y = 0.17;
+  base.castShadow = true;
+  stupa.add(base);
+
+  // Crimson collar band
+  const collar = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.06, 0.58), crimsonMat);
+  collar.position.y = 0.36;
+  stupa.add(collar);
+
+  // 2. Four Stepped Enlightenment Tiers
+  const steps = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.16, 0.46), whiteMat);
+  steps.position.y = 0.47;
+  stupa.add(steps);
+
+  // 3. Vase Dome (bum-pa)
+  const bumpa = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.22, 0.18, 0.32, 16),
+    whiteMat
+  );
+  bumpa.position.y = 0.71;
+  bumpa.castShadow = true;
+  stupa.add(bumpa);
+
+  // 4. Harmika & 13 Dharma Wheels Spire (chos-'khor bcu-gsum)
+  const harmika = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.08, 0.18), goldMat);
+  harmika.position.y = 0.91;
+  stupa.add(harmika);
+
+  const spire = new THREE.Mesh(new THREE.ConeGeometry(0.09, 0.36, 12), goldMat);
+  spire.position.y = 1.12;
+  stupa.add(spire);
+
+  // 5. Sacred Parasol & Nyi-Zla Crown
+  const crown = new THREE.Mesh(new THREE.SphereGeometry(0.05, 10, 10), goldMat);
+  crown.position.y = 1.33;
+  stupa.add(crown);
+
+  stupa.scale.setScalar(scale);
+  return stupa;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Helper: Create Catenary String of 5-Color Lung-ta Prayer Flags (རླུང་རྟ། · rlung-rta)
+   Traditional Tibetan elemental order: Blue, White, Red, Green, Yellow
+   ══════════════════════════════════════════════════════════════════════════ */
+function createLungtaPrayerFlagString(
+  start: [number, number, number],
+  end: [number, number, number],
+  flagCount = 10,
+  sag = 0.22
+) {
+  const group = new THREE.Group();
+  const vStart = new THREE.Vector3(...start);
+  const vEnd = new THREE.Vector3(...end);
+
+  const fiveColors = ["#2563eb", "#f8fafc", "#dc2626", "#16a34a", "#eab308"];
+  const flagGeo = new THREE.PlaneGeometry(0.11, 0.14);
+
+  for (let i = 1; i <= flagCount; i++) {
+    const t = i / (flagCount + 1);
+    const pt = new THREE.Vector3().lerpVectors(vStart, vEnd, t);
+    // Parabolic catenary sag
+    pt.y -= Math.sin(t * Math.PI) * sag;
+
+    const flagMat = new THREE.MeshStandardMaterial({
+      color: fiveColors[i % 5],
+      roughness: 0.75,
+      side: THREE.DoubleSide,
+    });
+    const flag = new THREE.Mesh(flagGeo, flagMat);
+    flag.position.copy(pt);
+    flag.userData = { basePosY: pt.y, phase: i * 0.65 };
+    group.add(flag);
+  }
+
+  return group;
+}
+
 export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
   const mountRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -799,10 +992,12 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     active: false,
   });
 
-  // Lights Refs
+  // Lights & Environment Refs
+  const envTextureRef = useRef<THREE.Texture | null>(null);
   const ambientLightRef = useRef<THREE.AmbientLight | null>(null);
   const sunLightRef = useRef<THREE.DirectionalLight | null>(null);
   const palaceSpotLightRef = useRef<THREE.SpotLight | null>(null);
+  const incenseLightRef = useRef<THREE.PointLight | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
 
   /* ══════════════════════════════════════════════════════════════════════
@@ -867,7 +1062,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     camera.position.set(0, 9.2, 21.5);
     cameraRef.current = camera;
 
-    // 3. Ultra-Fast 60 FPS WebGL Renderer + IBL Metallic Environment
+    // 3. Ultra-Fast 60 FPS WebGL Renderer + AgX Tone Mapping + IBL Metallic Environment
     const renderer = new THREE.WebGLRenderer({
       antialias: true,
       powerPreference: "high-performance",
@@ -877,13 +1072,14 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.1;
+    renderer.toneMapping = THREE.AgXToneMapping;
+    renderer.toneMappingExposure = 1.08;
 
     // Image-Based Lighting (IBL) for metallic reflections on the 7 Golden Roofs & Spen-bad discs
     const pmremGenerator = new THREE.PMREMGenerator(renderer);
     pmremGenerator.compileEquirectangularShader();
     const envTexture = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
+    envTextureRef.current = envTexture;
     scene.environment = envTexture;
     pmremGenerator.dispose();
 
@@ -933,12 +1129,18 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     rimLight.position.set(-14, 12, -12);
     scene.add(rimLight);
 
-    const palaceSpotLight = new THREE.SpotLight("#fbbf24", 0, 32, Math.PI / 3, 0.5, 1.2);
-    palaceSpotLight.position.set(0, 2.5, 12);
-    palaceSpotLight.target.position.set(0, 6.5, 0);
+    const palaceSpotLight = new THREE.SpotLight("#fbbf24", 0, 36, Math.PI / 2.6, 0.45, 1.0);
+    palaceSpotLight.position.set(0, 2.2, 12.5);
+    palaceSpotLight.target.position.set(0, 6.2, 0);
     scene.add(palaceSpotLight);
     scene.add(palaceSpotLight.target);
     palaceSpotLightRef.current = palaceSpotLight;
+
+    // Warm ceremonial Sang-khang (incense burner) point light on Deyangshar & upper terrace
+    const incenseLight = new THREE.PointLight("#f97316", 0, 11, 1.4);
+    incenseLight.position.set(2.4, 5.6, 1.4);
+    scene.add(incenseLight);
+    incenseLightRef.current = incenseLight;
 
     // 6. Root Group for the entire Potala Diorama
     const potalaRoot = new THREE.Group();
@@ -1035,7 +1237,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     proceduralGroup.add(hillMesh);
     mountainMeshRef.current = hillMesh;
 
-    // Rocky Western Crag Outcrop (seen on left of potala-elevation.jpg)
+    // Rocky Western Crag Outcrop & Fractured Granite Bedrock Interlocking with Palace Base
     const cragGeo = new THREE.DodecahedronGeometry(2.5, 1);
     cragGeo.scale(1.1, 1.35, 0.9);
     const cragMat = new THREE.MeshStandardMaterial({
@@ -1049,14 +1251,34 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     westCrag.receiveShadow = true;
     proceduralGroup.add(westCrag);
 
+    // Fractured granite bedrock outcrops emerging directly into the White & Red Palace foundations
+    const bedrockOutcrops: [number, number, number, number, number, number][] = [
+      [-3.1, 2.35, 1.85, 1.25, 0.95, 0.85],
+      [2.65, 2.25, 1.95, 1.15, 0.9, 0.85],
+      [-5.6, 2.55, 1.45, 1.1, 1.05, 0.8],
+      [6.35, 1.95, 2.25, 1.2, 0.85, 0.85],
+      [1.85, 5.15, -1.25, 1.05, 1.2, 0.9], // Summit crag around Chögyal Drupuk cave
+    ];
+    bedrockOutcrops.forEach(([rx, ry, rz, sx, sy, sz], idx) => {
+      const rockGeo = new THREE.IcosahedronGeometry(1.0, 1);
+      rockGeo.scale(sx, sy, sz);
+      const rockMesh = new THREE.Mesh(rockGeo, cragMat);
+      rockMesh.position.set(rx, ry, rz);
+      rockMesh.rotation.set(idx * 0.4, idx * 0.7, idx * 0.25);
+      rockMesh.castShadow = true;
+      rockMesh.receiveShadow = true;
+      proceduralGroup.add(rockMesh);
+    });
+
     /* ──────────────────────────────────────────────────────────────────
-       B. THE RED PALACE (ཕོ་བྲང་དམར་པོ། · Potrang Marpo - Center Summit)
+       B. THE RED PALACE (ཕོ་བྲང་དམར་པོ། · pho-brang dmar-po - Center Summit)
+       3-Tier Stepped Puntsok Kodpa (ཕུན་ཚོགས་བཀོད་པ།) Sanctuary Core
        ────────────────────────────────────────────────────────────────── */
-    // 1. Main Central Crimson Mass
+    // 1. Tier 1: Main Central Crimson Mass (85m × 70m scaled at 1u = 20m)
     const redPalaceMain = createBatteredPalaceBlock({
-      w: 4.3,
-      h: 3.3,
-      d: 2.7,
+      w: 4.35,
+      h: 3.15,
+      d: 2.8,
       taper: 0.89,
       wallColor: "#8b1d24",
       friezeColor: "#3f0d12",
@@ -1064,7 +1286,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
       rows: 4,
       roofTrimColor: "#fbbf24",
     });
-    redPalaceMain.position.set(-0.2, 6.2, -0.2);
+    redPalaceMain.position.set(-0.2, 6.1, -0.2);
     proceduralGroup.add(redPalaceMain);
 
     // 2. Four Prominent Golden/Timber Vertical Bay Window Columns on Red Palace Front
@@ -1078,24 +1300,62 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     [-1.15, -0.38, 0.38, 1.15].forEach((bx) => {
       const bayGeo = new THREE.BoxGeometry(0.36, 2.75, 0.25);
       const bay = new THREE.Mesh(bayGeo, goldBayMat);
-      bay.position.set(-0.2 + bx, 6.25, 1.08);
+      bay.position.set(-0.2 + bx, 6.2, 1.12);
       bay.castShadow = true;
       proceduralGroup.add(bay);
     });
 
-    // 3. Upper Red Palace Sanctuary Tier
-    const redPalaceUpper = createBatteredPalaceBlock({
-      w: 3.5,
-      h: 1.35,
-      d: 2.1,
+    // Black Yak-Hair Portal Curtains with White Trim (སྣམ་བུ། · snam-bu) on Red Palace Portals
+    const snambuBlackMat = new THREE.MeshStandardMaterial({
+      color: "#141215",
+      roughness: 0.88,
+    });
+    const snambuWhiteTrimMat = new THREE.MeshStandardMaterial({
+      color: "#f8fafc",
+      roughness: 0.7,
+    });
+    [-0.76, 0, 0.76].forEach((px) => {
+      const curtain = new THREE.Mesh(
+        new THREE.BoxGeometry(0.32, 0.46, 0.04),
+        snambuBlackMat
+      );
+      curtain.position.set(-0.2 + px, 5.15, 1.19);
+      const trim = new THREE.Mesh(
+        new THREE.BoxGeometry(0.33, 0.05, 0.045),
+        snambuWhiteTrimMat
+      );
+      trim.position.set(-0.2 + px, 5.32, 1.195);
+      proceduralGroup.add(curtain, trim);
+    });
+
+    // 3. Tier 2: Recessed Middle Puntsok Kodpa Clerestory Gallery
+    const redPalaceMidTier = createBatteredPalaceBlock({
+      w: 3.85,
+      h: 0.95,
+      d: 2.35,
       taper: 0.92,
-      wallColor: "#7f1d1d",
+      wallColor: "#82181f",
       friezeColor: "#3b0a0e",
       cols: 6,
+      rows: 1,
+      roofTrimColor: "#fbbf24",
+    });
+    redPalaceMidTier.position.set(-0.2, 7.85, -0.22);
+    proceduralGroup.add(redPalaceMidTier);
+
+    // 4. Tier 3: Upper Red Palace Summit Sanctuary Tier
+    const redPalaceUpper = createBatteredPalaceBlock({
+      w: 3.35,
+      h: 1.15,
+      d: 2.0,
+      taper: 0.93,
+      wallColor: "#7f1d1d",
+      friezeColor: "#3b0a0e",
+      cols: 5,
       rows: 2,
       roofTrimColor: "#fbbf24",
     });
-    redPalaceUpper.position.set(-0.2, 8.2, -0.25);
+    redPalaceUpper.position.set(-0.2, 8.55, -0.25);
     proceduralGroup.add(redPalaceUpper);
 
     // 4. Yellow-Ochre Flanking Sacred Chapels (West & East of Red Palace)
@@ -1165,9 +1425,10 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     proceduralGroup.add(farEastGoldRoof);
 
     /* ──────────────────────────────────────────────────────────────────
-       D. THE WHITE PALACE (ཕོ་བྲང་དཀར་པོ། · Potrang Karpo)
+       D. THE WHITE PALACE (ཕོ་བྲང་དཀར་པོ། · pho-brang dkar-po)
+          & CEREMONIAL GOS-SKU THANGKA WALL (གོས་སྐུ། · gos-sku, "cloth image")
        ────────────────────────────────────────────────────────────────── */
-    // 1. Great Central Alabaster Bastion (Directly below Red Palace, windows in top 2 rows)
+    // 1. Great Central Alabaster Bastion directly in front of the Red Palace
     const centralWhiteBastion = createBatteredPalaceBlock({
       w: 4.9,
       h: 3.1,
@@ -1182,19 +1443,37 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     centralWhiteBastion.position.set(-0.2, 3.6, 0.55);
     proceduralGroup.add(centralWhiteBastion);
 
-    // Solid sloping white apron wall in front of the central bastion
+    // Monumental Smooth White Gos-sku Wall (གོས་སྐུ། · gos-sku, literally "cloth image")
+    // Windowless lower battered facade in front of the Red Palace where giant silk thangkas are unfurled
     const frontApron = createBatteredPalaceBlock({
       w: 4.75,
-      h: 2.1,
+      h: 2.15,
       d: 1.6,
       taper: 0.84,
-      wallColor: "#f5f2eb",
+      wallColor: "#faf8f5",
       friezeColor: "#7f1d1d",
       cols: 8,
-      rows: 2,
+      rows: 4,
+      windowStartRow: 4, // Smooth windowless Gos-sku thangka display wall
     });
-    frontApron.position.set(-0.2, 2.9, 1.35);
+    frontApron.position.set(-0.2, 2.88, 1.38);
     proceduralGroup.add(frontApron);
+
+    // Gilded Bronze Gos-sku Thangka Suspension Mooring Hooks along the top cornice of the Gos-sku Wall
+    const hookMat = new THREE.MeshStandardMaterial({
+      color: "#fbbf24",
+      roughness: 0.25,
+      metalness: 0.9,
+    });
+    for (let hi = 0; hi < 7; hi++) {
+      const hx = -0.2 + (hi - 3) * 0.56;
+      const hook = new THREE.Mesh(
+        new THREE.TorusGeometry(0.045, 0.014, 8, 12),
+        hookMat
+      );
+      hook.position.set(hx, 3.88, 2.08);
+      proceduralGroup.add(hook);
+    }
 
     // 2. Western White Palace Wings & Iconic Cylindrical Drum Tower
     const westUpperWhite = createBatteredPalaceBlock({
@@ -1272,6 +1551,84 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     });
     eastMidWhite.position.set(3.85, 4.3, 0.55);
     proceduralGroup.add(eastMidWhite);
+
+    /* ──────────────────────────────────────────────────────────────────
+       D2. DEYANGSHAR CEREMONIAL COURTYARD (བདེ་དབྱངས་ཤར། · bde-dbyangs shar)
+           Polished Ar-ga Stone Floor, Vermilion Gzhu-gdong Galleries,
+           Dar-chen Prayer Flagpole, Bsang-khang Burner & Lung-ta Flags
+       ────────────────────────────────────────────────────────────────── */
+    const deyangsharGroup = new THREE.Group();
+    deyangsharGroup.position.set(2.55, 5.56, 1.15);
+    proceduralGroup.add(deyangsharGroup);
+
+    // 1. Hand-tamped polished Ar-ga (ཨར་ག) waterproof lime-stone terrace floor (roughness: 0.48)
+    const argaFloor = new THREE.Mesh(
+      new THREE.BoxGeometry(2.25, 0.12, 1.75),
+      new THREE.MeshStandardMaterial({
+        color: "#e7e0d6",
+        roughness: 0.48,
+        metalness: 0.08,
+      })
+    );
+    argaFloor.receiveShadow = true;
+    deyangsharGroup.add(argaFloor);
+
+    // 2. Vermilion Pillared Monastic Galleries (གཞུ་གདོང་། · gzhu-gdong) along North & East edges
+    const pillarMat = new THREE.MeshStandardMaterial({
+      color: "#991b1b",
+      roughness: 0.55,
+    });
+    for (let pi = 0; pi < 5; pi++) {
+      const pNorth = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.035, 0.04, 0.48, 8),
+        pillarMat
+      );
+      pNorth.position.set(-0.85 + pi * 0.42, 0.28, -0.72);
+      deyangsharGroup.add(pNorth);
+    }
+
+    // 3. Central Ceremonial Prayer Flagpole (དར་ཆེན། · dar-chen)
+    const darchenPole = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.028, 0.045, 1.85, 10),
+      new THREE.MeshStandardMaterial({
+        color: "#d97706",
+        roughness: 0.35,
+        metalness: 0.75,
+      })
+    );
+    darchenPole.position.set(0, 0.95, 0.1);
+    darchenPole.castShadow = true;
+    deyangsharGroup.add(darchenPole);
+
+    const darchenFinial = new THREE.Mesh(
+      new THREE.ConeGeometry(0.065, 0.18, 10),
+      hookMat
+    );
+    darchenFinial.position.set(0, 1.92, 0.1);
+    deyangsharGroup.add(darchenFinial);
+
+    // 4. Whitewashed Ritual Incense Burner (བསང་ཁང་། · bsang-khang) on Deyangshar terrace
+    const bsangKhang = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.11, 0.15, 0.32, 12),
+      new THREE.MeshStandardMaterial({ color: "#faf8f5", roughness: 0.7 })
+    );
+    bsangKhang.position.set(-0.55, 0.2, 0.35);
+    const bsangEmber = new THREE.Mesh(
+      new THREE.SphereGeometry(0.065, 8, 8),
+      new THREE.MeshBasicMaterial({ color: "#f97316" })
+    );
+    bsangEmber.position.set(-0.55, 0.36, 0.35);
+    deyangsharGroup.add(bsangKhang, bsangEmber);
+
+    // 5. Three Catenary Strings of 5-Color Lung-ta Prayer Flags (རླུང་རྟ། · rlung-rta)
+    const lungtaGroup = new THREE.Group();
+    lungtaGroup.name = "lungtaFlags";
+    lungtaGroup.add(
+      createLungtaPrayerFlagString([0, 1.78, 0.1], [-1.1, 0.95, -0.65], 9, 0.18),
+      createLungtaPrayerFlagString([0, 1.78, 0.1], [1.05, 0.95, -0.65], 9, 0.18),
+      createLungtaPrayerFlagString([0, 1.78, 0.1], [0.95, 0.72, 0.68], 8, 0.16)
+    );
+    deyangsharGroup.add(lungtaGroup);
 
     // Eastern Protruding Watchtower Bastion (Mid-Right Slope)
     const eastBastionTower = createBatteredPalaceBlock({
@@ -1399,7 +1756,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     sholEastBuilding.position.set(4.5, 1.18, 5.1);
     sholGroup.add(sholEastBuilding);
 
-    // Shol Doring (Ancient 763 CE Inscribed Stone Pillar)
+    // Shol Doring (ཞོལ་རྡོ་རིང་། · zhol rdo-ring - Ancient 763 CE Inscribed Stone Pillar)
     const doringGroup = new THREE.Group();
     const doringBase = new THREE.Mesh(
       new THREE.BoxGeometry(0.55, 0.25, 0.55),
@@ -1415,6 +1772,41 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     doringGroup.add(doringBase, doringPillar, doringRoof);
     doringGroup.position.set(-3.1, 0.65, 5.15);
     sholGroup.add(doringGroup);
+
+    // Sacred White Chörten Stupas (མཆོད་རྟེན། · mchod-rten) at Western Ridge & Shol Gateways
+    const westRidgeChorten = createChortenStupa(1.05);
+    westRidgeChorten.position.set(-6.85, 3.35, 1.15);
+    proceduralGroup.add(westRidgeChorten);
+
+    const sholWestChorten = createChortenStupa(0.88);
+    sholWestChorten.position.set(-7.35, 0.55, 5.25);
+    sholGroup.add(sholWestChorten);
+
+    const sholEastChorten = createChortenStupa(0.88);
+    sholEastChorten.position.set(7.35, 0.55, 5.25);
+    sholGroup.add(sholEastChorten);
+
+    // Instanced Golden Mani Prayer Wheels (མ་ཎི་འཁོར་ལོ། · ma-ṇi 'khor-lo) along the Lingkhor (གླིང་སྐོར།) Path
+    const maniCount = 28;
+    const maniGeo = new THREE.CylinderGeometry(0.055, 0.055, 0.18, 10);
+    const maniMat = new THREE.MeshStandardMaterial({
+      color: "#fbbf24",
+      emissive: "#78350f",
+      emissiveIntensity: 0.2,
+      roughness: 0.25,
+      metalness: 0.9,
+    });
+    const instancedManiWheels = new THREE.InstancedMesh(maniGeo, maniMat, maniCount);
+    const maniDummy = new THREE.Object3D();
+    for (let mi = 0; mi < maniCount; mi++) {
+      const mx = -7.6 + (mi / (maniCount - 1)) * 15.2;
+      maniDummy.position.set(mx, 0.92, 6.04);
+      maniDummy.rotation.set(0, mi * 0.4, 0);
+      maniDummy.updateMatrix();
+      instancedManiWheels.setMatrixAt(mi, maniDummy.matrix);
+    }
+    instancedManiWheels.instanceMatrix.needsUpdate = true;
+    sholGroup.add(instancedManiWheels);
 
     /* ──────────────────────────────────────────────────────────────────
        G. INSTANCED HIMALAYAN PINE & CYPRESS GROVES (THREE.InstancedMesh)
@@ -1531,12 +1923,22 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
 
       controls.update();
 
-      // Gentle upward drift of golden stardust & rotation of Sun/Moon rings
+      // Gentle upward drift of golden stardust, Sun/Moon rings & Lung-ta prayer flags
+      const t = performance.now() * 0.0025;
       particles.rotation.y += 0.0006;
       const solarRays = sunBody.getObjectByName("solarRays");
       if (solarRays) solarRays.rotation.z += 0.004;
       const lunarStars = moonBody.getObjectByName("lunarStars");
       if (lunarStars) lunarStars.rotation.z -= 0.003;
+
+      // Subtle Himalayan wind ripple on the 5-color Lung-ta prayer flags in Deyangshar
+      lungtaGroup.children.forEach((strand) => {
+        strand.children.forEach((flagObj) => {
+          const phase = flagObj.userData.phase || 0;
+          flagObj.rotation.y = Math.sin(t + phase) * 0.22;
+          flagObj.rotation.z = Math.cos(t * 0.8 + phase) * 0.08;
+        });
+      });
 
       // Pure 60 FPS Native WebGL Render
       renderer.render(scene, camera);
@@ -1578,6 +1980,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
 
     if (atmosphere === "sunlight") {
       scene.background = createLhasaDaySkyTexture();
+      scene.environment = envTextureRef.current;
       scene.fog = new THREE.FogExp2("#7dd3fc", 0.0035);
       ambient.color.set("#fffbeb");
       ambient.intensity = 1.35;
@@ -1585,6 +1988,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
       sun.intensity = 2.5;
       sun.position.set(14, 22, 16);
       spot.intensity = 0;
+      if (incenseLightRef.current) incenseLightRef.current.intensity = 0;
       wallEmissive = 0.02;
       if (sunBodyRef.current) {
         sunBodyRef.current.visible = true;
@@ -1594,17 +1998,20 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
         moonBodyRef.current.visible = false;
       }
     } else {
-      // Sacred Night Mode: deep crisp midnight sky, clear starlight & warm glowing windows
-      scene.background = new THREE.Color("#080c18");
-      scene.fog = new THREE.FogExp2("#080c18", 0.005);
-      ambient.color.set("#1e293b");
-      ambient.intensity = 0.55;
+      // Sacred Night Mode (AgX Colorimetry): 3,700m starry Himalayan sky, IBL disabled so gold roofs
+      // reflect only moonlight & floodlights, warm 4.2x upward monument floodlight & glowing windows
+      scene.background = createLhasaNightSkyTexture();
+      scene.environment = null;
+      scene.fog = new THREE.FogExp2("#040711", 0.0042);
+      ambient.color.set("#172554");
+      ambient.intensity = 0.48;
       sun.color.set("#93c5fd");
-      sun.intensity = 0.75;
+      sun.intensity = 0.68;
       sun.position.set(-10, 18, -10);
-      spot.color.set("#f59e0b");
-      spot.intensity = 2.4;
-      wallEmissive = 1.25;
+      spot.color.set("#fbbf24");
+      spot.intensity = 4.2;
+      if (incenseLightRef.current) incenseLightRef.current.intensity = 1.65;
+      wallEmissive = 1.45;
       if (sunBodyRef.current) {
         sunBodyRef.current.visible = false;
       }
@@ -1826,7 +2233,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
             {lang === "bo" ? "ཕོ་བྲང་པོ་ཏ་ལ་ ༣D" : "3D POTALA PALACE DIORAMA"}
           </span>
           <span className="text-white/60 font-mono text-[11px] hidden sm:inline">
-            LHASA · 400M × 350M · 117M (13 STORIES) · PBR + IBL + BLOOM
+            LHASA · 400M × 350M · 117M (13 STORIES) · AGX + PBR + 60 FPS
           </span>
         </div>
 
@@ -1991,7 +2398,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
                 >
                   <span className="opacity-70">{hs.number}</span>
                   <span lang="bo" className="font-serif">
-                    {lang === "bo" ? hs.nameBo : hs.nameEn.split("(")[0].trim()}
+                    {lang === "bo" ? hs.nameBo.split("(")[0].trim() : hs.nameEn}
                   </span>
                 </button>
               );
