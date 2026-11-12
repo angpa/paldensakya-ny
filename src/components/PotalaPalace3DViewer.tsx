@@ -139,10 +139,27 @@ function createPotalaFacadeTextures(options: {
     // Upper rows (r=0) have larger ceremonial windows; lower rows have smaller fortress windows
     const floorScale = 1.12 - (r / Math.max(1, options.rows)) * 0.34;
     const wy = usableTop + r * rowStep + rowStep * 0.14;
-    const winH = Math.min(50, rowStep * 0.62 * floorScale);
-    const winW = Math.min(36, colStep * 0.52 * floorScale);
+    const baseWinH = Math.min(50, rowStep * 0.62 * floorScale);
+    const baseWinW = Math.min(36, colStep * 0.52 * floorScale);
+
+    // Dynamic window density (canvas row 0 = top floor, highest row index = ground floor):
+    //  · Defensive stone base (bottom ~30% of rows on tall blocks): only ~30% of the windows survive.
+    //  · Ceremonial top floor (r = 0): windows are 30% wider / 25% taller.
+    const isDefensiveRow = options.rows >= 4 && r >= Math.ceil(options.rows * 0.7);
+    const isCeremonialRow = r === 0 && options.rows >= 2;
+    const winW = isCeremonialRow ? Math.min(colStep * 0.78, baseWinW * 1.3) : baseWinW;
+    const winH = isCeremonialRow ? baseWinH * 1.25 : baseWinH;
 
     for (let c = 0; c < options.cols; c++) {
+      if (isDefensiveRow) {
+        // Deterministic hash (never Math.random) so every load / every block renders identically
+        const hash =
+          (Math.imul(r + 1, 73856093) ^
+            Math.imul(c + 1, 19349663) ^
+            Math.imul(options.cols, 83492791)) >>>
+          0;
+        if (hash % 100 >= 30) continue;
+      }
       const wx = 20 + c * colStep + (colStep - winW) * 0.5;
 
       // Subtle rain & butter-lamp soot drip beneath each window sill
@@ -280,14 +297,16 @@ function createBatteredPalaceBlock(params: {
   const group = new THREE.Group();
   const taper = params.taper ?? 0.87;
 
-  // Tapered box geometry so granite walls batter inward (3-5m thick base narrowing upward)
+  // Battered fortress geometry: the roofline keeps its nominal footprint (w × d) while the
+  // base is flared by 1/taper (e.g. 1 / 0.85 ≈ +17%), giving the monumental sloped-wall silhouette.
   const geo = new THREE.BoxGeometry(params.w, params.h, params.d, 1, 1, 1);
   const pos = geo.attributes.position;
+  const invTaper = 1 / taper;
   for (let i = 0; i < pos.count; i++) {
     const vy = pos.getY(i);
-    if (vy > 0) {
-      pos.setX(i, pos.getX(i) * taper);
-      pos.setZ(i, pos.getZ(i) * taper);
+    if (vy < 0) {
+      pos.setX(i, pos.getX(i) * invTaper);
+      pos.setZ(i, pos.getZ(i) * invTaper);
     }
   }
   geo.computeVertexNormals();
@@ -328,8 +347,9 @@ function createBatteredPalaceBlock(params: {
   group.add(mesh);
 
   // 3D Protruding Bordó Lama Penba Frieze Molding (compacted tamarix band at top of wall)
-  const topW = params.w * taper;
-  const topD = params.d * taper;
+  // The roofline is now the un-tapered footprint, so frieze / cornice follow w × d directly.
+  const topW = params.w;
+  const topD = params.d;
   const penbaH = Math.min(0.28, params.h * 0.12);
   const penbaGeo = new THREE.BoxGeometry(topW + 0.08, penbaH, topD + 0.08);
   const penbaMat = new THREE.MeshStandardMaterial({
@@ -854,6 +874,44 @@ function createStaircaseSegment(
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
+   Helper: Main Zigzag Stairway (གཟིམ་ཆུང་ལམ། · gzim-chung lam)
+   Pure builder: local origin = bottom-left corner of the first flight. Each flight crosses the
+   full width `w`, climbs `totalH / segments` and advances `d / segments` toward -Z (up the hill),
+   with a square landing at every switchback. Reuses createStaircaseSegment (plain boxes, no CSG).
+   ══════════════════════════════════════════════════════════════════════════ */
+function createZigzagStairs(w: number, totalH: number, d: number, segments = 3) {
+  const group = new THREE.Group();
+  const landingMat = new THREE.MeshStandardMaterial({ color: "#f5f3ef", roughness: 0.8 });
+  const landingCapMat = new THREE.MeshStandardMaterial({ color: "#4a0a18", roughness: 0.65 });
+
+  const segH = totalH / segments;
+  const segD = d / segments;
+  let from: [number, number, number] = [0, 0, 0];
+
+  for (let i = 0; i < segments; i++) {
+    const goingRight = i % 2 === 0;
+    const to: [number, number, number] = [
+      goingRight ? w : 0,
+      segH * (i + 1),
+      -segD * (i + 1),
+    ];
+    group.add(createStaircaseSegment(from, to, 0.46, 0.55));
+
+    // Switchback landing (white body + Bordó Lama coping)
+    const landing = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.55, 0.62), landingMat);
+    landing.position.set(to[0], to[1], to[2]);
+    landing.castShadow = true;
+    landing.receiveShadow = true;
+    const cap = new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.1, 0.66), landingCapMat);
+    cap.position.set(to[0], to[1] + 0.32, to[2]);
+    group.add(landing, cap);
+
+    from = to;
+  }
+  return group;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
    Helper: Create Traditional Tibetan White Chörten Stupa (མཆོད་རྟེན། · mchod-rten)
    Features square throne base, stepped tiers, Bumpa dome, 13-wheel spire & Nyi-Zla
    ══════════════════════════════════════════════════════════════════════════ */
@@ -1204,45 +1262,114 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
       pedestalGroup.add(sphere);
     });
 
-    // Marpo Ri (Red Mountain) Sculpted Faceted Hill
-    const hillGeo = new THREE.CylinderGeometry(5.2, 8.8, 4.2, 24, 5);
-    hillGeo.scale(1.1, 1, 0.68);
+    // Marpo Ri (དམར་པོ་རི། · dmar-po ri): low-poly fractured granite massif.
+    // IcosahedronGeometry (non-indexed → crisp flat facets) projected onto the same elliptical
+    // envelope as before (flat summit plateau + battered flanks), then roughened with a
+    // deterministic position-based ridged noise (shared vertices always move together → no cracks).
+    const MARPO = { cx: -0.3, cy: 0.2, cz: -0.2, rx: 9.68, rz: 5.98, H: 4.2, plateau: 0.59 };
+    const marpoFlank = (rho: number) =>
+      Math.min(1, Math.max(0, (1 - rho) / (1 - MARPO.plateau)));
+    // The south face drops away in front of the palace (z > 1.2) so the white bastion and the
+    // gos-sku thangka wall stand clear of the rock instead of being swallowed by the summit plateau.
+    const marpoSouthDrop = (z: number) => {
+      const u = Math.min(1, Math.max(0, (z - 1.2) / 2.0));
+      return 1 - 0.6 * (u * u * (3 - 2 * u));
+    };
+    // Smooth (noise-free) surface height: used to seat trees & the main stairway on the slope
+    const marpoSurfaceY = (x: number, z: number) => {
+      const rho = Math.hypot((x - MARPO.cx) / MARPO.rx, (z - MARPO.cz) / MARPO.rz);
+      const t = marpoFlank(rho);
+      const eastDescent = x > 2 ? -(x - 2) * 0.18 : 0;
+      return MARPO.cy + (t * MARPO.H + eastDescent * t) * marpoSouthDrop(z);
+    };
+
+    const hillGeo = new THREE.IcosahedronGeometry(1, 7);
     const hillPos = hillGeo.attributes.position;
+    const hillColors = new Float32Array(hillPos.count * 3);
+    const rockDark = new THREE.Color("#5c5048"); // oxidised granite
+    const rockLight = new THREE.Color("#7d6d5b"); // sun-bleached scree
+    const alpineGreen = new THREE.Color("#58693a"); // juniper / scrub on the gentle foothills
+    const tmpColor = new THREE.Color();
+
     for (let i = 0; i < hillPos.count; i++) {
-      const vx = hillPos.getX(i);
-      const vy = hillPos.getY(i);
-      const vz = hillPos.getZ(i);
-      // Organic craggy rock facets
-      const ridgeNoise =
-        Math.sin(vx * 1.1) * 0.35 +
-        Math.cos(vz * 1.4) * 0.28 +
-        Math.sin((vx + vz) * 2.1) * 0.15;
-      hillPos.setX(i, vx + ridgeNoise * 0.45);
-      // Higher in the center-left, sloping down on the far right (matching Potala profile)
-      const slopeShift = vx > 2 ? -(vx - 2) * 0.18 : 0;
-      hillPos.setY(i, vy + slopeShift + Math.abs(ridgeNoise) * 0.25);
+      const ux = hillPos.getX(i);
+      const uy = hillPos.getY(i);
+      const uz = hillPos.getZ(i);
+
+      // Upper hemisphere → disk (orthographic); lower hemisphere collapses onto the base rim
+      let dx = ux;
+      let dz = uz;
+      let rho = Math.hypot(ux, uz);
+      if (uy < 0) {
+        const len = Math.max(rho, 1e-4);
+        dx = ux / len;
+        dz = uz / len;
+        rho = 1;
+      }
+      const x = MARPO.cx + dx * MARPO.rx;
+      const z = MARPO.cz + dz * MARPO.rz;
+      const t = marpoFlank(rho);
+
+      // Ridged, strata-like granite noise (fractures stronger on the flanks than on the summit)
+      const ridge =
+        0.55 * Math.sin(x * 1.3 + z * 0.7) +
+        0.3 * (1 - 2 * Math.abs(Math.sin(x * 2.9 - z * 2.3))) +
+        0.15 * Math.sin(z * 3.7 + x * 1.1);
+      const weight = 0.25 + 0.75 * (4 * t * (1 - t));
+      const eastDescent = x > 2 ? -(x - 2) * 0.18 : 0;
+
+      const y = Math.max(
+        MARPO.cy,
+        MARPO.cy + (t * MARPO.H + eastDescent * t) * marpoSouthDrop(z) + ridge * 0.42 * weight
+      );
+      hillPos.setXYZ(i, x + ridge * 0.2 * weight * (t > 0 ? 1 : 0), y, z);
+
+      // Vertex colours: green foothills → granite flanks → bleached summit scree
+      const rockMix = Math.min(1, Math.max(0, (t - 0.12) / 0.38 + ridge * 0.18));
+      tmpColor.copy(rockDark).lerp(rockLight, Math.min(1, Math.max(0, 0.5 + ridge * 0.5)));
+      tmpColor.lerp(alpineGreen, 1 - rockMix);
+      hillColors[i * 3] = tmpColor.r;
+      hillColors[i * 3 + 1] = tmpColor.g;
+      hillColors[i * 3 + 2] = tmpColor.b;
     }
+    hillGeo.setAttribute("color", new THREE.BufferAttribute(hillColors, 3));
     hillGeo.computeVertexNormals();
 
     const hillMat = new THREE.MeshStandardMaterial({
-      color: "#4d6b3c",
-      roughness: 0.88,
-      metalness: 0.04,
+      color: "#ffffff",
+      vertexColors: true,
+      roughness: 1.0,
+      metalness: 0.02,
       flatShading: true,
     });
     const hillMesh = new THREE.Mesh(hillGeo, hillMat);
-    hillMesh.position.set(-0.3, 2.3, -0.2);
     hillMesh.receiveShadow = true;
     hillMesh.castShadow = true;
     proceduralGroup.add(hillMesh);
     mountainMeshRef.current = hillMesh;
 
     // Rocky Western Crag Outcrop & Fractured Granite Bedrock Interlocking with Palace Base
-    const cragGeo = new THREE.DodecahedronGeometry(2.5, 1);
+    // Deterministic position-based roughening (shared vertices move together → no cracks)
+    const roughenRock = (geo: THREE.BufferGeometry, amp: number) => {
+      const p = geo.attributes.position;
+      for (let i = 0; i < p.count; i++) {
+        const x = p.getX(i);
+        const y = p.getY(i);
+        const z = p.getZ(i);
+        const n =
+          0.6 * Math.sin(x * 2.7 + y * 1.9) +
+          0.4 * (1 - 2 * Math.abs(Math.sin(z * 3.1 - x * 2.3 + y * 1.3)));
+        const k = 1 + n * amp;
+        p.setXYZ(i, x * k, y * (1 + n * amp * 0.7), z * k);
+      }
+      geo.computeVertexNormals();
+    };
+    const cragGeo = new THREE.DodecahedronGeometry(2.5, 2);
     cragGeo.scale(1.1, 1.35, 0.9);
+    roughenRock(cragGeo, 0.24);
     const cragMat = new THREE.MeshStandardMaterial({
-      color: "#6b7280",
-      roughness: 0.85,
+      color: "#736558",
+      roughness: 0.95,
       flatShading: true,
     });
     const westCrag = new THREE.Mesh(cragGeo, cragMat);
@@ -1262,6 +1389,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     bedrockOutcrops.forEach(([rx, ry, rz, sx, sy, sz], idx) => {
       const rockGeo = new THREE.IcosahedronGeometry(1.0, 1);
       rockGeo.scale(sx, sy, sz);
+      roughenRock(rockGeo, 0.2);
       const rockMesh = new THREE.Mesh(rockGeo, cragMat);
       rockMesh.position.set(rx, ry, rz);
       rockMesh.rotation.set(idx * 0.4, idx * 0.7, idx * 0.25);
@@ -1298,7 +1426,10 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     [-1.15, -0.38, 0.38, 1.15].forEach((bx) => {
       const bayGeo = new THREE.BoxGeometry(0.34, 2.72, 0.22);
       const bay = new THREE.Mesh(bayGeo, darkTimberBayMat);
-      bay.position.set(-0.2 + bx, 6.2, 1.11);
+      // Wall face now flares outward at the base (z≈1.37 bottom → 1.2 top): sit the bays on the
+      // slanted face and lean them back with the batter so they never sink into the wall.
+      bay.position.set(-0.2 + bx, 6.2, 1.31);
+      bay.rotation.x = -0.054;
       bay.castShadow = true;
       proceduralGroup.add(bay);
     });
@@ -1317,12 +1448,12 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
         new THREE.BoxGeometry(0.32, 0.46, 0.04),
         snambuBlackMat
       );
-      curtain.position.set(-0.2 + px, 5.15, 1.19);
+      curtain.position.set(-0.2 + px, 5.15, 1.38);
       const trim = new THREE.Mesh(
         new THREE.BoxGeometry(0.33, 0.05, 0.045),
         snambuWhiteTrimMat
       );
-      trim.position.set(-0.2 + px, 5.32, 1.195);
+      trim.position.set(-0.2 + px, 5.32, 1.385);
       proceduralGroup.add(curtain, trim);
     });
 
@@ -1454,7 +1585,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
       rows: 4,
       windowStartRow: 4, // Smooth windowless Gos-sku thangka display wall
     });
-    frontApron.position.set(-0.2, 2.88, 1.38);
+    frontApron.position.set(-0.2, 2.88, 1.48);
     proceduralGroup.add(frontApron);
 
     // Gilded Bronze Gos-sku Thangka Suspension Mooring Hooks along the top cornice of the Gos-sku Wall
@@ -1469,7 +1600,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
         new THREE.TorusGeometry(0.045, 0.014, 8, 12),
         hookMat
       );
-      hook.position.set(hx, 3.88, 2.08);
+      hook.position.set(hx, 3.86, 2.31);
       proceduralGroup.add(hook);
     }
 
@@ -1547,7 +1678,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
       cols: 8,
       rows: 3,
     });
-    eastMidWhite.position.set(3.85, 4.3, 0.55);
+    eastMidWhite.position.set(3.85, 4.3, 0.35);
     proceduralGroup.add(eastMidWhite);
 
     /* ──────────────────────────────────────────────────────────────────
@@ -1673,7 +1804,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     );
     // 3. Central Upper Stairway into White Palace
     stairsGroup.add(
-      createStaircaseSegment([-2.4, 3.2, 2.1], [0.2, 4.2, 1.65], 0.45, 0.6)
+      createStaircaseSegment([-2.4, 3.2, 2.22], [-0.4, 3.92, 2.28], 0.45, 0.6)
     );
     // 4. Western Ridge Staircase (Left side of Marpo Ri)
     stairsGroup.add(
@@ -1683,6 +1814,21 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     stairsGroup.add(
       createStaircaseSegment([5.6, 2.2, 2.5], [7.9, 1.35, 3.5], 0.44, 0.55)
     );
+
+    // 6. Main central zigzag stairway (gzim-chung lam) seated on the south face of Marpo Ri:
+    //    4 switchbacks from the Shol foothills up to the foot of the Gos-sku wall.
+    const mainStairsBaseZ = 5.25;
+    const mainStairsTopZ = 2.75;
+    const mainStairsBaseY = marpoSurfaceY(-0.3, mainStairsBaseZ) + 0.12;
+    const mainStairsTopY = marpoSurfaceY(-0.3, mainStairsTopZ) + 0.12;
+    const mainStairs = createZigzagStairs(
+      1.6,
+      mainStairsTopY - mainStairsBaseY,
+      mainStairsBaseZ - mainStairsTopZ,
+      4
+    );
+    mainStairs.position.set(-1.1, mainStairsBaseY, mainStairsBaseZ);
+    stairsGroup.add(mainStairs);
 
     /* ──────────────────────────────────────────────────────────────────
        F. SHOL WALLED VILLAGE & PERIMETER GATES (ཞོལ་གྲོང་། · Base of Palace)
@@ -1844,9 +1990,9 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
 
     for (let i = 0; i < treeCount; i++) {
       const tx = (Math.random() - 0.5) * 14.5;
-      const tz = 1.6 + Math.random() * 3.9;
-      const distCenter = Math.hypot(tx * 0.65, tz - 1.2);
-      const ty = Math.max(0.65, 2.75 - distCenter * 0.34);
+      // Keep groves on the flanks/foothills (z ≥ 2.8): the summit plateau belongs to the palace blocks
+      const tz = 2.8 + Math.random() * 2.7;
+      const ty = Math.max(0.65, marpoSurfaceY(tx, tz) + 0.05);
       const scale = 0.65 + Math.random() * 0.55;
 
       dummy.position.set(tx, ty + 0.15 * scale, tz);
@@ -2045,11 +2191,15 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     const hillMat = hill.material as THREE.MeshStandardMaterial;
     if (baseStyle === "maquette") {
       // Crisp white architectural maquette matching /potala/potala-3d-render.jpg
+      hillMat.vertexColors = false;
       hillMat.color.set("#f5f5f4");
+      hillMat.needsUpdate = true;
       foliage.visible = false;
     } else {
-      // Lush emerald Marpo Ri hill matching /potala/potala-diorama-model.png
-      hillMat.color.set("#4d6b3c");
+      // Marpo Ri granite massif with per-vertex rock / alpine-scrub colours
+      hillMat.vertexColors = true;
+      hillMat.color.set("#ffffff");
+      hillMat.needsUpdate = true;
       foliage.visible = true;
     }
   }, [baseStyle]);
