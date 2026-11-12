@@ -432,9 +432,23 @@ function createBatteredPalaceBlock(params: {
    dougong timber brackets, upturned curved corner eaves, Makara ridge ends,
    treasure vases (Bumpa), and central Dharma Wheel + Nyi-Da finial.
    ══════════════════════════════════════════════════════════════════════════ */
-function createGildedTibetanRoof(w: number, d: number, h: number) {
+function createGildedTibetanRoof(
+  w: number,
+  d: number,
+  h: number,
+  options?: {
+    lanternH?: number;
+    doubleEave?: boolean;
+    finials?: 1 | 3;
+    tallSpire?: boolean;
+  }
+) {
   const roofGroup = new THREE.Group();
   const goldRoughTex = getGoldRoofRoughnessTexture();
+  const lanternH = options?.lanternH ?? 0.34;
+  const doubleEave = options?.doubleEave ?? false;
+  const finials = options?.finials ?? 3;
+  const tallSpire = options?.tallSpire ?? false;
 
   const goldMat = new THREE.MeshStandardMaterial({
     color: "#facc15",
@@ -453,18 +467,78 @@ function createGildedTibetanRoof(w: number, d: number, h: number) {
     metalness: 0.15,
   });
 
+  const grilleMat = new THREE.MeshStandardMaterial({
+    color: "#2a050e",
+    roughness: 0.65,
+    metalness: 0.2,
+  });
+
+  // 0. Clerestory Timber Lantern Pavilion (གསེར་ཐོག་ལྷ་ཁང་།) beneath the golden roof
+  //    Matches `A cross-section of the Potala in Lhasa.webp`: pillared skylight drum over the Serdong stupas
+  if (lanternH > 0) {
+    const coreGeo = new THREE.BoxGeometry(w * 0.82, lanternH, d * 0.8);
+    const coreMesh = new THREE.Mesh(coreGeo, grilleMat);
+    coreMesh.position.y = lanternH * 0.5;
+    roofGroup.add(coreMesh);
+
+    // Golden lattice clerestory band around lantern
+    const latticeBand = new THREE.Mesh(
+      new THREE.BoxGeometry(w * 0.85, lanternH * 0.45, d * 0.83),
+      goldMat
+    );
+    latticeBand.position.y = lanternH * 0.56;
+    roofGroup.add(latticeBand);
+
+    // Corner & bay Bordó Lama colonnade pillars + Tibetan bracket capitals (gzhu-ma)
+    const pillarCols = [-0.42, -0.14, 0.14, 0.42];
+    pillarCols.forEach((px) => {
+      [-0.42, 0.42].forEach((pz) => {
+        const col = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.028, 0.032, lanternH, 8),
+          dougongMat
+        );
+        col.position.set(px * w, lanternH * 0.5, pz * d);
+        const cap = new THREE.Mesh(
+          new THREE.BoxGeometry(0.11, 0.045, 0.06),
+          goldMat
+        );
+        cap.position.set(px * w, lanternH * 0.9, pz * d);
+        roofGroup.add(col, cap);
+      });
+    });
+  }
+
+  const y0 = lanternH;
+
   // 1. Dougong wooden bracket cornice tier beneath the golden eaves
   const dougongGeo = new THREE.BoxGeometry(w * 1.04, h * 0.18, d * 1.04);
   const dougongMesh = new THREE.Mesh(dougongGeo, dougongMat);
-  dougongMesh.position.y = -h * 0.06;
+  dougongMesh.position.y = y0 - h * 0.04;
   roofGroup.add(dougongMesh);
 
   // 2. Lower flared gilded eave tier
-  const baseGeo = new THREE.BoxGeometry(w * 1.18, h * 0.22, d * 1.18);
+  const baseGeo = new THREE.BoxGeometry(w * 1.18, h * 0.2, d * 1.18);
   const baseMesh = new THREE.Mesh(baseGeo, goldMat);
-  baseMesh.position.y = h * 0.1;
+  baseMesh.position.y = y0 + h * 0.1;
   baseMesh.castShadow = true;
   roofGroup.add(baseMesh);
+
+  // Optional 2nd superimposed eave tier (Great Fifth Dalai Lama central canopy in cross-section)
+  const upperOffset = doubleEave ? h * 0.24 : 0;
+  if (doubleEave) {
+    const midNeck = new THREE.Mesh(
+      new THREE.BoxGeometry(w * 0.84, h * 0.18, d * 0.84),
+      dougongMat
+    );
+    midNeck.position.y = y0 + h * 0.22;
+    const upperEave = new THREE.Mesh(
+      new THREE.BoxGeometry(w * 1.02, h * 0.16, d * 1.02),
+      goldMat
+    );
+    upperEave.position.y = y0 + h * 0.32;
+    upperEave.castShadow = true;
+    roofGroup.add(midNeck, upperEave);
+  }
 
   // 3. Upturned Curved Eave Corners & Chu-srin (Makara) Bronze Gargoyle Rain Spouts
   [
@@ -475,7 +549,7 @@ function createGildedTibetanRoof(w: number, d: number, h: number) {
   ].forEach(([sx, sz]) => {
     const spurGeo = new THREE.ConeGeometry(0.075, 0.28, 6);
     const spur = new THREE.Mesh(spurGeo, goldMat);
-    spur.position.set(sx * w * 0.6, h * 0.24, sz * d * 0.6);
+    spur.position.set(sx * w * 0.6, y0 + h * 0.24, sz * d * 0.6);
     spur.rotation.z = -sx * 0.55;
     spur.rotation.x = sz * 0.55;
     roofGroup.add(spur);
@@ -483,25 +557,25 @@ function createGildedTibetanRoof(w: number, d: number, h: number) {
     // Chu-srin (Makara sea-dragon) horizontal corner rain spout protruding below eave
     const spoutGeo = new THREE.CylinderGeometry(0.018, 0.032, 0.22, 6);
     const spout = new THREE.Mesh(spoutGeo, goldMat);
-    spout.position.set(sx * w * 0.64, h * 0.06, sz * d * 0.64);
+    spout.position.set(sx * w * 0.64, y0 + h * 0.06, sz * d * 0.64);
     spout.rotation.z = sx * (Math.PI * 0.42);
     spout.rotation.y = sz * 0.35;
     roofGroup.add(spout);
   });
 
   // 4. Sloped hip-and-gable roof body (4-sided pyramid frustum)
-  const hipGeo = new THREE.CylinderGeometry(w * 0.34, w * 0.8, h * 0.72, 4);
+  const hipGeo = new THREE.CylinderGeometry(w * 0.32, w * 0.8, h * 0.68, 4);
   hipGeo.rotateY(Math.PI / 4);
   hipGeo.scale(1, 1, d / w);
   const hipMesh = new THREE.Mesh(hipGeo, goldMat);
-  hipMesh.position.y = h * 0.46;
+  hipMesh.position.y = y0 + upperOffset + h * 0.44;
   hipMesh.castShadow = true;
   roofGroup.add(hipMesh);
 
   // 5. Golden Ridge Beam + Makara Dragon-Fish Upturned Ends
-  const ridgeGeo = new THREE.BoxGeometry(w * 0.58, h * 0.2, d * 0.16);
+  const ridgeGeo = new THREE.BoxGeometry(w * 0.58, h * 0.18, d * 0.16);
   const ridgeMesh = new THREE.Mesh(ridgeGeo, goldMat);
-  ridgeMesh.position.y = h * 0.82;
+  ridgeMesh.position.y = y0 + upperOffset + h * 0.8;
   roofGroup.add(ridgeMesh);
 
   [-w * 0.31, w * 0.31].forEach((mx, idx) => {
@@ -509,33 +583,43 @@ function createGildedTibetanRoof(w: number, d: number, h: number) {
       new THREE.ConeGeometry(0.07, 0.22, 8),
       goldMat
     );
-    makara.position.set(mx, h * 0.92, 0);
+    makara.position.set(mx, y0 + upperOffset + h * 0.9, 0);
     makara.rotation.z = idx === 0 ? 0.4 : -0.4;
     roofGroup.add(makara);
   });
 
-  // 6. Twin Golden Bumpa Treasure Vase Finials (Ganjira) on ridge
-  [-w * 0.18, w * 0.18].forEach((fx) => {
-    const finialGeo = new THREE.ConeGeometry(0.085, 0.3, 10);
-    const finial = new THREE.Mesh(finialGeo, goldMat);
-    finial.position.set(fx, h * 1.02, 0);
-    roofGroup.add(finial);
-  });
+  // 6. Gser-tog / Ganjira Ridge Finials (1 central tall spire or 3 triple finials per cross-section)
+  if (finials === 3) {
+    [-w * 0.19, 0, w * 0.19].forEach((fx, idx) => {
+      const isCenter = idx === 1;
+      const finialH = isCenter ? (tallSpire ? 0.48 : 0.36) : 0.28;
+      const finialGeo = new THREE.ConeGeometry(isCenter ? 0.09 : 0.075, finialH, 10);
+      const finial = new THREE.Mesh(finialGeo, goldMat);
+      finial.position.set(fx, y0 + upperOffset + h * 0.98 + finialH * 0.35, 0);
+      roofGroup.add(finial);
+    });
+  } else {
+    const spireH = tallSpire ? 0.56 : 0.38;
+    const spire = new THREE.Mesh(new THREE.ConeGeometry(0.095, spireH, 12), goldMat);
+    spire.position.set(0, y0 + upperOffset + h * 1.0 + spireH * 0.4, 0);
+    roofGroup.add(spire);
+  }
 
   // 7. Central Dharma Wheel (Chokhor) & Sacred Nyi-Da (Crescent Moon + Sun + Jyoti) Finial
-  const wheelGeo = new THREE.TorusGeometry(0.12, 0.03, 8, 16);
+  const topY = y0 + upperOffset + (tallSpire ? h * 1.22 : h * 1.05);
+  const wheelGeo = new THREE.TorusGeometry(0.11, 0.028, 8, 16);
   const wheel = new THREE.Mesh(wheelGeo, goldMat);
-  wheel.position.set(0, h * 1.06, 0);
+  wheel.position.set(0, topY, 0);
   roofGroup.add(wheel);
 
   const crescentGeo = new THREE.TorusGeometry(0.08, 0.02, 8, 16, Math.PI);
   crescentGeo.rotateZ(Math.PI);
   const crescent = new THREE.Mesh(crescentGeo, goldMat);
-  crescent.position.set(0, h * 1.24, 0);
+  crescent.position.set(0, topY + 0.17, 0);
   roofGroup.add(crescent);
 
   const sunDisc = new THREE.Mesh(new THREE.SphereGeometry(0.055, 12, 12), goldMat);
-  sunDisc.position.set(0, h * 1.28, 0);
+  sunDisc.position.set(0, topY + 0.21, 0);
   roofGroup.add(sunDisc);
 
   return roofGroup;
@@ -836,8 +920,8 @@ function createStaircaseSegment(
   const vStart = new THREE.Vector3(...start);
   const vEnd = new THREE.Vector3(...end);
   const diff = new THREE.Vector3().subVectors(vEnd, vStart);
-  const length = diff.length();
-  const mid = new THREE.Vector3().addVectors(vStart, vEnd).multiplyScalar(0.5);
+  const horizLen = Math.hypot(diff.x, diff.z);
+  const yaw = -Math.atan2(diff.z, diff.x);
 
   const whiteMat = new THREE.MeshStandardMaterial({
     color: "#f5f3ef",
@@ -848,27 +932,57 @@ function createStaircaseSegment(
     roughness: 0.65,
   });
 
-  // Main whitewashed stone ramp/wall body
-  const bodyGeo = new THREE.BoxGeometry(length, wallHeight, width);
-  const bodyMesh = new THREE.Mesh(bodyGeo, whiteMat);
-  bodyMesh.castShadow = true;
-  bodyMesh.receiveShadow = true;
-  group.add(bodyMesh);
+  // Flat perimeter wall vs sloped sawtooth stepped parapet (matching peggy_marco-potala-1027014.jpg)
+  if (Math.abs(diff.y) < 0.08 || horizLen < 0.2) {
+    const mid = new THREE.Vector3().addVectors(vStart, vEnd).multiplyScalar(0.5);
+    const bodyMesh = new THREE.Mesh(
+      new THREE.BoxGeometry(horizLen, wallHeight, width),
+      whiteMat
+    );
+    bodyMesh.castShadow = true;
+    bodyMesh.receiveShadow = true;
+    const capMesh = new THREE.Mesh(
+      new THREE.BoxGeometry(horizLen + 0.04, 0.11, width + 0.06),
+      redCapMat
+    );
+    capMesh.position.y = wallHeight / 2 + 0.05;
+    group.add(bodyMesh, capMesh);
+    group.position.copy(mid);
+    group.rotation.y = yaw;
+    return group;
+  }
 
-  // Crimson parapet coping along top edges
-  const capGeo = new THREE.BoxGeometry(length + 0.04, 0.11, width + 0.06);
-  const capMesh = new THREE.Mesh(capGeo, redCapMat);
-  capMesh.position.y = wallHeight / 2 + 0.05;
-  group.add(capMesh);
+  // Stepped sawtooth masonry parapet (horizontal white stone tiers with Bordó Lama coping)
+  const stepCount = Math.max(5, Math.min(11, Math.round(horizLen * 2.2)));
+  const stepLen = (horizLen / stepCount) * 1.08;
 
-  // Orient segment from start to end
-  group.position.copy(mid);
-  const horizLen = Math.hypot(diff.x, diff.z);
-  const yaw = -Math.atan2(diff.z, diff.x);
-  const pitch = Math.atan2(diff.y, horizLen);
-  group.rotation.order = "YXZ";
-  group.rotation.y = yaw;
-  group.rotation.z = pitch;
+  for (let s = 0; s < stepCount; s++) {
+    const t = (s + 0.5) / stepCount;
+    const sx = vStart.x + diff.x * t;
+    const sy = vStart.y + diff.y * t;
+    const sz = vStart.z + diff.z * t;
+
+    const stepGroup = new THREE.Group();
+    const blockH = wallHeight + 0.12;
+    const block = new THREE.Mesh(
+      new THREE.BoxGeometry(stepLen, blockH, width),
+      whiteMat
+    );
+    block.position.y = -0.06;
+    block.castShadow = true;
+    block.receiveShadow = true;
+
+    const cap = new THREE.Mesh(
+      new THREE.BoxGeometry(stepLen + 0.03, 0.095, width + 0.05),
+      redCapMat
+    );
+    cap.position.y = wallHeight / 2 + 0.045;
+
+    stepGroup.add(block, cap);
+    stepGroup.position.set(sx, sy, sz);
+    stepGroup.rotation.y = yaw;
+    group.add(stepGroup);
+  }
 
   return group;
 }
@@ -1014,6 +1128,111 @@ function createLungtaPrayerFlagString(
   return group;
 }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   Helper: Create Golden Funerary Serdong Reliquary Stupa (གསེར་གདུང་། · gser-gdung)
+   Matches the multi-story indoor stupas in `A cross-section of the Potala in Lhasa.webp`:
+   stepped Lion Throne (Seng-khri), turquoise/coral inlaid bands, bulbous Bumpa dome,
+   Bre-ba harmika, 13 Dharma Wheels (Chos-'khor bcu-gsum), parasol & Nyi-Zla crown.
+   ══════════════════════════════════════════════════════════════════════════ */
+function createGoldenSerdongStupa(totalH = 2.45, widthScale = 1.0) {
+  const group = new THREE.Group();
+  const goldRoughTex = getGoldRoofRoughnessTexture();
+  const goldMat = new THREE.MeshStandardMaterial({
+    color: "#facc15",
+    emissive: "#78350f",
+    emissiveIntensity: 0.28,
+    roughnessMap: goldRoughTex,
+    roughness: 0.2,
+    metalness: 0.92,
+  });
+  const turquoiseMat = new THREE.MeshStandardMaterial({
+    color: "#0d9488",
+    emissive: "#115e59",
+    emissiveIntensity: 0.25,
+    roughness: 0.35,
+    metalness: 0.4,
+  });
+  const coralMat = new THREE.MeshStandardMaterial({
+    color: "#9f1239",
+    roughness: 0.4,
+    metalness: 0.3,
+  });
+
+  const w = 0.88 * widthScale;
+
+  // 1. Stepped Lion Throne Base (Seng-khri) + 4 Enlightenment Steps (Bang-rim)
+  const plinth = new THREE.Mesh(
+    new THREE.BoxGeometry(w * 1.12, totalH * 0.14, w * 1.12),
+    goldMat
+  );
+  plinth.position.y = totalH * 0.07;
+  group.add(plinth);
+
+  const throneWaist = new THREE.Mesh(
+    new THREE.BoxGeometry(w * 0.94, totalH * 0.14, w * 0.94),
+    turquoiseMat
+  );
+  throneWaist.position.y = totalH * 0.21;
+  group.add(throneWaist);
+
+  for (let s = 0; s < 4; s++) {
+    const stepW = w * (1.0 - s * 0.08);
+    const step = new THREE.Mesh(
+      new THREE.BoxGeometry(stepW, totalH * 0.042, stepW),
+      s % 2 === 0 ? goldMat : coralMat
+    );
+    step.position.y = totalH * (0.3 + s * 0.042);
+    group.add(step);
+  }
+
+  // 2. Bulbous Lotus Vase Dome (Bum-pa) with sacred Kumbha niche
+  const bumpa = new THREE.Mesh(
+    new THREE.SphereGeometry(w * 0.38, 18, 16),
+    goldMat
+  );
+  bumpa.scale.set(1, 1.12, 1);
+  bumpa.position.y = totalH * 0.56;
+  group.add(bumpa);
+
+  const niche = new THREE.Mesh(
+    new THREE.BoxGeometry(w * 0.22, totalH * 0.12, w * 0.08),
+    turquoiseMat
+  );
+  niche.position.set(0, totalH * 0.56, w * 0.36);
+  group.add(niche);
+
+  // 3. Harmika Cube (Bre-ba)
+  const harmika = new THREE.Mesh(
+    new THREE.BoxGeometry(w * 0.32, totalH * 0.07, w * 0.32),
+    coralMat
+  );
+  harmika.position.y = totalH * 0.72;
+  group.add(harmika);
+
+  // 4. Conical 13-Wheel Spire (Chos-'khor bcu-gsum) reaching into the skylight lantern
+  const spire = new THREE.Mesh(
+    new THREE.CylinderGeometry(w * 0.045, w * 0.15, totalH * 0.22, 14),
+    goldMat
+  );
+  spire.position.y = totalH * 0.86;
+  group.add(spire);
+
+  // 5. Royal Parasol (Gdugs) & Nyi-Zla Finial
+  const parasol = new THREE.Mesh(
+    new THREE.CylinderGeometry(w * 0.16, w * 0.19, totalH * 0.025, 16),
+    turquoiseMat
+  );
+  parasol.position.y = totalH * 0.97;
+  const jewel = new THREE.Mesh(
+    new THREE.SphereGeometry(w * 0.055, 10, 10),
+    goldMat
+  );
+  jewel.position.y = totalH * 1.01;
+  group.add(parasol, jewel);
+
+  return group;
+}
+
 export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
   const mountRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -1024,6 +1243,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
   const [baseStyle, setBaseStyle] = useState<BaseStyle>("island");
   const [cameraPreset, setCameraPreset] = useState<CameraViewPreset>("diorama");
   const [autoRotate, setAutoRotate] = useState<boolean>(true);
+  const [crossSection, setCrossSection] = useState<boolean>(false);
   const [showTripoStudio, setShowTripoStudio] = useState<boolean>(false);
   const [customModelName, setCustomModelName] = useState<string | null>(null);
   const [copiedPromptId, setCopiedPromptId] = useState<string | null>(null);
@@ -1038,6 +1258,8 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
   const customGlbGroupRef = useRef<THREE.Group | null>(null);
   const islandFoliageGroupRef = useRef<THREE.Group | null>(null);
   const mountainMeshRef = useRef<THREE.Mesh | null>(null);
+  const redPalaceInteriorGroupRef = useRef<THREE.Group | null>(null);
+  const redPalaceCutawayMeshesRef = useRef<THREE.Object3D[]>([]);
   const sunBodyRef = useRef<THREE.Group | null>(null);
   const moonBodyRef = useRef<THREE.Group | null>(null);
   const cameraTargetGoalRef = useRef<{
@@ -1487,7 +1709,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     redPalaceUpper.position.set(-0.2, 8.55, -0.25);
     proceduralGroup.add(redPalaceUpper);
 
-    // 5. Flanking Bordó Lama Sacred Chapels (West & East of Red Palace)
+    // 5. Flanking Bordó Lama & Imperial Sacred Chapels (West & East of Red Palace)
     const westOchreWing = createBatteredPalaceBlock({
       w: 1.35,
       h: 2.2,
@@ -1514,44 +1736,164 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     eastOchreWing.position.set(2.3, 6.2, -0.05);
     proceduralGroup.add(eastOchreWing);
 
+    // 6. Nyi-'od (ཉི་འོད། · Sunshine Apartment — #15 in Axonometric Map) atop East Inner White Wing
+    const nyiodSunshineApt = createBatteredPalaceBlock({
+      w: 1.75,
+      h: 0.88,
+      d: 1.45,
+      taper: 0.94,
+      wallColor: "#d97706",
+      friezeColor: "#380714",
+      cols: 4,
+      rows: 1,
+    });
+    nyiodSunshineApt.position.set(3.35, 7.82, -0.2);
+    proceduralGroup.add(nyiodSunshineApt);
+
+    // Register Red Palace outer facade objects for Cross-Section X-Ray cutaway mode
+    const redCutawayList: THREE.Object3D[] = [
+      redPalaceMain,
+      redPalaceMidTier,
+      redPalaceUpper,
+    ];
+
+    /* ──────────────────────────────────────────────────────────────────
+       B2. RED PALACE INTERIOR SANCTUARY (Cross-Section Mode · 实测图62 红宫纵剖面)
+           Houses the 3-story Golden Serdong Stupas of the 5th & 13th Dalai Lamas,
+           smaller lineage stupas, and the 44-columned Sishi Phuntsok Great Assembly Hall
+       ────────────────────────────────────────────────────────────────── */
+    const redInteriorGroup = new THREE.Group();
+    redInteriorGroup.position.set(-0.2, 4.55, -0.2);
+    redInteriorGroup.visible = false;
+    proceduralGroup.add(redInteriorGroup);
+    redPalaceInteriorGroupRef.current = redInteriorGroup;
+
+    // 1. Three internal floor slabs & gallery balconies matching the cross-section drawing
+    const slabMat = new THREE.MeshStandardMaterial({
+      color: "#d6ccc2",
+      roughness: 0.65,
+    });
+    const beamMat = new THREE.MeshStandardMaterial({
+      color: "#380714",
+      roughness: 0.55,
+    });
+    [0.05, 1.05, 2.05, 3.05].forEach((sy, sIdx) => {
+      const slab = new THREE.Mesh(
+        new THREE.BoxGeometry(4.1, 0.08, 2.1),
+        sIdx === 0 ? slabMat : beamMat
+      );
+      slab.position.set(0, sy, 0);
+      redInteriorGroup.add(slab);
+    });
+
+    // 2. Great Fifth Dalai Lama Golden Serdong Stupa (འཛམ་གླིང་རྒྱན་གཅིག · 14.85m, 3 stories tall)
+    const fifthDalaiSerdong = createGoldenSerdongStupa(3.45, 1.15);
+    fifthDalaiSerdong.position.set(-0.35, 0.08, -0.05);
+    redInteriorGroup.add(fifthDalaiSerdong);
+
+    // 3. Thirteenth Dalai Lama Golden Serdong Stupa (ཐུབ་བསྟན་རྒྱ་མཚོ། · 14m, far-left in cross-section)
+    const thirteenthDalaiSerdong = createGoldenSerdongStupa(3.25, 1.02);
+    thirteenthDalaiSerdong.position.set(-1.55, 0.08, -0.05);
+    redInteriorGroup.add(thirteenthDalaiSerdong);
+
+    // 4. Lineage Serdong Stupas of the 7th, 8th & 9th Dalai Lamas (East & North chapels)
+    const seventhDalaiSerdong = createGoldenSerdongStupa(1.85, 0.68);
+    seventhDalaiSerdong.position.set(1.35, 1.08, -0.05);
+    const eighthDalaiSerdong = createGoldenSerdongStupa(1.45, 0.55);
+    eighthDalaiSerdong.position.set(0.45, 2.08, -0.45);
+    redInteriorGroup.add(seventhDalaiSerdong, eighthDalaiSerdong);
+
+    // 5. Sishi Phuntsok (སྲིད་ཞི་ཕུན་ཚོགས།) Great Western Assembly Hall Hypostyle Columns + Gzhu-ma Capitals
+    const hallColMat = new THREE.MeshStandardMaterial({
+      color: "#7f1d1d",
+      roughness: 0.45,
+    });
+    const capitalGoldMat = new THREE.MeshStandardMaterial({
+      color: "#facc15",
+      roughness: 0.25,
+      metalness: 0.88,
+    });
+    for (let cx = 0; cx < 4; cx++) {
+      for (let cz = -1; cz <= 1; cz++) {
+        const colX = 0.25 + cx * 0.42;
+        const colZ = cz * 0.55;
+        const col = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.042, 0.05, 1.95, 10),
+          hallColMat
+        );
+        col.position.set(colX, 1.05, colZ);
+        const gzhumaCap = new THREE.Mesh(
+          new THREE.BoxGeometry(0.22, 0.065, 0.08),
+          capitalGoldMat
+        );
+        gzhumaCap.position.set(colX, 1.96, colZ);
+        redInteriorGroup.add(col, gzhumaCap);
+      }
+    }
+
     /* ──────────────────────────────────────────────────────────────────
        C. THE SEVEN GOLDEN ROOFS (གསེར་ཐོག་བདུན། · 7 Gilded Bronze Gyaphib Roofs)
-       Crowning the funerary stupas (Serdong) of the Dalai Lamas on the Red Palace
+       Crowning the funerary stupas (Serdong) with Clerestory Lanterns per cross-section
        ────────────────────────────────────────────────────────────────── */
-    // 1. Central Great Fifth Dalai Lama Stupa Roof
-    const centerGoldRoof = createGildedTibetanRoof(1.75, 1.15, 0.85);
-    centerGoldRoof.position.set(-0.2, 9.0, -0.25);
+    // 1. Central Great Fifth Dalai Lama Stupa Roof (Double-eave canopy + tall central spire)
+    const centerGoldRoof = createGildedTibetanRoof(1.75, 1.15, 0.85, {
+      lanternH: 0.38,
+      doubleEave: true,
+      finials: 1,
+      tallSpire: true,
+    });
+    centerGoldRoof.position.set(-0.2, 8.95, -0.25);
     proceduralGroup.add(centerGoldRoof);
 
-    // 2. West Thirteenth Dalai Lama Stupa Roof
-    const westGoldRoof = createGildedTibetanRoof(1.25, 0.95, 0.68);
-    westGoldRoof.position.set(-1.55, 8.92, -0.25);
+    // 2. West Thirteenth Dalai Lama Stupa Roof (Wide hipped gallery + 3 Gser-tog finials)
+    const westGoldRoof = createGildedTibetanRoof(1.28, 0.96, 0.68, {
+      lanternH: 0.34,
+      finials: 3,
+    });
+    westGoldRoof.position.set(-1.55, 8.85, -0.25);
     proceduralGroup.add(westGoldRoof);
 
-    // 3. East Seventh Dalai Lama Stupa Roof
-    const eastGoldRoof = createGildedTibetanRoof(1.25, 0.95, 0.68);
-    eastGoldRoof.position.set(1.15, 8.92, -0.25);
+    // 3. East Seventh Dalai Lama Stupa Roof (3 Gser-tog finials)
+    const eastGoldRoof = createGildedTibetanRoof(1.25, 0.95, 0.68, {
+      lanternH: 0.32,
+      finials: 3,
+    });
+    eastGoldRoof.position.set(1.15, 8.85, -0.25);
     proceduralGroup.add(eastGoldRoof);
 
-    // 4. North-West Eighth Dalai Lama Stupa Roof
-    const northWestGoldRoof = createGildedTibetanRoof(1.05, 0.82, 0.58);
-    northWestGoldRoof.position.set(-0.95, 8.85, -1.05);
+    // 4. North-West Eighth Dalai Lama Stupa Roof (Pyramidal 1-finial canopy per cross-section center)
+    const northWestGoldRoof = createGildedTibetanRoof(1.05, 0.82, 0.58, {
+      lanternH: 0.28,
+      finials: 1,
+    });
+    northWestGoldRoof.position.set(-0.95, 8.78, -1.05);
     proceduralGroup.add(northWestGoldRoof);
 
-    // 5. North-East Ninth Dalai Lama Stupa Roof
-    const northEastGoldRoof = createGildedTibetanRoof(1.05, 0.82, 0.58);
-    northEastGoldRoof.position.set(0.55, 8.85, -1.05);
+    // 5. North-East Ninth Dalai Lama Stupa Roof (3 Gser-tog finials)
+    const northEastGoldRoof = createGildedTibetanRoof(1.05, 0.82, 0.58, {
+      lanternH: 0.28,
+      finials: 3,
+    });
+    northEastGoldRoof.position.set(0.55, 8.78, -1.05);
     proceduralGroup.add(northEastGoldRoof);
 
     // 6. Far-West Chapel Golden Roof
-    const farWestGoldRoof = createGildedTibetanRoof(1.15, 0.85, 0.6);
-    farWestGoldRoof.position.set(-2.65, 7.25, -0.1);
+    const farWestGoldRoof = createGildedTibetanRoof(1.15, 0.85, 0.6, {
+      lanternH: 0.26,
+      finials: 3,
+    });
+    farWestGoldRoof.position.set(-2.65, 7.12, -0.1);
     proceduralGroup.add(farWestGoldRoof);
 
-    // 7. Far-East White/Red Junction Golden Roof
-    const farEastGoldRoof = createGildedTibetanRoof(1.3, 0.9, 0.65);
-    farEastGoldRoof.position.set(3.45, 7.75, -0.2);
+    // 7. Far-East Nyi-'od Sunshine Apartment Golden Roof
+    const farEastGoldRoof = createGildedTibetanRoof(1.3, 0.9, 0.65, {
+      lanternH: 0.26,
+      finials: 3,
+    });
+    farEastGoldRoof.position.set(3.35, 8.26, -0.2);
     proceduralGroup.add(farEastGoldRoof);
+
+    redPalaceCutawayMeshesRef.current = redCutawayList;
 
     /* ──────────────────────────────────────────────────────────────────
        D. THE WHITE PALACE (ཕོ་བྲང་དཀར་པོ། · pho-brang dkar-po)
@@ -1758,6 +2100,23 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
       createLungtaPrayerFlagString([0, 1.78, 0.1], [0.95, 0.72, 0.68], 8, 0.16)
     );
     deyangsharGroup.add(lungtaGroup);
+
+    // 6. Eastern Rounded Defensive Bastion (ཤར་རྒྱལ་མཁར། · shar-rgyal-mkhar — Point 6 in Plan & #16 in Map)
+    const eastRoundBastion = new THREE.Group();
+    const eastDrumBody = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.82, 0.94, 2.25, 24),
+      drumMat
+    );
+    eastDrumBody.castShadow = true;
+    eastDrumBody.receiveShadow = true;
+    const eastDrumCap = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.86, 0.84, 0.3, 24),
+      drumCrimsonMat
+    );
+    eastDrumCap.position.y = 1.15;
+    eastRoundBastion.add(eastDrumBody, eastDrumCap);
+    eastRoundBastion.position.set(5.65, 4.35, 0.95);
+    proceduralGroup.add(eastRoundBastion);
 
     // Eastern Protruding Watchtower Bastion (Mid-Right Slope)
     const eastBastionTower = createBatteredPalaceBlock({
@@ -2214,6 +2573,44 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
   }, [autoRotate]);
 
   /* ══════════════════════════════════════════════════════════════════════
+     Toggle Red Palace Longitudinal Cross-Section Mode (实测图62 红宫纵剖面)
+     Makes the Red Palace outer facade translucent to reveal the 3-story
+     Golden Serdong Stupas and the 44-column Sishi Phuntsok Assembly Hall
+     ══════════════════════════════════════════════════════════════════════ */
+  useEffect(() => {
+    const interior = redPalaceInteriorGroupRef.current;
+    const cutawayList = redPalaceCutawayMeshesRef.current;
+    if (!interior || !cutawayList.length) return;
+
+    interior.visible = crossSection;
+    cutawayList.forEach((groupObj) => {
+      groupObj.traverse((child) => {
+        if ((child as THREE.Mesh).isMesh) {
+          const mesh = child as THREE.Mesh;
+          const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+          mats.forEach((m) => {
+            const std = m as THREE.MeshStandardMaterial;
+            if (std) {
+              std.transparent = crossSection;
+              std.opacity = crossSection ? 0.18 : 1.0;
+              std.depthWrite = !crossSection;
+              std.needsUpdate = true;
+            }
+          });
+        }
+      });
+    });
+
+    if (crossSection) {
+      cameraTargetGoalRef.current = {
+        pos: new THREE.Vector3(0.2, 8.2, 8.8),
+        look: new THREE.Vector3(-0.3, 6.4, -0.2),
+        active: true,
+      };
+    }
+  }, [crossSection]);
+
+  /* ══════════════════════════════════════════════════════════════════════
      Camera Preset Transitions
      ══════════════════════════════════════════════════════════════════════ */
   const applyCameraView = useCallback((preset: CameraViewPreset) => {
@@ -2473,6 +2870,32 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
             }`}
           >
             {autoRotate ? "↻ 360° On" : "↻ 360° Paused"}
+          </button>
+
+          {/* Red Palace Cross-Section X-Ray Toggle (Reveals 3-Story Golden Serdong Stupas) */}
+          <button
+            type="button"
+            onClick={() => {
+              setCrossSection((prev) => !prev);
+              playResonance(963);
+            }}
+            className={`px-2.5 py-1.5 rounded-sm border font-mono text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
+              crossSection
+                ? "bg-amber-400 text-black border-amber-300 shadow-sm"
+                : "bg-white/10 hover:bg-white/20 border-tibet-gold/40 text-tibet-gold-light"
+            }`}
+            title="Toggle architectural cross-section of the Red Palace to inspect the 3-story Golden Serdong Stupas inside"
+          >
+            <span>🏛️</span>
+            <span>
+              {crossSection
+                ? lang === "bo"
+                  ? "ནང་ངོས་གསེར་གདུང་། (On)"
+                  : "Serdong Cutaway: ON"
+                : lang === "bo"
+                ? "གསེར་གདུང་ནང་མཐོང་།"
+                : "Cross-Section"}
+            </span>
           </button>
 
           {/* Tripo3D Studio & GLB Drawer Toggle */}
