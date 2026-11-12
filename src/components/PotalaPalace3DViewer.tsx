@@ -6,10 +6,6 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { GLTFExporter } from "three/examples/jsm/exporters/GLTFExporter.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
-import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
-import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
-import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
-import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
 import {
   Language,
   PotalaHotspot,
@@ -20,13 +16,6 @@ import {
 type AtmosphereMode = "sunlight" | "night";
 type BaseStyle = "island" | "maquette";
 type CameraViewPreset = "diorama" | "hero" | "elevation" | "summit";
-
-interface ScreenHotspotPos {
-  id: string;
-  x: number;
-  y: number;
-  visible: boolean;
-}
 
 /* ══════════════════════════════════════════════════════════════════════════
    Procedural High-DPI Tibetan PBR Facade Texture Generator (Canvas 2D -> WebGL)
@@ -612,11 +601,11 @@ function createSunCelestialBody() {
   }
   sunGroup.add(raysGroup);
 
-  // 4. Volumetric Solar Halo Sprite (vivid against daytime blue sky)
+  // 4. Subtle Golden Solar Halo Sprite
   const glowTex = createCelestialGlowTexture(
-    "rgba(254, 249, 195, 0.95)",
-    "rgba(251, 191, 36, 0.65)",
-    "rgba(245, 158, 11, 0.18)"
+    "rgba(254, 249, 195, 0.85)",
+    "rgba(251, 191, 36, 0.45)",
+    "rgba(245, 158, 11, 0.08)"
   );
   const spriteMat = new THREE.SpriteMaterial({
     map: glowTex,
@@ -624,7 +613,7 @@ function createSunCelestialBody() {
     depthWrite: false,
   });
   const glowSprite = new THREE.Sprite(spriteMat);
-  glowSprite.scale.set(6.5, 6.5, 1);
+  glowSprite.scale.set(3.8, 3.8, 1);
   sunGroup.add(glowSprite);
 
   return sunGroup;
@@ -706,20 +695,19 @@ function createMoonCelestialBody() {
   }
   moonGroup.add(starRingGroup);
 
-  // 4. Volumetric Silvery-Blue Lunar Halo Sprite
+  // 4. Subtle Silvery-Blue Lunar Halo Sprite (soft starlight glow, no blinding blowout)
   const moonGlowTex = createCelestialGlowTexture(
-    "rgba(240, 249, 255, 0.92)",
-    "rgba(125, 211, 252, 0.48)",
-    "rgba(56, 189, 248, 0.12)"
+    "rgba(224, 242, 254, 0.72)",
+    "rgba(147, 197, 253, 0.32)",
+    "rgba(56, 189, 248, 0.05)"
   );
   const moonSpriteMat = new THREE.SpriteMaterial({
     map: moonGlowTex,
     transparent: true,
-    blending: THREE.AdditiveBlending,
     depthWrite: false,
   });
   const moonGlowSprite = new THREE.Sprite(moonSpriteMat);
-  moonGlowSprite.scale.set(5.8, 5.8, 1);
+  moonGlowSprite.scale.set(3.2, 3.2, 1);
   moonGroup.add(moonGlowSprite);
 
   return moonGroup;
@@ -785,19 +773,10 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
   const [baseStyle, setBaseStyle] = useState<BaseStyle>("island");
   const [cameraPreset, setCameraPreset] = useState<CameraViewPreset>("diorama");
   const [autoRotate, setAutoRotate] = useState<boolean>(true);
-  const [showHotspots, setShowHotspots] = useState<boolean>(true);
   const [showTripoStudio, setShowTripoStudio] = useState<boolean>(false);
   const [customModelName, setCustomModelName] = useState<string | null>(null);
   const [copiedPromptId, setCopiedPromptId] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState<boolean>(false);
-  const [screenHotspots, setScreenHotspots] = useState<ScreenHotspotPos[]>([]);
-  const [screenCelestials, setScreenCelestials] = useState<{
-    sun: { x: number; y: number; visible: boolean };
-    moon: { x: number; y: number; visible: boolean };
-  }>({
-    sun: { x: 0, y: 0, visible: false },
-    moon: { x: 0, y: 0, visible: false },
-  });
 
   // Three.js Object Refs for live updates without rebuilding scene
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -820,11 +799,10 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     active: false,
   });
 
-  // Lights & Post-Processing Refs
+  // Lights Refs
   const ambientLightRef = useRef<THREE.AmbientLight | null>(null);
   const sunLightRef = useRef<THREE.DirectionalLight | null>(null);
   const palaceSpotLightRef = useRef<THREE.SpotLight | null>(null);
-  const bloomPassRef = useRef<UnrealBloomPass | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
 
   /* ══════════════════════════════════════════════════════════════════════
@@ -889,7 +867,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     camera.position.set(0, 9.2, 21.5);
     cameraRef.current = camera;
 
-    // 3. Renderer + IBL Environment (PMREMGenerator) + Selective UnrealBloomPass
+    // 3. Ultra-Fast 60 FPS WebGL Renderer + IBL Metallic Environment
     const renderer = new THREE.WebGLRenderer({
       antialias: true,
       powerPreference: "high-performance",
@@ -900,26 +878,14 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.15;
+    renderer.toneMappingExposure = 1.1;
 
-    // Image-Based Lighting (IBL) for realistic metallic reflections on the 7 Golden Roofs & Spen-bad discs
+    // Image-Based Lighting (IBL) for metallic reflections on the 7 Golden Roofs & Spen-bad discs
     const pmremGenerator = new THREE.PMREMGenerator(renderer);
     pmremGenerator.compileEquirectangularShader();
     const envTexture = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
     scene.environment = envTexture;
-
-    // Post-Processing: EffectComposer + Selective High-Threshold UnrealBloomPass
-    const composer = new EffectComposer(renderer);
-    composer.addPass(new RenderPass(scene, camera));
-    const bloomPass = new UnrealBloomPass(
-      new THREE.Vector2(width, height),
-      0.22, // strength (boosted in Night Mode)
-      0.45, // radius
-      0.85  // high threshold so only emissive windows, golden roofs & Sun/Moon glow
-    );
-    composer.addPass(bloomPass);
-    composer.addPass(new OutputPass());
-    bloomPassRef.current = bloomPass;
+    pmremGenerator.dispose();
 
     container.innerHTML = "";
     container.appendChild(renderer.domElement);
@@ -1551,8 +1517,6 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
        Animation & 3D Hotspot Projection Loop
        ────────────────────────────────────────────────────────────────── */
     let animFrameId: number;
-    const tempVec = new THREE.Vector3();
-
     const animate = () => {
       animFrameId = requestAnimationFrame(animate);
 
@@ -1574,51 +1538,8 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
       const lunarStars = moonBody.getObjectByName("lunarStars");
       if (lunarStars) lunarStars.rotation.z -= 0.003;
 
-      composer.render();
-
-      // Project 3D Hotspot positions to 2D Screen Coordinates
-      const currentW = container.clientWidth || width;
-      const currentH = container.clientHeight || height;
-
-      const projected: ScreenHotspotPos[] = POTALA_HOTSPOTS.map((hs) => {
-        tempVec.set(...hs.position3D);
-        tempVec.project(camera);
-        const x = (tempVec.x * 0.5 + 0.5) * currentW;
-        const y = (-(tempVec.y * 0.5) + 0.5) * currentH;
-        const visible = tempVec.z < 1 && x >= 16 && x <= currentW - 16 && y >= 16 && y <= currentH - 16;
-        return { id: hs.id, x, y, visible };
-      });
-      setScreenHotspots(projected);
-
-      // Project 3D Sun & Moon positions for interactive sky badges
-      tempVec.copy(sunBody.position).add(new THREE.Vector3(0, -1.5, 0));
-      tempVec.project(camera);
-      const sunX = (tempVec.x * 0.5 + 0.5) * currentW;
-      const sunY = (-(tempVec.y * 0.5) + 0.5) * currentH;
-      const sunVis =
-        sunBody.visible &&
-        tempVec.z < 1 &&
-        sunX >= 20 &&
-        sunX <= currentW - 20 &&
-        sunY >= 20 &&
-        sunY <= currentH - 20;
-
-      tempVec.copy(moonBody.position).add(new THREE.Vector3(0, -1.5, 0));
-      tempVec.project(camera);
-      const moonX = (tempVec.x * 0.5 + 0.5) * currentW;
-      const moonY = (-(tempVec.y * 0.5) + 0.5) * currentH;
-      const moonVis =
-        moonBody.visible &&
-        tempVec.z < 1 &&
-        moonX >= 20 &&
-        moonX <= currentW - 20 &&
-        moonY >= 20 &&
-        moonY <= currentH - 20;
-
-      setScreenCelestials({
-        sun: { x: sunX, y: sunY, visible: sunVis },
-        moon: { x: moonX, y: moonY, visible: moonVis },
-      });
+      // Pure 60 FPS Native WebGL Render
+      renderer.render(scene, camera);
     };
 
     animate();
@@ -1631,7 +1552,6 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
       camera.aspect = newW / newH;
       camera.updateProjectionMatrix();
       renderer.setSize(newW, newH);
-      composer.setSize(newW, newH);
     };
     window.addEventListener("resize", handleResize);
 
@@ -1639,8 +1559,6 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
       cancelAnimationFrame(animFrameId);
       window.removeEventListener("resize", handleResize);
       controls.removeEventListener("start", onControlStart);
-      pmremGenerator.dispose();
-      composer.dispose();
       renderer.dispose();
     };
   }, []);
@@ -1660,18 +1578,14 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
 
     if (atmosphere === "sunlight") {
       scene.background = createLhasaDaySkyTexture();
-      scene.fog = new THREE.FogExp2("#60a5fa", 0.0055);
+      scene.fog = new THREE.FogExp2("#7dd3fc", 0.0035);
       ambient.color.set("#fffbeb");
       ambient.intensity = 1.35;
       sun.color.set("#ffffff");
-      sun.intensity = 2.6;
+      sun.intensity = 2.5;
       sun.position.set(14, 22, 16);
       spot.intensity = 0;
       wallEmissive = 0.02;
-      if (bloomPassRef.current) {
-        bloomPassRef.current.threshold = 0.88;
-        bloomPassRef.current.strength = 0.22;
-      }
       if (sunBodyRef.current) {
         sunBodyRef.current.visible = true;
         sunBodyRef.current.scale.setScalar(1.15);
@@ -1680,26 +1594,23 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
         moonBodyRef.current.visible = false;
       }
     } else {
-      // Sacred Night Mode: deep midnight sky, selective UnrealBloomPass on windows, 7 Golden Roofs & 3D Moon
-      scene.background = new THREE.Color("#050814");
-      scene.fog = new THREE.FogExp2("#050814", 0.014);
-      ambient.color.set("#93c5fd");
-      ambient.intensity = 0.35;
-      sun.color.set("#60a5fa");
-      sun.intensity = 0.45;
+      // Sacred Night Mode: deep crisp midnight sky, clear starlight & warm glowing windows
+      scene.background = new THREE.Color("#080c18");
+      scene.fog = new THREE.FogExp2("#080c18", 0.005);
+      ambient.color.set("#1e293b");
+      ambient.intensity = 0.55;
+      sun.color.set("#93c5fd");
+      sun.intensity = 0.75;
       sun.position.set(-10, 18, -10);
-      spot.intensity = 3.6;
-      wallEmissive = 1.45;
-      if (bloomPassRef.current) {
-        bloomPassRef.current.threshold = 0.82;
-        bloomPassRef.current.strength = 0.78;
-      }
+      spot.color.set("#f59e0b");
+      spot.intensity = 2.4;
+      wallEmissive = 1.25;
       if (sunBodyRef.current) {
         sunBodyRef.current.visible = false;
       }
       if (moonBodyRef.current) {
         moonBodyRef.current.visible = true;
-        moonBodyRef.current.scale.setScalar(1.25);
+        moonBodyRef.current.scale.setScalar(1.2);
       }
     }
 
@@ -2009,25 +1920,6 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
             {autoRotate ? "↻ 360° On" : "↻ 360° Paused"}
           </button>
 
-          {/* Show / Hide All Labels Toggle (Clean 3D View) */}
-          <button
-            type="button"
-            onClick={() => setShowHotspots((h) => !h)}
-            className={`px-2.5 py-1.5 rounded-sm border font-mono text-[11px] font-bold transition-colors cursor-pointer ${
-              showHotspots
-                ? "bg-tibet-gold/20 border-tibet-gold/60 text-tibet-gold hover:bg-tibet-gold/30"
-                : "bg-white/10 border-white/25 text-white hover:bg-white/20"
-            }`}
-          >
-            {showHotspots
-              ? lang === "bo"
-                ? "🙈 ཁ་བྱང་སྦེད་པ (3D གཙང་མ)"
-                : "🙈 Hide Labels (Clean 3D)"
-              : lang === "bo"
-              ? "🏷️ ཁ་བྱང་སྟོན་པ"
-              : "🏷️ Show Labels"}
-          </button>
-
           {/* Tripo3D Studio & GLB Drawer Toggle */}
           <button
             type="button"
@@ -2048,7 +1940,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
           Main 3D Viewport + Architectural Inspector Split Layout
           ══════════════════════════════════════════════════════════════════ */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-        {/* LEFT 8 COLS: Interactive WebGL 3D Potala Canvas */}
+        {/* LEFT 8 COLS: Interactive WebGL 3D Potala Canvas (Clean Unobstructed 3D View) */}
         <div
           className="lg:col-span-8 relative w-full min-h-[500px] sm:min-h-[600px] rounded-sm border border-sakya-gold/40 bg-[#0c0a09] overflow-hidden shadow-2xl"
           onDragOver={(e) => e.preventDefault()}
@@ -2063,156 +1955,48 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
           {/* Three.js WebGL Mount Container */}
           <div ref={mountRef} className="w-full h-full min-h-[500px] sm:min-h-[600px] cursor-grab active:cursor-grabbing" />
 
-          {/* Top-Right Quick Button inside Canvas: Toggle Clean 3D View (Hide/Show all text & labels) */}
-          <button
-            type="button"
-            onClick={() => setShowHotspots((h) => !h)}
-            className="absolute top-3 right-3 z-30 px-3 py-1.5 rounded-full bg-black/75 hover:bg-tibet-gold text-white hover:text-black border border-tibet-gold/60 backdrop-blur-md font-mono text-[11px] font-bold transition-all cursor-pointer shadow-lg flex items-center gap-1.5"
-          >
-            <span>{showHotspots ? "🙈" : "🏷️"}</span>
-            <span>
-              {showHotspots
-                ? lang === "bo"
-                  ? "3D གཙང་མ"
-                  : "Clean 3D"
-                : lang === "bo"
-                ? "ཁ་བྱང་སྟོན"
-                : "Show Labels"}
+          {/* Top-Left Minimal HUD Overlay */}
+          <div className="absolute top-3 left-3 z-10 pointer-events-none flex flex-col gap-1 bg-black/70 backdrop-blur-md px-3 py-2 rounded-xs border border-white/10">
+            <div className="flex items-center gap-2 text-[10px] font-mono text-tibet-gold">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              <span>
+                {customModelName
+                  ? `CUSTOM GLB: ${customModelName}`
+                  : lang === "bo"
+                  ? "ཕོ་བྲང་པོ་ཏ་ལའི་༣D དཔེ་གཟུགས།"
+                  : "POTALA PALACE · 3D ARCHITECTURAL MODEL"}
+              </span>
+            </div>
+            <span className="text-[10px] font-mono text-white/60">
+              {lang === "bo"
+                ? "ཙིག་རྟགས་ཀྱིས་༣༦༠° བསྐོར་བ་དང་ཆེ་ཆུང་སྒྱུར་ཐུབ། འོག་གི་ ༠༡–༠༧ མནན་ན་དེར་འཁྲིད་ཐུབ།"
+                : "Drag to orbit 360° · Scroll to zoom · Click 01–07 below to inspect"}
             </span>
-          </button>
+          </div>
 
-          {/* 3D Projected Sun (ཉི་མ།) & Moon (ཟླ་བ།) Sky Badges */}
-          {showHotspots && !customModelName && screenCelestials.sun.visible && (
-            <button
-              type="button"
-              onClick={() => {
-                setAtmosphere("sunlight");
-                playResonance(528);
-              }}
-              style={{
-                left: `${screenCelestials.sun.x}px`,
-                top: `${screenCelestials.sun.y}px`,
-                transform: "translate(-50%, -50%)",
-              }}
-              className={`absolute z-10 px-2.5 py-0.5 rounded-full font-mono text-[10px] transition-all cursor-pointer flex items-center gap-1 border ${
-                atmosphere === "sunlight"
-                  ? "bg-amber-400 text-black font-bold border-white shadow-[0_0_15px_rgba(251,191,36,0.9)]"
-                  : "bg-black/70 hover:bg-amber-400/90 text-amber-200 hover:text-black border-amber-400/50"
-              }`}
-              title="Click to activate Lhasa Sunlight"
-            >
-              <span>☀️</span>
-              <span lang="bo" className="font-serif">
-                {lang === "bo" ? "ཉི་མ།" : "Sun"}
-              </span>
-            </button>
-          )}
-
-          {showHotspots && !customModelName && screenCelestials.moon.visible && (
-            <button
-              type="button"
-              onClick={() => {
-                setAtmosphere("night");
-                playResonance(432);
-              }}
-              style={{
-                left: `${screenCelestials.moon.x}px`,
-                top: `${screenCelestials.moon.y}px`,
-                transform: "translate(-50%, -50%)",
-              }}
-              className={`absolute z-10 px-2.5 py-0.5 rounded-full font-mono text-[10px] transition-all cursor-pointer flex items-center gap-1 border ${
-                atmosphere === "night"
-                  ? "bg-sky-300 text-black font-bold border-white shadow-[0_0_15px_rgba(125,211,252,0.9)]"
-                  : "bg-black/70 hover:bg-sky-300/90 text-sky-200 hover:text-black border-sky-300/50"
-              }`}
-              title="Click to activate Sacred Night Moon"
-            >
-              <span>🌙</span>
-              <span lang="bo" className="font-serif">
-                {lang === "bo" ? "ཟླ་བ།" : "Moon"}
-              </span>
-            </button>
-          )}
-
-          {/* 3D Projected Interactive Hotspot Pins */}
-          {showHotspots &&
-            !customModelName &&
-            screenHotspots.map((pos) => {
-              if (!pos.visible) return null;
-              const hs = POTALA_HOTSPOTS.find((h) => h.id === pos.id);
-              if (!hs) return null;
-              const isSelected = selectedHotspot.id === hs.id;
-
+          {/* Bottom Hotspot Quick-Select Ribbon inside Canvas (Navigates directly to each palace wing) */}
+          <div className="absolute bottom-3 inset-x-3 z-20 flex items-center gap-1.5 overflow-x-auto py-1.5 px-2.5 rounded-sm bg-black/80 backdrop-blur-md border border-white/15">
+            {POTALA_HOTSPOTS.map((hs) => {
+              const active = selectedHotspot.id === hs.id;
               return (
                 <button
                   key={hs.id}
                   type="button"
                   onClick={() => focusHotspot(hs)}
-                  style={{
-                    left: `${pos.x}px`,
-                    top: `${pos.y}px`,
-                    transform: "translate(-50%, -50%)",
-                  }}
-                  className={`absolute z-20 group flex items-center gap-1.5 rounded-full transition-all duration-150 cursor-pointer ${
-                    isSelected
-                      ? "bg-tibet-gold text-black px-3 py-1 font-bold shadow-[0_0_20px_rgba(251,191,36,0.9)] scale-110 border-2 border-white"
-                      : "bg-black/85 hover:bg-tibet-gold text-white hover:text-black px-2.5 py-1 border border-tibet-gold/70 shadow-lg"
+                  className={`px-2.5 py-1 rounded-xs text-[11px] font-mono whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
+                    active
+                      ? "bg-tibet-gold text-black font-bold shadow-xs"
+                      : "bg-white/5 hover:bg-white/15 text-white/80"
                   }`}
                 >
-                  <span className="font-mono text-[10px] font-bold">{hs.number}</span>
-                  <span lang="bo" className="font-serif text-xs hidden sm:inline">
+                  <span className="opacity-70">{hs.number}</span>
+                  <span lang="bo" className="font-serif">
                     {lang === "bo" ? hs.nameBo : hs.nameEn.split("(")[0].trim()}
                   </span>
                 </button>
               );
             })}
-
-          {/* Top-Left HUD Overlay */}
-          {showHotspots && (
-            <div className="absolute top-3 left-3 z-10 pointer-events-none flex flex-col gap-1 bg-black/65 backdrop-blur-md px-3 py-2 rounded-xs border border-white/10">
-              <div className="flex items-center gap-2 text-[10px] font-mono text-tibet-gold">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                <span>
-                  {customModelName
-                    ? `CUSTOM GLB: ${customModelName}`
-                    : lang === "bo"
-                    ? "ཕོ་བྲང་པོ་ཏ་ལའི་༣D དཔེ་གཟུགས།"
-                    : "POTALA PALACE · 3D ARCHITECTURAL MODEL"}
-                </span>
-              </div>
-              <span className="text-[10px] font-mono text-white/60">
-                {lang === "bo"
-                  ? "ཙིག་རྟགས་ཀྱིས་༣༦༠° བསྐོར་བ་དང་ཆེ་ཆུང་སྒྱུར་ཐུབ།"
-                  : "Drag to orbit 360° · Scroll to zoom · Click pins (01–07) to inspect"}
-              </span>
-            </div>
-          )}
-
-          {/* Bottom Hotspot Quick-Select Ribbon inside Canvas */}
-          {showHotspots && (
-            <div className="absolute bottom-3 inset-x-3 z-20 flex items-center gap-1.5 overflow-x-auto py-1.5 px-2.5 rounded-sm bg-black/80 backdrop-blur-md border border-white/15">
-              {POTALA_HOTSPOTS.map((hs) => {
-                const active = selectedHotspot.id === hs.id;
-                return (
-                  <button
-                    key={hs.id}
-                    type="button"
-                    onClick={() => focusHotspot(hs)}
-                    className={`px-2.5 py-1 rounded-xs text-[11px] font-mono whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
-                      active
-                        ? "bg-tibet-gold text-black font-bold shadow-xs"
-                        : "bg-white/5 hover:bg-white/15 text-white/80"
-                    }`}
-                  >
-                    <span className="opacity-70">{hs.number}</span>
-                    <span lang="bo" className="font-serif">
-                      {lang === "bo" ? hs.nameBo : hs.nameEn.split("(")[0].trim()}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          )}
+          </div>
         </div>
 
         {/* RIGHT 4 COLS: Sacred Architectural Inspector Panel */}
