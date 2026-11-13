@@ -27,6 +27,12 @@ type CameraViewPreset = "diorama" | "hero" | "elevation" | "summit";
    3. Packed ORM + Bump Map: Occlusion (R), Roughness 0.85-0.95 (G), Metalness (B)
       and recessed window relief.
    ══════════════════════════════════════════════════════════════════════════ */
+// Facade texture cache: identical facade specs share one set of GPU textures (zero duplicate uploads)
+const facadeTextureCache = new Map<
+  string,
+  { diffuseTex: THREE.CanvasTexture; emissiveTex: THREE.CanvasTexture; ormTex: THREE.CanvasTexture }
+>();
+
 function createPotalaFacadeTextures(options: {
   wallColor: string;
   friezeColor?: string;
@@ -35,6 +41,17 @@ function createPotalaFacadeTextures(options: {
   windowStartRow?: number;
   hasGoldBand?: boolean;
 }) {
+  const cacheKey = [
+    options.wallColor,
+    options.friezeColor ?? "",
+    options.cols,
+    options.rows,
+    options.windowStartRow ?? 0,
+    options.hasGoldBand !== false ? 1 : 0,
+  ].join("|");
+  const cached = facadeTextureCache.get(cacheKey);
+  if (cached) return cached;
+
   const width = 512;
   const height = 512;
 
@@ -244,7 +261,9 @@ function createPotalaFacadeTextures(options: {
   const ormTex = new THREE.CanvasTexture(ormCanvas);
   ormTex.anisotropy = 4;
 
-  return { diffuseTex, emissiveTex, ormTex };
+  const result = { diffuseTex, emissiveTex, ormTex };
+  facadeTextureCache.set(cacheKey, result);
+  return result;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -1026,6 +1045,155 @@ function createZigzagStairs(w: number, totalH: number, d: number, segments = 3) 
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
+   Helper: Lightweight Shol Townhouse Block (ཞོལ་གྲོང་གི་ཁང་པ། · zhol-grong khang-pa)
+   Low draw-call variant of createBatteredPalaceBlock for the many Shol buildings:
+   exactly 3 meshes (battered wall body + spen-ma frieze + white cornice), with
+   materials cached and shared across every block that uses the same facade spec.
+   Local origin = center of the wall body (same convention as createBatteredPalaceBlock).
+   ══════════════════════════════════════════════════════════════════════════ */
+const sholMaterialCache = new Map<string, THREE.Material>();
+function getSholMaterial(key: string, make: () => THREE.Material) {
+  let m = sholMaterialCache.get(key);
+  if (!m) {
+    m = make();
+    sholMaterialCache.set(key, m);
+  }
+  return m;
+}
+
+function createSholBlock(params: {
+  w: number;
+  h: number;
+  d: number;
+  wallColor?: string;
+  friezeColor?: string;
+  cols?: number;
+  rows?: number;
+  taper?: number;
+}) {
+  const group = new THREE.Group();
+  const wallColor = params.wallColor ?? "#f5f1e8";
+  const friezeColor = params.friezeColor ?? "#4a0a18";
+  const cols = params.cols ?? Math.max(2, Math.round(params.w * 2.2));
+  const rows = params.rows ?? Math.max(1, Math.round(params.h * 1.6));
+  const taper = params.taper ?? 0.95;
+
+  const geo = new THREE.BoxGeometry(params.w, params.h, params.d);
+  const pos = geo.attributes.position;
+  const inv = 1 / taper;
+  for (let i = 0; i < pos.count; i++) {
+    if (pos.getY(i) < 0) {
+      pos.setX(i, pos.getX(i) * inv);
+      pos.setZ(i, pos.getZ(i) * inv);
+    }
+  }
+  geo.computeVertexNormals();
+
+  const wallKey = `wall|${wallColor}|${friezeColor}|${cols}|${rows}`;
+  const wallMat = getSholMaterial(wallKey, () => {
+    const { diffuseTex, emissiveTex, ormTex } = createPotalaFacadeTextures({
+      wallColor,
+      friezeColor,
+      cols,
+      rows,
+      hasGoldBand: false,
+    });
+    const m = new THREE.MeshStandardMaterial({
+      map: diffuseTex,
+      emissiveMap: emissiveTex,
+      emissive: new THREE.Color("#fde68a"),
+      emissiveIntensity: 0,
+      roughnessMap: ormTex,
+      roughness: 0.92,
+      metalness: 0.03,
+    });
+    m.userData = { isPalaceWall: true };
+    return m;
+  });
+  const roofMat = getSholMaterial("roof|#2a050e", () =>
+    new THREE.MeshStandardMaterial({ color: "#2a050e", roughness: 0.8 })
+  );
+  const friezeMat = getSholMaterial(`frieze|${friezeColor}`, () =>
+    new THREE.MeshStandardMaterial({ color: friezeColor, roughness: 0.92 })
+  );
+  const corniceMat = getSholMaterial("cornice|#f8fafc", () =>
+    new THREE.MeshStandardMaterial({ color: "#f8fafc", roughness: 0.65 })
+  );
+
+  const body = new THREE.Mesh(geo, [wallMat, wallMat, roofMat, roofMat, wallMat, wallMat]);
+  body.castShadow = true;
+  body.receiveShadow = true;
+
+  const friezeH = Math.min(0.16, params.h * 0.13);
+  const frieze = new THREE.Mesh(
+    new THREE.BoxGeometry(params.w + 0.06, friezeH, params.d + 0.06),
+    friezeMat
+  );
+  frieze.position.y = params.h / 2 - friezeH * 0.55;
+
+  const cornice = new THREE.Mesh(
+    new THREE.BoxGeometry(params.w + 0.1, 0.06, params.d + 0.1),
+    corniceMat
+  );
+  cornice.position.y = params.h / 2 + 0.03;
+
+  group.add(body, frieze, cornice);
+  return group;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Helper: Shol Cloister Courtyard Compound (ཞོལ་གྱི་རྭ་བ། · zhol-gyi ra-ba)
+   Matches the enclosed "□" and "U" courtyard compounds of Shol seen in the
+   Sketchfab photogrammetry model: four (or three) whitewashed townhouse wings
+   around an open lawn courtyard. Local origin = ground level, courtyard center.
+   ══════════════════════════════════════════════════════════════════════════ */
+function createSholCloister(params: {
+  w: number;
+  d: number;
+  wingD: number;
+  h: number;
+  openSide?: "none" | "north";
+  wallColor?: string;
+}) {
+  const group = new THREE.Group();
+  const { w, d, wingD, h } = params;
+  const inner = d - wingD * 2;
+
+  // South wing (street facade) + optional north wing
+  const south = createSholBlock({ w, h, d: wingD, wallColor: params.wallColor });
+  south.position.set(0, h / 2, (d - wingD) / 2);
+  group.add(south);
+  if (params.openSide !== "north") {
+    const north = createSholBlock({ w, h: h * 1.12, d: wingD, wallColor: params.wallColor });
+    north.position.set(0, (h * 1.12) / 2, -(d - wingD) / 2);
+    group.add(north);
+  }
+
+  // East & west side wings
+  const sideLen = params.openSide === "north" ? inner + wingD : inner;
+  const sideZ = params.openSide === "north" ? -wingD / 2 : 0;
+  [-1, 1].forEach((sx) => {
+    const side = createSholBlock({ w: wingD, h, d: sideLen, wallColor: params.wallColor, cols: 3 });
+    side.position.set(sx * (w - wingD) / 2, h / 2, sideZ);
+    group.add(side);
+  });
+
+  // Inner lawn courtyard (rtswa-thang) with polished ar-ga stone border
+  const lawnMat = getSholMaterial("lawn", () =>
+    new THREE.MeshStandardMaterial({ color: "#5f7f45", roughness: 0.95 })
+  );
+  const lawn = new THREE.Mesh(
+    new THREE.BoxGeometry(w - wingD * 2 - 0.04, 0.04, (params.openSide === "north" ? d - wingD : inner) - 0.04),
+    lawnMat
+  );
+  lawn.position.set(0, 0.02, params.openSide === "north" ? -wingD / 2 : 0);
+  lawn.receiveShadow = true;
+  group.add(lawn);
+
+  return group;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
    Helper: Create Traditional Tibetan White Chörten Stupa (མཆོད་རྟེན། · mchod-rten)
    Features square throne base, stepped tiers, Bumpa dome, 13-wheel spire & Nyi-Zla
    ══════════════════════════════════════════════════════════════════════════ */
@@ -1444,40 +1612,41 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     const pedestalGroup = new THREE.Group();
     proceduralGroup.add(pedestalGroup);
 
-    // Upper stone platform slab
-    const platformGeo = new THREE.BoxGeometry(19.6, 0.55, 13.6);
+    // Upper stone platform slab (extended 2u south to host the walled Shol town, as in the
+    // Sketchfab photogrammetry model "Potala Palace in Lhasa Tibet" by Hong Nguyen)
+    const platformGeo = new THREE.BoxGeometry(19.6, 0.55, 15.6);
     const platformMat = new THREE.MeshStandardMaterial({
       color: "#d6d3d1",
       roughness: 0.7,
       metalness: 0.1,
     });
     const platformMesh = new THREE.Mesh(platformGeo, platformMat);
-    platformMesh.position.set(0, 0.25, 0.6);
+    platformMesh.position.set(0, 0.25, 1.6);
     platformMesh.receiveShadow = true;
     platformMesh.castShadow = true;
     pedestalGroup.add(platformMesh);
 
     // Inverted floating island bowl & spherical feet (matching potala-diorama-model.png)
     const underBowlGeo = new THREE.CylinderGeometry(8.5, 3.2, 2.4, 16);
-    underBowlGeo.scale(1.12, 1, 0.75);
+    underBowlGeo.scale(1.12, 1, 0.86);
     const underBowlMat = new THREE.MeshStandardMaterial({
       color: "#a8a29e",
       roughness: 0.65,
       metalness: 0.15,
     });
     const underBowl = new THREE.Mesh(underBowlGeo, underBowlMat);
-    underBowl.position.set(0, -1.2, 0.6);
+    underBowl.position.set(0, -1.2, 1.6);
     pedestalGroup.add(underBowl);
 
     // Spherical pedestal nodes underneath
     const footPositions: [number, number, number, number][] = [
-      [0, -2.5, 0.6, 0.95],
-      [-4.2, -1.9, 2.6, 0.75],
-      [4.2, -1.9, 2.6, 0.75],
-      [-6.8, -1.2, 3.4, 0.55],
-      [6.8, -1.2, 3.4, 0.55],
-      [-4.2, -1.9, -1.4, 0.7],
-      [4.2, -1.9, -1.4, 0.7],
+      [0, -2.5, 1.6, 0.95],
+      [-4.2, -1.9, 3.6, 0.75],
+      [4.2, -1.9, 3.6, 0.75],
+      [-6.8, -1.2, 4.6, 0.55],
+      [6.8, -1.2, 4.6, 0.55],
+      [-4.2, -1.9, -0.6, 0.7],
+      [4.2, -1.9, -0.6, 0.7],
     ];
     footPositions.forEach(([fx, fy, fz, r]) => {
       const sphereGeo = new THREE.SphereGeometry(r, 16, 16);
@@ -1744,7 +1913,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
       h: 0.88,
       d: 1.45,
       taper: 0.94,
-      wallColor: "#d97706",
+      wallColor: "#c9a03a",
       friezeColor: "#380714",
       cols: 4,
       rows: 1,
@@ -2193,18 +2362,132 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
 
     /* ──────────────────────────────────────────────────────────────────
        F. SHOL WALLED VILLAGE & PERIMETER GATES (ཞོལ་གྲོང་། · Base of Palace)
+          Enriched from the Sketchfab photogrammetry model (Hong Nguyen):
+          turreted enclosure with 3 gateways, cloister courtyards, Zhol Par-khang,
+          processional avenue and the stepped stone terrace below the Gos-sku wall.
        ────────────────────────────────────────────────────────────────── */
     const sholGroup = new THREE.Group();
     proceduralGroup.add(sholGroup);
 
-    // Front Southern Perimeter Wall with Crimson Coping
-    const frontWall = createStaircaseSegment(
-      [-8.4, 0.85, 5.8],
-      [8.4, 0.85, 5.8],
-      0.42,
-      0.75
+    const SHOL_GROUND = 0.525; // top of the extended stone platform
+    const SHOL_FRONT_Z = 8.9; // southern enclosure wall (lcags-ri)
+    const SHOL_SIDE_X = 9.2; // east & west enclosure walls
+    const SHOL_BACK_Z = 4.4; // where the side walls meet the Marpo Ri foothills
+
+    // 1. Turreted Enclosure Walls (ཞོལ་གྱི་ལྕགས་རི། · zhol-gyi lcags-ri), white with Bordó coping
+    sholGroup.add(
+      // South wall, split around the central main gate
+      createStaircaseSegment([-SHOL_SIDE_X, 0.85, SHOL_FRONT_Z], [-1.15, 0.85, SHOL_FRONT_Z], 0.42, 0.75),
+      createStaircaseSegment([0.55, 0.85, SHOL_FRONT_Z], [SHOL_SIDE_X, 0.85, SHOL_FRONT_Z], 0.42, 0.75),
+      // West & east side walls running north to the foothills
+      createStaircaseSegment([-SHOL_SIDE_X, 0.85, SHOL_FRONT_Z], [-SHOL_SIDE_X, 0.85, SHOL_BACK_Z], 0.42, 0.75),
+      createStaircaseSegment([SHOL_SIDE_X, 0.85, SHOL_FRONT_Z], [SHOL_SIDE_X, 0.85, SHOL_BACK_Z], 0.42, 0.75),
+      // Sawtooth links climbing to the western ridge & far-eastern descent walls → one continuous
+      // defensive circuit from Shol up to the palace (as in the Sketchfab model)
+      createStaircaseSegment([-SHOL_SIDE_X, 0.85, SHOL_BACK_Z], [-7.5, 0.95, 3.9], 0.42, 0.7),
+      createStaircaseSegment([SHOL_SIDE_X, 0.85, SHOL_BACK_Z], [7.9, 1.35, 3.5], 0.42, 0.7)
     );
-    sholGroup.add(frontWall);
+
+    // Corner watchtowers (ཟུར་མཁར། · zur-mkhar) at the two southern corners
+    [-SHOL_SIDE_X, SHOL_SIDE_X].forEach((cx) => {
+      const tower = createSholBlock({ w: 0.85, h: 1.45, d: 0.85, cols: 1, rows: 2, taper: 0.88 });
+      tower.position.set(cx, SHOL_GROUND + 0.725, SHOL_FRONT_Z);
+      sholGroup.add(tower);
+    });
+
+    // 2. Three Shol Gateways (ཞོལ་གྱི་རྒྱལ་སྒོ་གསུམ། · zhol-gyi rgyal-sgo gsum)
+    const gateOpeningMat = getSholMaterial("gate-opening", () =>
+      new THREE.MeshStandardMaterial({ color: "#141215", roughness: 0.9 })
+    );
+    const gateTrimMat = getSholMaterial("gate-trim", () =>
+      new THREE.MeshStandardMaterial({ color: "#f8fafc", roughness: 0.7 })
+    );
+    const addGate = (gx: number, gw: number, gh: number, withRoof: boolean) => {
+      const gate = createSholBlock({ w: gw, h: gh, d: 0.8, cols: 2, rows: 1, taper: 0.97 });
+      gate.position.set(gx, SHOL_GROUND + gh / 2, SHOL_FRONT_Z);
+      sholGroup.add(gate);
+      // Dark portal with black yak-hair snam-bu curtain and white border
+      const portalH = gh * 0.55;
+      const portal = new THREE.Mesh(new THREE.BoxGeometry(gw * 0.36, portalH, 0.05), gateOpeningMat);
+      portal.position.set(gx, SHOL_GROUND + portalH / 2, SHOL_FRONT_Z + 0.425);
+      const trim = new THREE.Mesh(new THREE.BoxGeometry(gw * 0.4, 0.05, 0.06), gateTrimMat);
+      trim.position.set(gx, SHOL_GROUND + portalH, SHOL_FRONT_Z + 0.43);
+      sholGroup.add(portal, trim);
+      if (withRoof) {
+        const gateRoof = createGildedTibetanRoof(gw * 0.62, 0.62, 0.34, { lanternH: 0, finials: 1 });
+        gateRoof.position.set(gx, SHOL_GROUND + gh + 0.06, SHOL_FRONT_Z);
+        sholGroup.add(gateRoof);
+      }
+    };
+    addGate(-0.3, 1.7, 1.45, true); // Main South Gate (ཞོལ་སྒོ་ཆེན། · zhol sgo-chen)
+    addGate(-5.6, 1.1, 1.15, false); // West Gate (ནུབ་སྒོ། · nub-sgo)
+    addGate(5.0, 1.1, 1.15, false); // East Gate (ཤར་སྒོ། · shar-sgo)
+
+    // 3. Processional Stone Avenue (ལམ་ཆེན། · lam-chen) from the main gate to the zigzag stairway
+    const avenueMat = getSholMaterial("avenue", () =>
+      new THREE.MeshStandardMaterial({ color: "#e7e0d6", roughness: 0.6 })
+    );
+    const avenue = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.03, 3.25), avenueMat);
+    avenue.position.set(-0.3, SHOL_GROUND + 0.015, 7.05);
+    avenue.receiveShadow = true;
+    sholGroup.add(avenue);
+
+    // 4. Cloister Courtyard Compounds (ཞོལ་གྱི་རྭ་བ། · zhol-gyi ra-ba)
+    //    West: closed "□" cloister · East: "U" cloister opening north towards the palace
+    const westCloister = createSholCloister({ w: 3.2, d: 2.0, wingD: 0.5, h: 0.9, openSide: "none" });
+    westCloister.position.set(-5.4, SHOL_GROUND, 7.3);
+    sholGroup.add(westCloister);
+
+    const eastCloister = createSholCloister({ w: 3.4, d: 2.0, wingD: 0.5, h: 0.95, openSide: "north" });
+    eastCloister.position.set(4.6, SHOL_GROUND, 7.3);
+    sholGroup.add(eastCloister);
+
+    // 5. Zhol Par-khang (ཞོལ་པར་ཁང་། · zhol par-khang): 3-tier stepped woodblock printing house
+    const parkhangTiers: [number, number, number][] = [
+      // [w, h, d]
+      [2.0, 0.78, 1.4],
+      [1.6, 0.62, 1.1],
+      [1.1, 0.5, 0.8],
+    ];
+    let parkhangY = SHOL_GROUND;
+    parkhangTiers.forEach(([tw, th, td], ti) => {
+      const tier = createSholBlock({ w: tw, h: th, d: td, rows: ti === 0 ? 2 : 1, taper: 0.94 });
+      tier.position.set(-2.3, parkhangY + th / 2, 6.95 - ti * 0.1);
+      sholGroup.add(tier);
+      parkhangY += th + 0.06;
+    });
+    const parkhangRoof = createGildedTibetanRoof(0.7, 0.5, 0.3, { lanternH: 0.12, finials: 1 });
+    parkhangRoof.position.set(-2.3, parkhangY, 6.75);
+    sholGroup.add(parkhangRoof);
+
+    // 6. Gos-sku Thangka Storehouse (གོས་སྐུ་མཛོད་ཁང་། · gos-sku mdzod-khang) in Tibetan ochre (ser-po)
+    const thangkaStore = createSholBlock({
+      w: 1.6,
+      h: 1.05,
+      d: 1.1,
+      wallColor: "#c9a03a",
+      friezeColor: "#380714",
+      cols: 3,
+      rows: 2,
+    });
+    thangkaStore.position.set(1.65, SHOL_GROUND + 0.525, 6.85);
+    sholGroup.add(thangkaStore);
+
+    // 7. Stepped Stone Terrace (རྡོ་སྐས། · rdo-skas) at the foot of the Gos-sku wall, where the
+    //    main zigzag stairway lands (grey ashlar steps visible in the Sketchfab model)
+    const terraceMats = [
+      getSholMaterial("terrace-a", () => new THREE.MeshStandardMaterial({ color: "#a8a29e", roughness: 0.85 })),
+      getSholMaterial("terrace-b", () => new THREE.MeshStandardMaterial({ color: "#d6d3d1", roughness: 0.8 })),
+    ];
+    for (let si = 0; si < 3; si++) {
+      const sz = 2.55 + si * 0.24;
+      const stepTop = marpoSurfaceY(-0.2, sz) + 0.22 - si * 0.04;
+      const step = new THREE.Mesh(new THREE.BoxGeometry(4.5 - si * 0.35, 0.9, 0.26), terraceMats[si % 2]);
+      step.position.set(-0.2, stepTop - 0.45, sz);
+      step.castShadow = true;
+      step.receiveShadow = true;
+      sholGroup.add(step);
+    }
 
     // Western Shol Two-Story Courtyard Building (Lower Left)
     const sholWestBuilding = createBatteredPalaceBlock({
@@ -2304,8 +2587,12 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     const instancedManiWheels = new THREE.InstancedMesh(maniGeo, maniMat, maniCount);
     const maniDummy = new THREE.Object3D();
     for (let mi = 0; mi < maniCount; mi++) {
-      const mx = -7.6 + (mi / (maniCount - 1)) * 15.2;
-      maniDummy.position.set(mx, 0.92, 6.04);
+      const mx = -8.2 + (mi / (maniCount - 1)) * 16.4;
+      // Lingkhor path runs outside the new southern Shol wall; leave the 3 gateways clear
+      const inGate =
+        (mx > -1.3 && mx < 0.7) || (mx > -6.3 && mx < -4.9) || (mx > 4.3 && mx < 5.7);
+      maniDummy.position.set(mx, inGate ? -50 : 0.62, 9.22);
+      maniDummy.scale.setScalar(inGate ? 0 : 1);
       maniDummy.rotation.set(0, mi * 0.4, 0);
       maniDummy.updateMatrix();
       instancedManiWheels.setMatrixAt(mi, maniDummy.matrix);
@@ -2373,6 +2660,52 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     if (instancedCrowns.instanceColor) instancedCrowns.instanceColor.needsUpdate = true;
 
     foliageGroup.add(instancedTrunks, instancedCrowns);
+
+    // Broadleaf Tibetan willows (ལྕང་མ། · lcang-ma) in the Shol courtyards & along the avenue,
+    // matching the round tree canopies of the Sketchfab model — 2 extra draw calls total
+    const willowSpots: [number, number, number][] = [
+      // [x, z, scale]
+      [-5.4, 7.3, 1.05],
+      [4.6, 7.0, 1.1],
+      [-1.15, 8.2, 0.85],
+      [0.55, 8.2, 0.85],
+      [-1.15, 6.2, 0.8],
+      [0.55, 6.2, 0.8],
+      [1.65, 8.15, 0.9],
+      [-8.1, 7.6, 1.0],
+      [7.55, 7.4, 1.0],
+      [-3.7, 8.3, 0.8],
+      [3.0, 5.95, 0.75],
+    ];
+    const willowTrunks = new THREE.InstancedMesh(
+      new THREE.CylinderGeometry(0.045, 0.07, 0.42, 6),
+      trunkMat,
+      willowSpots.length
+    );
+    const willowCrownGeo = new THREE.IcosahedronGeometry(0.38, 1);
+    willowCrownGeo.scale(1, 0.85, 1);
+    const willowCrowns = new THREE.InstancedMesh(
+      willowCrownGeo,
+      new THREE.MeshStandardMaterial({ color: "#ffffff", roughness: 0.85, flatShading: true }),
+      willowSpots.length
+    );
+    willowCrowns.castShadow = true;
+    const willowPalette = [new THREE.Color("#4f7a3a"), new THREE.Color("#5d8a40"), new THREE.Color("#3f6b31")];
+    willowSpots.forEach(([wx, wz, ws], wi) => {
+      dummy.rotation.set(0, wi * 1.3, 0);
+      dummy.scale.setScalar(ws);
+      dummy.position.set(wx, 0.525 + 0.21 * ws, wz);
+      dummy.updateMatrix();
+      willowTrunks.setMatrixAt(wi, dummy.matrix);
+      dummy.position.set(wx, 0.525 + 0.62 * ws, wz);
+      dummy.updateMatrix();
+      willowCrowns.setMatrixAt(wi, dummy.matrix);
+      willowCrowns.setColorAt(wi, willowPalette[wi % willowPalette.length]);
+    });
+    willowTrunks.instanceMatrix.needsUpdate = true;
+    willowCrowns.instanceMatrix.needsUpdate = true;
+    if (willowCrowns.instanceColor) willowCrowns.instanceColor.needsUpdate = true;
+    foliageGroup.add(willowTrunks, willowCrowns);
 
     /* ──────────────────────────────────────────────────────────────────
        H. FLOATING GOLDEN HIMALAYAN ATMOSPHERE PARTICLES
