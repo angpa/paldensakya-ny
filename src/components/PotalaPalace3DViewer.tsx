@@ -1850,6 +1850,21 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
       proceduralGroup.add(curtain, trim);
     });
 
+    // 2b. Four Golden-Ochre Vertical Bay Window Columns on the NORTH Rear Facade (Lámina 7)
+    const northOchreBayMat = new THREE.MeshStandardMaterial({
+      color: "#c9a03a",
+      roughness: 0.72,
+      metalness: 0.12,
+    });
+    [-1.15, -0.38, 0.38, 1.15].forEach((bx) => {
+      const nBayGeo = new THREE.BoxGeometry(0.32, 2.72, 0.2);
+      const nBay = new THREE.Mesh(nBayGeo, northOchreBayMat);
+      nBay.position.set(-0.2 + bx, 6.2, -1.71);
+      nBay.rotation.x = 0.054;
+      nBay.castShadow = true;
+      proceduralGroup.add(nBay);
+    });
+
     // 3. Tier 2: Recessed Middle Puntsok Kodpa Clerestory Gallery
     const redPalaceMidTier = createBatteredPalaceBlock({
       w: 3.85,
@@ -1970,6 +1985,22 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     northPlaza.receiveShadow = true;
     proceduralGroup.add(northPlaza);
 
+    // #24 Rear Round Bastion (后圆堡 · rgyab-kyi mkhar) guarding the northern turnaround
+    const rearRoundBastion = new THREE.Group();
+    const rearDrumBody = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.46, 0.54, 1.1, 18),
+      new THREE.MeshStandardMaterial({ color: "#f8f6f0", roughness: 0.72 })
+    );
+    rearDrumBody.castShadow = true;
+    const rearDrumCap = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.5, 0.48, 0.2, 18),
+      new THREE.MeshStandardMaterial({ color: "#4a0a18", roughness: 0.62 })
+    );
+    rearDrumCap.position.y = 0.62;
+    rearRoundBastion.add(rearDrumBody, rearDrumCap);
+    rearRoundBastion.position.set(-0.45, 4.85, -4.45);
+    proceduralGroup.add(rearRoundBastion);
+
     // Register Red Palace outer facade objects for Cross-Section X-Ray cutaway mode
     const redCutawayList: THREE.Object3D[] = [
       redPalaceMain,
@@ -2023,7 +2054,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     eighthDalaiSerdong.position.set(0.45, 2.08, -0.45);
     redInteriorGroup.add(seventhDalaiSerdong, eighthDalaiSerdong);
 
-    // 5. Sishi Phuntsok (སྲིད་ཞི་ཕུན་ཚོགས།) Great Western Assembly Hall Hypostyle Columns + Gzhu-ma Capitals
+    // 5. Sishi Phuntsok (སྲིད་ཞི་ཕུན་ཚོགས།) Great Western Assembly Hall Hypostyle Columns + Golden Central Dais (Lámina 5)
     const hallColMat = new THREE.MeshStandardMaterial({
       color: "#7f1d1d",
       roughness: 0.45,
@@ -2033,6 +2064,13 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
       roughness: 0.25,
       metalness: 0.88,
     });
+    const westHallDais = new THREE.Mesh(
+      new THREE.BoxGeometry(1.45, 0.14, 1.15),
+      capitalGoldMat
+    );
+    westHallDais.position.set(0.88, 0.14, 0);
+    redInteriorGroup.add(westHallDais);
+
     for (let cx = 0; cx < 4; cx++) {
       for (let cz = -1; cz <= 1; cz++) {
         const colX = 0.25 + cx * 0.42;
@@ -2048,6 +2086,35 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
         );
         gzhumaCap.position.set(colX, 1.96, colZ);
         redInteriorGroup.add(col, gzhumaCap);
+      }
+    }
+
+    // 6. White Palace East Great Assembly Hall (ཚོམས་ཆེན་ཤར། · 东有寂圆满大殿 — Lámina 6)
+    //    Hypostyle golden-ochre interior columns + Central Dalai Lama Golden Throne
+    const eastHallFloor = new THREE.Mesh(
+      new THREE.BoxGeometry(2.15, 0.1, 2.05),
+      new THREE.MeshStandardMaterial({ color: "#c9a03a", roughness: 0.65 })
+    );
+    eastHallFloor.position.set(3.55, 0.25, 0);
+    redInteriorGroup.add(eastHallFloor);
+
+    const dalaiThrone = new THREE.Mesh(
+      new THREE.BoxGeometry(0.38, 0.42, 0.36),
+      capitalGoldMat
+    );
+    dalaiThrone.position.set(3.55, 0.5, -0.35);
+    redInteriorGroup.add(dalaiThrone);
+
+    for (let ex = 0; ex < 4; ex++) {
+      for (let ez = 0; ez < 4; ez++) {
+        const ecX = 2.85 + ex * 0.46;
+        const ecZ = -0.68 + ez * 0.45;
+        const eCol = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.036, 0.042, 1.65, 8),
+          capitalGoldMat
+        );
+        eCol.position.set(ecX, 1.12, ecZ);
+        redInteriorGroup.add(eCol);
       }
     }
 
@@ -2229,6 +2296,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     });
     eastInnerWhite.position.set(3.35, 6.1, -0.2);
     proceduralGroup.add(eastInnerWhite);
+    redCutawayList.push(eastInnerWhite);
 
     const eastMidWhite = createBatteredPalaceBlock({
       w: 3.8,
@@ -2321,7 +2389,7 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     );
     deyangsharGroup.add(lungtaGroup);
 
-    // 6. Eastern Rounded Defensive Bastion (ཤར་རྒྱལ་མཁར། · shar-rgyal-mkhar — Point 6 in Plan & #16 in Map)
+    // 6. Eastern Rounded Defensive Bastion (ཤར་རྒྱལ་མཁར། · shar-rgyal-mkhar — Point 6 in Plan & #8/#16 in Map)
     const eastRoundBastion = new THREE.Group();
     const eastDrumBody = new THREE.Mesh(
       new THREE.CylinderGeometry(0.82, 0.94, 2.25, 24),
@@ -2337,6 +2405,50 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     eastRoundBastion.add(eastDrumBody, eastDrumCap);
     eastRoundBastion.position.set(5.65, 4.35, 0.95);
     proceduralGroup.add(eastRoundBastion);
+
+    // 7. #12 Eastern Great Bastion (东大堡) & Tall Easternmost Cylindrical Corner Tower (Láminas 1 & 9)
+    const eastGreatBastion = createBatteredPalaceBlock({
+      w: 2.35,
+      h: 2.25,
+      d: 1.55,
+      taper: 0.87,
+      wallColor: "#f8f6f0",
+      friezeColor: "#4a0a18",
+      cols: 4,
+      rows: 2,
+    });
+    eastGreatBastion.position.set(7.35, 3.35, 0.72);
+    proceduralGroup.add(eastGreatBastion);
+
+    const eastExtremeTower = new THREE.Group();
+    const extremeDrumBody = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.46, 0.56, 3.6, 20),
+      drumMat
+    );
+    extremeDrumBody.castShadow = true;
+    extremeDrumBody.receiveShadow = true;
+    const extremeDrumCap = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.49, 0.47, 0.24, 20),
+      drumCrimsonMat
+    );
+    extremeDrumCap.position.y = 1.85;
+    eastExtremeTower.add(extremeDrumBody, extremeDrumCap);
+    eastExtremeTower.position.set(8.65, 2.45, 0.75);
+    proceduralGroup.add(eastExtremeTower);
+
+    // 8. #11 Lower ZhaSha Bastion (下札厦) at the lower-left foot of the central stairway (Láminas 1 & 2)
+    const lowerZhaSha = createBatteredPalaceBlock({
+      w: 1.45,
+      h: 1.65,
+      d: 1.25,
+      taper: 0.88,
+      wallColor: "#faf8f5",
+      friezeColor: "#4a0a18",
+      cols: 3,
+      rows: 2,
+    });
+    lowerZhaSha.position.set(-5.95, 2.35, 3.25);
+    proceduralGroup.add(lowerZhaSha);
 
     // Eastern Protruding Watchtower Bastion (Mid-Right Slope)
     const eastBastionTower = createBatteredPalaceBlock({
