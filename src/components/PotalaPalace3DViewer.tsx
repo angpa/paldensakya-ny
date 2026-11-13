@@ -1612,41 +1612,41 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     const pedestalGroup = new THREE.Group();
     proceduralGroup.add(pedestalGroup);
 
-    // Upper stone platform slab (extended 2u south to host the walled Shol town, as in the
-    // Sketchfab photogrammetry model "Potala Palace in Lhasa Tibet" by Hong Nguyen)
-    const platformGeo = new THREE.BoxGeometry(19.6, 0.55, 15.6);
+    // Upper stone platform slab (extended south for Shol & north for the Byang-ngos turnaround
+    // and pentagonal perimeter circuit seen in the satellite orthophoto)
+    const platformGeo = new THREE.BoxGeometry(20.4, 0.55, 17.2);
     const platformMat = new THREE.MeshStandardMaterial({
       color: "#d6d3d1",
       roughness: 0.7,
       metalness: 0.1,
     });
     const platformMesh = new THREE.Mesh(platformGeo, platformMat);
-    platformMesh.position.set(0, 0.25, 1.6);
+    platformMesh.position.set(0, 0.25, 1.2);
     platformMesh.receiveShadow = true;
     platformMesh.castShadow = true;
     pedestalGroup.add(platformMesh);
 
     // Inverted floating island bowl & spherical feet (matching potala-diorama-model.png)
-    const underBowlGeo = new THREE.CylinderGeometry(8.5, 3.2, 2.4, 16);
-    underBowlGeo.scale(1.12, 1, 0.86);
+    const underBowlGeo = new THREE.CylinderGeometry(8.8, 3.3, 2.4, 16);
+    underBowlGeo.scale(1.12, 1, 0.92);
     const underBowlMat = new THREE.MeshStandardMaterial({
       color: "#a8a29e",
       roughness: 0.65,
       metalness: 0.15,
     });
     const underBowl = new THREE.Mesh(underBowlGeo, underBowlMat);
-    underBowl.position.set(0, -1.2, 1.6);
+    underBowl.position.set(0, -1.2, 1.2);
     pedestalGroup.add(underBowl);
 
     // Spherical pedestal nodes underneath
     const footPositions: [number, number, number, number][] = [
-      [0, -2.5, 1.6, 0.95],
+      [0, -2.5, 1.2, 0.95],
       [-4.2, -1.9, 3.6, 0.75],
       [4.2, -1.9, 3.6, 0.75],
       [-6.8, -1.2, 4.6, 0.55],
       [6.8, -1.2, 4.6, 0.55],
-      [-4.2, -1.9, -0.6, 0.7],
-      [4.2, -1.9, -0.6, 0.7],
+      [-4.2, -1.9, -1.6, 0.7],
+      [4.2, -1.9, -1.6, 0.7],
     ];
     footPositions.forEach(([fx, fy, fz, r]) => {
       const sphereGeo = new THREE.SphereGeometry(r, 16, 16);
@@ -1920,6 +1920,55 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     });
     nyiodSunshineApt.position.set(3.35, 7.82, -0.2);
     proceduralGroup.add(nyiodSunshineApt);
+
+    // 7. Central Tshoms-chen Skylight Light-Well Courtyard on Red Palace Roof (visible in satellite orthophoto)
+    const skylightFrame = new THREE.Mesh(
+      new THREE.BoxGeometry(1.15, 0.16, 0.85),
+      new THREE.MeshStandardMaterial({ color: "#f8fafc", roughness: 0.65 })
+    );
+    skylightFrame.position.set(-0.2, 9.15, -0.45);
+    const skylightVoid = new THREE.Mesh(
+      new THREE.BoxGeometry(0.92, 0.18, 0.62),
+      new THREE.MeshStandardMaterial({ color: "#1c1917", roughness: 0.9 })
+    );
+    skylightVoid.position.set(-0.2, 9.16, -0.45);
+    proceduralGroup.add(skylightFrame, skylightVoid);
+
+    // 8. North Rear Spur (བྱང་ངོས། · byang-ngos) & Circular Rear Turnaround Plaza (from satellite orthophoto)
+    const northRearSpur = createBatteredPalaceBlock({
+      w: 1.65,
+      h: 2.25,
+      d: 1.85,
+      taper: 0.88,
+      wallColor: "#520c1c",
+      friezeColor: "#2d050e",
+      cols: 3,
+      rows: 3,
+    });
+    northRearSpur.position.set(-0.35, 5.5, -2.25);
+    proceduralGroup.add(northRearSpur);
+
+    const northGateHouse = createBatteredPalaceBlock({
+      w: 1.25,
+      h: 1.45,
+      d: 1.25,
+      taper: 0.9,
+      wallColor: "#faf8f5",
+      friezeColor: "#4a0a18",
+      cols: 2,
+      rows: 2,
+    });
+    northGateHouse.position.set(-0.4, 4.75, -3.55);
+    proceduralGroup.add(northGateHouse);
+
+    // Circular paved northern turnaround plaza at top of the rear access roads
+    const northPlaza = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.92, 1.05, 0.25, 24),
+      new THREE.MeshStandardMaterial({ color: "#d6d3d1", roughness: 0.72 })
+    );
+    northPlaza.position.set(-0.45, 4.25, -4.45);
+    northPlaza.receiveShadow = true;
+    proceduralGroup.add(northPlaza);
 
     // Register Red Palace outer facade objects for Cross-Section X-Ray cutaway mode
     const redCutawayList: THREE.Object3D[] = [
@@ -2203,9 +2252,9 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     deyangsharGroup.position.set(2.55, 5.56, 1.15);
     proceduralGroup.add(deyangsharGroup);
 
-    // 1. Hand-tamped polished Ar-ga (ཨར་ག) waterproof lime-stone terrace floor (roughness: 0.48)
+    // 1. Hand-tamped polished Ar-ga (ཨར་ག) waterproof lime-stone terrace floor (40m × 40m open plaza in satellite view)
     const argaFloor = new THREE.Mesh(
-      new THREE.BoxGeometry(2.25, 0.12, 1.75),
+      new THREE.BoxGeometry(2.75, 0.12, 2.15),
       new THREE.MeshStandardMaterial({
         color: "#e7e0d6",
         roughness: 0.48,
@@ -2385,7 +2434,18 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
       // Sawtooth links climbing to the western ridge & far-eastern descent walls → one continuous
       // defensive circuit from Shol up to the palace (as in the Sketchfab model)
       createStaircaseSegment([-SHOL_SIDE_X, 0.85, SHOL_BACK_Z], [-7.5, 0.95, 3.9], 0.42, 0.7),
-      createStaircaseSegment([SHOL_SIDE_X, 0.85, SHOL_BACK_Z], [7.9, 1.35, 3.5], 0.42, 0.7)
+      createStaircaseSegment([SHOL_SIDE_X, 0.85, SHOL_BACK_Z], [7.9, 1.35, 3.5], 0.42, 0.7),
+      // Northern Pentagonal Outer Perimeter Wall (closing the back of Marpo Ri per satellite orthophoto)
+      createStaircaseSegment([-SHOL_SIDE_X, 0.85, SHOL_BACK_Z], [-7.8, 0.85, -1.6], 0.4, 0.72),
+      createStaircaseSegment([-7.8, 0.85, -1.6], [-0.4, 0.85, -6.3], 0.4, 0.72),
+      createStaircaseSegment([-0.4, 0.85, -6.3], [7.6, 0.85, -1.6], 0.4, 0.72),
+      createStaircaseSegment([7.6, 0.85, -1.6], [SHOL_SIDE_X, 0.85, SHOL_BACK_Z], 0.4, 0.72),
+      // North-West Sweeping Rear Approach Road (from circular turnaround down NW flank)
+      createStaircaseSegment([-0.45, 4.15, -4.45], [-4.6, 2.45, -2.5], 0.46, 0.45),
+      createStaircaseSegment([-4.6, 2.45, -2.5], [-8.2, 0.95, 1.4], 0.46, 0.45),
+      // North-East Double Zigzag Rear Ramp (from circular turnaround down NE flank)
+      createStaircaseSegment([-0.2, 4.15, -4.45], [3.6, 2.65, -3.1], 0.42, 0.5),
+      createStaircaseSegment([3.6, 2.65, -3.1], [6.8, 1.35, -1.6], 0.42, 0.5)
     );
 
     // Corner watchtowers (ཟུར་མཁར། · zur-mkhar) at the two southern corners
@@ -2441,6 +2501,42 @@ export function PotalaPalace3DViewer({ lang }: { lang: Language }) {
     const eastCloister = createSholCloister({ w: 3.4, d: 2.0, wingD: 0.5, h: 0.95, openSide: "north" });
     eastCloister.position.set(4.6, SHOL_GROUND, 7.3);
     sholGroup.add(eastCloister);
+
+    // Additional Inner Cloister Compound (East-Center of Shol, matching satellite grid)
+    const eastInnerCloister = createSholCloister({ w: 2.3, d: 1.5, wingD: 0.42, h: 0.85, openSide: "none" });
+    eastInnerCloister.position.set(2.8, SHOL_GROUND, 5.85);
+    sholGroup.add(eastInnerCloister);
+
+    // Interior SW & SE Green Park Lawns inside the Shol Enclosure (per satellite orthophoto)
+    const parkLawnMat = getSholMaterial("park-lawn", () =>
+      new THREE.MeshStandardMaterial({ color: "#4d7c3a", roughness: 0.95 })
+    );
+    [
+      [-7.65, 7.2, 2.1, 2.5], // SW Shol Park
+      [7.45, 7.2, 2.3, 2.5],  // SE Shol Park
+    ].forEach(([px, pz, pw, pd]) => {
+      const park = new THREE.Mesh(new THREE.BoxGeometry(pw, 0.04, pd), parkLawnMat);
+      park.position.set(px, SHOL_GROUND + 0.02, pz);
+      park.receiveShadow = true;
+      sholGroup.add(park);
+    });
+
+    // Twin Symmetrical Ornamental Cloud-Spiral Gardens outside the Southern Shol Wall
+    const spiralGoldMat = getSholMaterial("spiral-gold", () =>
+      new THREE.MeshStandardMaterial({ color: "#eab308", roughness: 0.7 })
+    );
+    [-4.8, 4.4].forEach((gx) => {
+      const bed = new THREE.Mesh(new THREE.BoxGeometry(5.6, 0.03, 0.72), parkLawnMat);
+      bed.position.set(gx, SHOL_GROUND + 0.015, 9.42);
+      bed.receiveShadow = true;
+      const spiral = new THREE.Mesh(
+        new THREE.TorusGeometry(0.24, 0.045, 6, 18),
+        spiralGoldMat
+      );
+      spiral.rotation.x = Math.PI / 2;
+      spiral.position.set(gx, SHOL_GROUND + 0.04, 9.42);
+      sholGroup.add(bed, spiral);
+    });
 
     // 5. Zhol Par-khang (ཞོལ་པར་ཁང་། · zhol par-khang): 3-tier stepped woodblock printing house
     const parkhangTiers: [number, number, number][] = [
